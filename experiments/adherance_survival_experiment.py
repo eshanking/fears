@@ -1,4 +1,4 @@
-from experiment_class_raw import Experiment
+from fears.classes.experiment_class_raw import Experiment
 import numpy as np
 
 init_counts = np.zeros(16)

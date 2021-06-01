@@ -1,7 +1,7 @@
 # Non-interactive class for running experiments and saving raw data.
 # Does not produce images by default.
 
-from population_class import Population
+from fears.classes.population_class import Population
 import numpy as np
 # import matplotlib.pyplot as plt
 import pandas as pd
