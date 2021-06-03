@@ -8,8 +8,8 @@ from matplotlib.patches import Patch
 import pickle
 import sys
 
-data_folder = 'results_06032021_0001'
-exp_info_file = 'experiment_info_06032021_0001.p'
+data_folder = 'results_06032021_0002'
+exp_info_file = 'experiment_info_06032021_0002.p'
 
 sys.path.append('/Users/eshanking/repos/')
 from fears.classes import experiment_class_raw
@@ -62,7 +62,7 @@ fig,ax = plt.subplots(2,1,figsize=(6.25,7.75),sharex=True)
 gap = int(p1.dose_schedule/p1.timestep_scale)
 n_scheduled_doses = int(np.ceil(p1.n_timestep/gap))
 
-exp_num = 0
+exp_num = 2
 exp = experiment_folders[exp_num]
 
 p_drop = exp[exp.find('=')+1:]
@@ -161,7 +161,9 @@ title = '$p_{forget}$ = ' + p_drop
 
 ax[0].set_title(title,fontsize=15)     
 
-plt.savefig('dose_regimen_heatmap.pdf',bbox_inches="tight")
+p_drop_t = p_drop.replace('.', ',')
+
+plt.savefig('dose_regimen_heatmap_p=' + p_drop_t + '.pdf',bbox_inches="tight")
         
 fig2, ax2 = plt.subplots(2,1,sharex=True,figsize=(3,4))
 
@@ -205,7 +207,7 @@ ax2[1].set_title('Extinct')
 ax2[1].set_ylabel('Probability')    
 ax2[1].set_xlabel('Dose number') 
 
-plt.savefig('dose_regimen_histogram.pdf',bbox_inches="tight")
+plt.savefig('dose_regimen_histogram_p=' + p_drop_t + '.pdf',bbox_inches="tight")
 # # p = p[0:10]
 # # v_survived = chi_square(n_survived,np.sum(resistant_regimen[:,0:10],axis=0),p) 
 # # v_perished = chi_square(n_perished,np.sum(extinct_regimen[:,0:10],axis=0),p)

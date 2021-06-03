@@ -12,14 +12,19 @@ from cycler import cycler
 def int_to_binary(num, pad=4):
     return bin(num)[2:].zfill(pad)
 
-data_folder = 'results_05262021_0000'
+def make_resultspath_absolute(filename):
+    p = '..' + os.sep + 'results' + os.sep + filename
+    return p
+
+data_folder = 'results_06032021_0000'
 max_cells = 10**11 # carrying capacity for determining if a population survived or not
 timestep_scale = 2
 
 ###############################################################################
 # generate figure and axes
 
-results_dir = os.getcwd() + '//' + data_folder # folder containing all of the results
+# results_dir = os.getcwd() + '//' + data_folder # folder containing all of the results
+results_dir = make_resultspath_absolute(data_folder)
 experiment_folders = os.listdir(path=results_dir) # each of these folders corresponds to a different k_abs
 
 experiment_folders = sorted(experiment_folders)
@@ -47,6 +52,93 @@ for i in range(n_params):
 ###############################################################################
 # data analysis
 
+# barchart_labels = [] # will eventually contain the k_abs values
+# barchart_data = [] # will eventually contain the survival data for the barchart
+
+# row = 0 # counts the current row of the figure
+# for exp in experiment_folders:
+#     p_drop = exp[exp.find('=')+1:] # determine the k_abs from the folder name
+    
+#     p_drop = p_drop.replace(',', '.')
+    
+#     exp_path = results_dir + os.sep + exp
+#     sim_files = os.listdir(path=exp_path) # each file corresponds to a single simulation
+    
+#     n_survive = 0
+#     n_sim = len(sim_files)
+#     sim_num = 0
+#     # k=0
+    
+#     has_plotted = False
+#     for sim in sim_files:
+#         sim_num += 1
+        
+#         sim_path = exp_path + os.sep + sim
+        
+#         data_df = pd.read_csv(sim_path)
+#         data = data_df.to_numpy()
+        
+#         drug_conc = data[:,-2] # drug concentration is the 17th column of the data
+#         counts = data[:,0:-2]
+        
+#         if any(counts[-1,:]>0.1*max_cells):
+#             n_survive+=1
+#             # if k==0:
+#             #     counts_t = counts
+#             # else:
+#             #     counts_t += counts
+#             # k+=1
+        
+#             counts = counts/np.max(counts) # normalize cell counts to the carrying capacity     
+#             # plot each simulation trace in grey
+#             if has_plotted == False:
+                
+#                 # plot the drug concentration
+#                 drug_ax[row].plot(drug_conc,color='black',label='Drug Concentration ($\u03BC$M)',linewidth=0.9)
+#                 counts_total = np.sum(counts,axis=0)
+    
+#                 # counts_total = counts_total/np.max(counts_total)    
+#                 sorted_index = counts_total.argsort()
+#                 sorted_index_big = sorted_index[8:] # sort the top 8 alleles with the largest cell count
+                
+#                 colors = sns.color_palette('bright')
+#                 colors = np.concatenate((colors[0:9],colors[0:7]),axis=0)
+                
+#                 # shuffle colors
+                
+#                 colors[[14,15]] = colors[[15,14]]
+                
+#                 # cycle through dashed and solid lines
+#                 cc = (cycler(color=colors) + 
+#                       cycler(linestyle=['-', '-','-','-','-','-','-','-','-',
+#                                         '--','--','--','--','--','--','--']))
+                
+#                 all_ax[row].set_prop_cycle(cc)
+                
+#                 # counts_t = counts_t/np.max(counts_t)
+#                 for allele in range(counts.shape[1]):
+#                     # print(str(allele))
+#                     if allele in sorted_index_big:
+#                         # only label the trace for the legend if the cell count is large enough (don't want to bother putting tiny populations in the legend)
+#                         if row == 4:
+#                             all_ax[row].plot(counts[:,allele],linewidth=2.0,label=str(int_to_binary(allele)))
+#                             # print(str(allele))
+#                             # print(str(int_to_binary(allele)))
+#                         else:
+#                             all_ax[row].plot(counts[:,allele],linewidth=2.0,label=None)
+#             #            print(str(allele))
+#                     else:
+#                         all_ax[row].plot(counts[:,allele],linewidth=2.0,label=None)
+#                 has_plotted = True
+        
+#         if has_plotted == False and sim_num == n_sim:
+#             drug_ax[row].plot(drug_conc,color='black',label='Drug Concentration ($\u03BC$M)',linewidth=0.9)
+            
+#     barchart_data.append(100*n_survive/n_sim)
+#     barchart_labels.append(p_drop)
+    
+#     row+=1
+
 barchart_labels = [] # will eventually contain the k_abs values
 barchart_data = [] # will eventually contain the survival data for the barchart
 
@@ -55,80 +147,76 @@ for exp in experiment_folders:
     p_drop = exp[exp.find('=')+1:] # determine the k_abs from the folder name
     
     p_drop = p_drop.replace(',', '.')
-    
+        
     exp_path = results_dir + os.sep + exp
     sim_files = os.listdir(path=exp_path) # each file corresponds to a single simulation
     
     n_survive = 0
     n_sim = len(sim_files)
-    sim_num = 0
-    # k=0
     
-    has_plotted = False
+    k=0
     for sim in sim_files:
-        sim_num += 1
-        
+
         sim_path = exp_path + os.sep + sim
         
         data_df = pd.read_csv(sim_path)
         data = data_df.to_numpy()
         
-        drug_conc = data[:,-2] # drug concentration is the 17th column of the data
-        counts = data[:,0:-2]
+        drug_conc = data[:,-1] # drug concentration is the 17th column of the data
+        counts = data[:,0:-1]
         
         if any(counts[-1,:]>0.1*max_cells):
             n_survive+=1
-            # if k==0:
-            #     counts_t = counts
-            # else:
-            #     counts_t += counts
-            # k+=1
+            if k==0:
+                counts_t = counts
+            else:
+                counts_t += counts
+            k+=1
+        # else:
+        #     counts_t = np.zeros(counts.shape)
         
-            counts = counts/np.max(counts) # normalize cell counts to the carrying capacity     
-            # plot each simulation trace in grey
-            if has_plotted == False:
-                
-                # plot the drug concentration
-                drug_ax[row].plot(drug_conc,color='black',label='Drug Concentration ($\u03BC$M)',linewidth=0.9)
-                counts_total = np.sum(counts,axis=0)
+        counts = counts/max_cells # normalize cell counts to the carrying capacity     
+        # plot each simulation trace in grey
+        for allele in range(counts.shape[1]):
+            all_ax[row].plot(counts[:,allele],linewidth=1.0,color='grey',alpha=0.5)
     
-                # counts_total = counts_total/np.max(counts_total)    
-                sorted_index = counts_total.argsort()
-                sorted_index_big = sorted_index[8:] # sort the top 8 alleles with the largest cell count
-                
-                colors = sns.color_palette('bright')
-                colors = np.concatenate((colors[0:9],colors[0:7]),axis=0)
-                
-                # shuffle colors
-                
-                colors[[14,15]] = colors[[15,14]]
-                
-                # cycle through dashed and solid lines
-                cc = (cycler(color=colors) + 
-                      cycler(linestyle=['-', '-','-','-','-','-','-','-','-',
-                                        '--','--','--','--','--','--','--']))
-                
-                all_ax[row].set_prop_cycle(cc)
-                
-                # counts_t = counts_t/np.max(counts_t)
-                for allele in range(counts.shape[1]):
-                    # print(str(allele))
-                    if allele in sorted_index_big:
-                        # only label the trace for the legend if the cell count is large enough (don't want to bother putting tiny populations in the legend)
-                        if row == 4:
-                            all_ax[row].plot(counts[:,allele],linewidth=2.0,label=str(int_to_binary(allele)))
-                            # print(str(allele))
-                            # print(str(int_to_binary(allele)))
-                        else:
-                            all_ax[row].plot(counts[:,allele],linewidth=2.0,label=None)
-            #            print(str(allele))
-                    else:
-                        all_ax[row].plot(counts[:,allele],linewidth=2.0,label=None)
-                has_plotted = True
+    if 'counts_t' in locals():       
+        counts_t = counts_t/n_survive
+        counts_total = np.sum(counts,axis=0)
         
-        if has_plotted == False and sim_num == n_sim:
-            drug_ax[row].plot(drug_conc,color='black',label='Drug Concentration ($\u03BC$M)',linewidth=0.9)
-            
+        # counts_total = counts_total/np.max(counts_total)    
+        sorted_index = counts_total.argsort()
+        sorted_index_big = sorted_index[8:] # sort the top 8 alleles with the largest cell count
+        
+        colors = sns.color_palette('bright')
+        colors = np.concatenate((colors[0:9],colors[0:7]),axis=0)
+        
+        # shuffle colors
+        
+        colors[[14,15]] = colors[[15,14]]
+        
+        # cycle through dashed and solid lines
+        cc = (cycler(color=colors) + 
+              cycler(linestyle=['-', '-','-','-','-','-','-','-','-',
+                                '--','--','--','--','--','--','--']))
+        
+        all_ax[row].set_prop_cycle(cc)
+        
+        counts_t = counts_t/max_cells
+        for allele in range(counts.shape[1]):
+            if allele in sorted_index_big:
+                # only label the trace for the legend if the cell count is large enough (don't want to bother putting tiny populations in the legend)
+                all_ax[row].plot(counts_t[:,allele],linewidth=2.0,label=str(int_to_binary(allele)))
+    #            print(str(allele))
+            else:
+                all_ax[row].plot(counts_t[:,allele],linewidth=2.0,label=None)
+            # if k==0:
+            #     counts_avg
+        
+    # plot the drug concentration
+    # drug_ax[row].plot(drug_conc,color='black',label='Drug Concentration ($\u03BC$M)')
+    
+                
     barchart_data.append(100*n_survive/n_sim)
     barchart_labels.append(p_drop)
     
@@ -194,8 +282,8 @@ all_ax[-1].set_xticklabels(xlabels)
 all_ax[-1].set_xlabel('Days',fontsize=12)
 
 all_ax[-1].yaxis.tick_right()
-all_ax[-1].legend(frameon=False,fontsize=11,loc='lower left',bbox_to_anchor=(-1.1,-1.1),ncol=4)
-drug_ax[-1].legend(frameon=False,fontsize=11,loc='lower left',bbox_to_anchor=(-1.1,-1.35),ncol=1)
+# all_ax[-1].legend(frameon=False,fontsize=11,loc='lower left',bbox_to_anchor=(-1.1,-1.1),ncol=4)
+# drug_ax[-1].legend(frameon=False,fontsize=11,loc='lower left',bbox_to_anchor=(-1.1,-1.35),ncol=1)
 # all_ax[-1].legend(loc=(1.25,-.12),frameon=False,fontsize=15)
 
 for ax in drug_ax:

@@ -19,7 +19,7 @@ options = {'doubling_time':1.5,
            'timestep_scale':2,
            'plot':False}
 
-p = np.array([0.2])
+p = np.array([0.4,0.6,0.8])
 n_sims = 1000
 
 experiment_type = 'drug-regimen'
