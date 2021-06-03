@@ -5,6 +5,7 @@ from cycler import cycler
 import seaborn as sns
 import scipy as sp
 import math
+import os
 
 class Population:
 ###############################################################################    
@@ -14,7 +15,7 @@ class Population:
                  curve_type='constant', # drug concentration curve
                  counts_log_scale = False, # plot counts on log scale
                  constant_pop = False, # normalize to a constant population size
-                 drugless_path = None, # file path for the drugless growth rates
+                 drugless_data = None, # file path for the drugless growth rates
                  death_rate = 0.15, 
                  doubling_time = 1, # average doubling time of model organism
                  dose_schedule=12, # dose every x hours
@@ -26,7 +27,7 @@ class Population:
                  fig_title = '',
                  fitness_data = 'generate', # 'generate' = generate fitness data using drugless growth rates, ic50, and drug concentration. 'manual' = input fitness landscape from csv
                  h_step = 500,
-                 ic50_path = None, 
+                 ic50_data = None, 
                  init_counts = None, # default is 10,000 wild type cells
                  k_elim = 0.001, # for modeling pharmacokinetics
                  k_abs = 0.07,
@@ -78,21 +79,21 @@ class Population:
         # Generate fitness data from IC50 and drugless growth rate data
         if fitness_data == 'generate':
             # Data paths
-            if drugless_path is None:
-                # self.drugless_path = "C:\\Users\\Eshan\\Documents\\python scripts\\theory division\\abm_variable_fitness\\data\\ogbunugafor_drugless.csv"
-                self.drugless_path = 'ogbunugafor_drugless.csv'
+            if drugless_data is None:
+                # self.drugless_data = "C:\\Users\\Eshan\\Documents\\python scripts\\theory division\\abm_variable_fitness\\data\\ogbunugafor_drugless.csv"
+                self.drugless_data = self.make_datapath_absolute('ogbunugafor_drugless.csv')
             else:
-                self.drugless_path = drugless_path
+                self.drugless_data = self.make_datapath_absolute(drugless_data)
                 
-            if ic50_path is None:
-                # self.ic50_path = "C:\\Users\\Eshan\\Documents\\python scripts\\theory division\\abm_variable_fitness\\data\\pyrimethamine_ic50.csv"
-                self.ic50_path = 'pyrimethamine_ic50.csv'
+            if ic50_data is None:
+                # self.ic50_data = "C:\\Users\\Eshan\\Documents\\python scripts\\theory division\\abm_variable_fitness\\data\\pyrimethamine_ic50.csv"
+                self.ic50_data = self.make_datapath_absolute('pyrimethamine_ic50.csv')
             else:
-                self.ic50_path = ic50_path
+                self.ic50_data = self.make_datapath_absolute(ic50_data)
             
             # load the data
-            self.drugless_rates = self.load_fitness(self.drugless_path)
-            self.ic50 = self.load_fitness(self.ic50_path)
+            self.drugless_rates = self.load_fitness(self.drugless_data)
+            self.ic50 = self.load_fitness(self.ic50_data)
             
             self.max_replication_rate = max(self.drugless_rates)
             # determine number of alleles from data (not yet implemented)
@@ -160,6 +161,11 @@ class Population:
         self.y_lim = y_lim
         self.entropy_lim = entropy_lim
 ###############################################################################       
+    
+    def make_datapath_absolute(self,filename):
+        # takes a data file name and turns it into an absolute path
+        p = '..' + os.sep + 'data' + os.sep + filename
+        return p
     
     # Load data
     def load_fitness(self,data_path):
