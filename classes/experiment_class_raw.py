@@ -168,15 +168,17 @@ class Experiment():
             
             date_str = time.strftime('%m%d%Y',time.localtime())
             
-            save_folder = os.getcwd() + '//results_' + date_str + '_' + num_str
+            save_folder = '..' + os.sep + 'results' + os.sep + 'results_' + date_str + '_' + num_str
+            
+            # save_folder = os.getcwd() + '//results_' + date_str + '_' + num_str
             
             while(os.path.exists(save_folder)):
                 num += 1
                 num_str = str(num).zfill(4)
-                save_folder = os.getcwd() + '//results_' + date_str + '_' + num_str
+                save_folder = '..' + os.sep + 'results' + os.sep + 'results_' + date_str + '_' + num_str
             os.mkdir(save_folder) 
             
-            self.experiment_info_path = os.getcwd() + '//experiment_info_' + date_str + '_' + num_str + '.p'
+            self.experiment_info_path = '..' + os.sep + 'results' + os.sep + 'experiment_info_' + date_str + '_' + num_str + '.p'
             
             # self.experiment_info_path = experiment_info_path
             self.results_path = save_folder
