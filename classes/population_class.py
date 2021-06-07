@@ -55,37 +55,29 @@ class Population:
         self.n_timestep = n_timestep
         self.max_cells = max_cells
         
-        # ABM parameters
+        # model parameters
         self.mut_rate = mut_rate
         self.death_rate = death_rate
         self.doubling_time = doubling_time
         self.timestep_scale = timestep_scale # timestep_scale = 2 -> timestep = 2 hrs, etc
         
-        # Timecouse (set after running self.simulate)
-        self.counts = np.zeros([self.n_timestep,16])
-        self.counts_extinct = np.zeros([self.n_timestep,16])
-        self.counts_survive = np.zeros([self.n_timestep,16])
-                                            
-        # Model parameters
-        
         self.carrying_cap = True
-        # self.div_scale = div_scale # Scale the division rate to simulate different organisms
         self.n_sims = n_sims # number of simulations to average together in self.simulate
         self.constant_pop = constant_pop
-        # self.v2 = v2
         self.debug = debug
         
         self.fitness_data = fitness_data
+
+        self.counts = np.zeros([self.n_timestep,16])
+        self.counts_extinct = np.zeros([self.n_timestep,16])
+        self.counts_survive = np.zeros([self.n_timestep,16])
         
         # Generate fitness data from IC50 and drugless growth rate data
         if fitness_data == 'generate':
             # Data paths
             if drugless_data is None:
-                # self.drugless_data = "C:\\Users\\Eshan\\Documents\\python scripts\\theory division\\abm_variable_fitness\\data\\ogbunugafor_drugless.csv"
-                # self.drugless_data = self.make_datapath_absolute('ogbunugafor_drugless.csv')
                 self.drugless_data = utils.make_datapath_absolute('ogbunugafor_drugless.csv')
             else:
-                # self.drugless_data = self.make_datapath_absolute(drugless_data)
                 self.drugless_data = utils.make_datapath_absolute(drugless_data)
                 
             if ic50_data is None:
@@ -101,7 +93,6 @@ class Population:
             self.ic50 = self.load_fitness(self.ic50_data)
             
             self.max_replication_rate = max(self.drugless_rates)
-            # determine number of alleles from data (not yet implemented)
             self.n_genotype = self.drugless_rates.shape[0]
         
         # load fitness landscape from excel file
@@ -167,15 +158,10 @@ class Population:
         self.y_lim = y_lim
         self.entropy_lim = entropy_lim
 ###############################################################################       
-    
-    # def make_datapath_absolute(self,filename):
-    #     # takes a data file name and turns it into an absolute path
-    #     p = '..' + os.sep + 'data' + os.sep + filename
-    #     return p
-    
+        
     # Load data
+    # also use to load ic50 and drugless growth rate (anything from a csv)
     def load_fitness(self,data_path):
-        # also use to load ic50 and drugless growth rate
         fitness = pd.read_csv(data_path)
         cols = list(fitness.columns)
         fit_array = np.array(cols)
@@ -209,10 +195,7 @@ class Population:
         
         trans_mat[trans_mat>1] = 0
         trans_mat = trans_mat/trans_mat.sum(axis=1)
-        
-    #    trans_mat[3,:] = 0
-    #    trans_mat[:,3] = 0
-    #    print(str(trans_mat))
+
         return trans_mat
     
     # compute fitness given a drug concentration
@@ -264,7 +247,7 @@ class Population:
         conc = conc*max_dose
         return conc
 
-    # New convolution method (much faster with numpy)
+    # Convolve dose regimen u with pharmacokinetic model
     def convolve_pharm(self,u):
                        # k_elim=0.01,
                        # k_abs=0.1,
@@ -277,7 +260,6 @@ class Population:
         for i in range(self.n_timestep):
             pharm[i] = self.pharm_eqn(i,k_elim=k_elim,k_abs=k_abs,max_dose=max_dose)
         
-        # using FFT turns out to be much faster for convolutions!
         conv = np.convolve(u,pharm)
         conv = conv[0:self.n_timestep]
         return conv
@@ -307,6 +289,8 @@ class Population:
         u[impulse_indx]=1 # list of impulses at the simulated drug dosage times
         return u
     
+    # method to simulate an evolutionary bottleneck by pulsing drug 
+    # concentration
     def gen_bottleneck_regimen(self,duty_cycle=None):
         
         if duty_cycle is None:
@@ -410,7 +394,6 @@ class Population:
     
             # Scale division rates based on carrying capacity
             if self.carrying_cap:
-                # division_scale = 1 / (1+(2*np.sum(counts[mm])/self.max_cells)**4)
                 division_scale = 1-np.sum(counts[mm])/self.max_cells
             else:
                 division_scale = 1
@@ -449,7 +432,7 @@ class Population:
     
                 # Add mutating cell to their final types
                 counts[mm+1] +=np.bincount( mutations , minlength=n_genotype)
-                counts[:,3] =  0
+                # counts[:,3] =  0
                 # Substract mutating cells from that allele
                 daughter_counts[genotype] -=n_mut
     
