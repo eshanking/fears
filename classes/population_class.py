@@ -5,7 +5,7 @@ from cycler import cycler
 import seaborn as sns
 import scipy as sp
 import math
-import os
+from fears.src import utils
 
 class Population:
 ###############################################################################    
@@ -23,6 +23,7 @@ class Population:
                  drug_curve = None, # input a custom drug concentration curve
                  drug_regimen = None, # for modeling drug regimens
                  debug=False, # print the current time step
+                 duty_cycle = None,
                  entropy_lim = None, # entropy plotting limits
                  fig_title = '',
                  fitness_data = 'generate', # 'generate' = generate fitness data using drugless growth rates, ic50, and drug concentration. 'manual' = input fitness landscape from csv
@@ -81,15 +82,19 @@ class Population:
             # Data paths
             if drugless_data is None:
                 # self.drugless_data = "C:\\Users\\Eshan\\Documents\\python scripts\\theory division\\abm_variable_fitness\\data\\ogbunugafor_drugless.csv"
-                self.drugless_data = self.make_datapath_absolute('ogbunugafor_drugless.csv')
+                # self.drugless_data = self.make_datapath_absolute('ogbunugafor_drugless.csv')
+                self.drugless_data = utils.make_datapath_absolute('ogbunugafor_drugless.csv')
             else:
-                self.drugless_data = self.make_datapath_absolute(drugless_data)
+                # self.drugless_data = self.make_datapath_absolute(drugless_data)
+                self.drugless_data = utils.make_datapath_absolute(drugless_data)
                 
             if ic50_data is None:
                 # self.ic50_data = "C:\\Users\\Eshan\\Documents\\python scripts\\theory division\\abm_variable_fitness\\data\\pyrimethamine_ic50.csv"
-                self.ic50_data = self.make_datapath_absolute('pyrimethamine_ic50.csv')
+                # self.ic50_data = self.make_datapath_absolute('pyrimethamine_ic50.csv')
+                self.ic50_data = utils.make_datapath_absolute('pyrimethamine_ic50.csv')
             else:
-                self.ic50_data = self.make_datapath_absolute(ic50_data)
+                # self.ic50_data = self.make_datapath_absolute(ic50_data)
+                self.ic50_data = utils.make_datapath_absolute(ic50_data)
             
             # load the data
             self.drugless_rates = self.load_fitness(self.drugless_data)
@@ -135,6 +140,7 @@ class Population:
         self.prob_drop = prob_drop # probability of dropping a dose
         self.h_step = h_step # when to turn on heaviside function
         self.min_dose = min_dose 
+        self.duty_cycle = duty_cycle
         
         # Generate drug dosage curves if one is not specified
         if drug_curve is None:
@@ -162,10 +168,10 @@ class Population:
         self.entropy_lim = entropy_lim
 ###############################################################################       
     
-    def make_datapath_absolute(self,filename):
-        # takes a data file name and turns it into an absolute path
-        p = '..' + os.sep + 'data' + os.sep + filename
-        return p
+    # def make_datapath_absolute(self,filename):
+    #     # takes a data file name and turns it into an absolute path
+    #     p = '..' + os.sep + 'data' + os.sep + filename
+    #     return p
     
     # Load data
     def load_fitness(self,data_path):
@@ -301,6 +307,25 @@ class Population:
         u[impulse_indx]=1 # list of impulses at the simulated drug dosage times
         return u
     
+    def gen_bottleneck_regimen(self,duty_cycle=None):
+        
+        if duty_cycle is None:
+            duty_cycle= self.duty_cycle
+        if duty_cycle is None:
+            duty_cycle = 0.5
+            
+        u = np.zeros(self.n_timestep)
+        on = False
+        for i in range(self.n_timestep):
+            if np.mod(i,self.dose_schedule/self.timestep_scale) == 0:
+                on = True
+                off_time = i + round((self.dose_schedule*duty_cycle))/self.timestep_scale
+            if i == off_time:
+                on = False
+            if on:
+                u[i] = self.max_dose
+        return u
+    
     # generates drug concentration curves
     def gen_curves(self):
         curve = np.zeros(self.n_timestep)
@@ -346,6 +371,9 @@ class Population:
         elif self.curve_type == 'pulsed':
             u = self.gen_impulses()
             curve = self.convolve_pharm(u)
+            
+        elif self.curve_type == 'bottleneck':
+            curve = self.gen_bottleneck_regimen()
             
         return curve, u
     

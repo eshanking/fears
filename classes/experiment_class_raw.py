@@ -9,6 +9,7 @@ import warnings
 import os
 import time
 import pickle
+from fears.src import utils
 
 class Experiment():
     
@@ -24,6 +25,8 @@ class Experiment():
                  population_options = {},
                  slopes=None,
                  debug = True): # debug = True -> no save
+    
+        self.root_path = str(utils.get_project_root())
         
         # list of allowed drug curve types
         allowed_types = ['linear',
@@ -37,7 +40,8 @@ class Experiment():
                                'dose-survival',
                                'drug-regimen',
                                'dose-entropy',
-                               'rate-survival']
+                               'rate-survival',
+                               'bottleneck']
         
         if curve_types is not None:
             if not all(elem in allowed_types for elem in curve_types):
@@ -45,7 +49,7 @@ class Experiment():
                 
         if experiment_type is not None:
             if experiment_type not in allowed_experiments:
-                raise Exception('Experiment type not recognized.\nAllowable types are inoculant-survival, dose-survival, drug-regimen, and dose-entropy.')
+                raise Exception('Experiment type not recognized.\nAllowable types are inoculant-survival, dose-survival, drug-regimen, dose-entropy, and bottleneck.')
             
         # Curve type: linear, constant, heaviside, pharm, pulsed
         if curve_types is None:
@@ -88,6 +92,20 @@ class Experiment():
         
         # if experiment_type == 'inoculant-survival' and inoculants is None:
         #     raise Exception('The experiment type is set to inoculant-survival, but no inoculants are given.')
+        
+        if self.experiment_type == 'bottleneck':
+            
+            p_bottleneck = Population(max_dose = max_doses,
+                                         n_sims = self.n_sims,
+                                         curve_type = 'bottleneck'
+                                         **self.population_options)
+            self.populations.append(p_bottleneck)
+            
+            p_no_bottleneck = Population(max_dose = max_doses,
+                             n_sims = self.n_sims,
+                             curve_type = 'constant'
+                             **self.population_options)
+            self.populations.append(p_no_bottleneck)
         
         if self.experiment_type == 'dose-survival':
             for curve_type in self.curve_types:
@@ -168,17 +186,17 @@ class Experiment():
             
             date_str = time.strftime('%m%d%Y',time.localtime())
             
-            save_folder = '..' + os.sep + 'results' + os.sep + 'results_' + date_str + '_' + num_str
+            save_folder = self.root_path + os.sep + 'results' + os.sep + 'results_' + date_str + '_' + num_str
             
             # save_folder = os.getcwd() + '//results_' + date_str + '_' + num_str
             
             while(os.path.exists(save_folder)):
                 num += 1
                 num_str = str(num).zfill(4)
-                save_folder = '..' + os.sep + 'results' + os.sep + 'results_' + date_str + '_' + num_str
+                save_folder = self.root_path + os.sep + 'results' + os.sep + 'results_' + date_str + '_' + num_str
             os.mkdir(save_folder) 
             
-            self.experiment_info_path = '..' + os.sep + 'results' + os.sep + 'experiment_info_' + date_str + '_' + num_str + '.p'
+            self.experiment_info_path = self.root_path + os.sep + 'results' + os.sep + 'experiment_info_' + date_str + '_' + num_str + '.p'
             
             # self.experiment_info_path = experiment_info_path
             self.results_path = save_folder
@@ -316,12 +334,12 @@ class Experiment():
     def save_counts(self,counts,num,save_folder,prefix='sim_'):
         
         # check if the desired save folder exists. If not, create it
-        folder_path = self.results_path + '//' + save_folder
+        folder_path = self.results_path + os.sep + save_folder
         if os.path.exists(folder_path) != True:
             os.mkdir(folder_path)
             
         num = str(num).zfill(4)
-        savename = self.results_path + '//' + save_folder + '//' + prefix + num + '.csv'
+        savename = self.results_path + os.sep + save_folder + os.sep + prefix + num + '.csv'
         np.savetxt(savename, counts, delimiter=",")
         return
     

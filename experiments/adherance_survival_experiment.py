@@ -20,7 +20,7 @@ options = {'doubling_time':1.5,
            'plot':False}
 
 p = np.array([0.4,0.6,0.8])
-n_sims = 1000
+n_sims = 1
 
 experiment_type = 'drug-regimen'
 
