@@ -11,6 +11,7 @@ class Population:
 ###############################################################################    
     # Initializer
     def __init__(self,
+                 bottleneck = False,
                  carrying_cap = True,
                  curve_type='constant', # drug concentration curve
                  counts_log_scale = False, # plot counts on log scale
@@ -61,12 +62,14 @@ class Population:
         self.doubling_time = doubling_time
         self.timestep_scale = timestep_scale # timestep_scale = 2 -> timestep = 2 hrs, etc
         
-        self.carrying_cap = True
+        self.carrying_cap = carrying_cap
         self.n_sims = n_sims # number of simulations to average together in self.simulate
         self.constant_pop = constant_pop
         self.debug = debug
         
         self.fitness_data = fitness_data
+        
+        self.bottleneck = bottleneck
 
         self.counts = np.zeros([self.n_timestep,16])
         self.counts_extinct = np.zeros([self.n_timestep,16])
@@ -289,9 +292,9 @@ class Population:
         u[impulse_indx]=1 # list of impulses at the simulated drug dosage times
         return u
     
-    # method to simulate an evolutionary bottleneck by pulsing drug 
+    # method to simulate an evolutionary on_off by pulsing drug 
     # concentration
-    def gen_bottleneck_regimen(self,duty_cycle=None):
+    def gen_on_off_regimen(self,duty_cycle=None):
         
         if duty_cycle is None:
             duty_cycle= self.duty_cycle
@@ -356,11 +359,12 @@ class Population:
             u = self.gen_impulses()
             curve = self.convolve_pharm(u)
             
-        elif self.curve_type == 'bottleneck':
-            curve = self.gen_bottleneck_regimen()
+        elif self.curve_type == 'on_off':
+            curve = self.gen_on_off_regimen()
             
         return curve, u
     
+    # core evolutionary model
     def run_abm_v2(self):
         
         n_genotype = self.n_genotype
@@ -378,7 +382,7 @@ class Population:
             if self.debug:
                 if np.mod(mm,10) == 0:
                     print(str(mm))
-                            
+            
             conc = self.drug_curve[mm]
             
             fit_land = np.zeros(self.n_genotype)
@@ -406,6 +410,11 @@ class Population:
             death_rate = self.death_rate*self.timestep_scale
             mut_rate = self.mut_rate*self.timestep_scale
             
+            # passage_timestep = (self.dose_schedule + self.duty_cycle*self.dose_schedule)/self.timestep_scale
+            
+            if mm > 0 and self.bottleneck == True and np.mod(mm-self.duty_cycle*self.dose_schedule,self.dose_schedule) == 0:
+                counts[mm] = np.round(0.1*counts[mm])
+             
             counts[mm+1] = counts[mm]
     
             # Kill cells
@@ -652,14 +661,13 @@ class Population:
         ax.set_prop_cycle(cc) 
         
         for allele in range(16):
-            if allele == 3:
-                fit = np.zeros(conc.shape[0])
-            if allele > 3:
-                for j in range(conc.shape[0]):
-                    fit[j] = self.gen_fitness(allele,conc[j],drugless_rates,ic50)
-            else:
-                for j in range(conc.shape[0]):
-                    fit[j] = self.gen_fitness(allele,conc[j],drugless_rates,ic50)
+            # if allele == 3:
+            #     fit = np.zeros(conc.shape[0])
+            # if allele > 3:
+            #     for j in range(conc.shape[0]):
+            #         fit[j] = self.gen_fitness(allele,conc[j],drugless_rates,ic50)
+            for j in range(conc.shape[0]):
+                fit[j] = self.gen_fitness(allele,conc[j],drugless_rates,ic50)
             ax.plot(powers,fit,linewidth=3,label=str(self.int_to_binary(allele)))
 
         ax.legend(fontsize=15,frameon=False,loc=(1,-.10))

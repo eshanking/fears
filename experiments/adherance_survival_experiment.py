@@ -1,4 +1,4 @@
-from fears.classes.experiment_class_raw import Experiment
+from fears.classes.experiment_class import Experiment
 import numpy as np
 
 init_counts = np.zeros(16)
@@ -13,14 +13,15 @@ options = {'doubling_time':1.5,
            'init_counts':init_counts,
            'k_abs':0.95,
            'k_elim':0.00839,
-           'max_dose':1100,
+           'max_dose':400,
            'dose_schedule':24,
            'pad_right':True,
            'timestep_scale':2,
-           'plot':False}
+           'plot':True,
+           'ic50_data':'cycloguanil_ic50.csv'}
 
-p = np.array([0.4,0.6,0.8])
-n_sims = 1
+p = np.array([0,0.2,0.4,0.6,0.8])
+n_sims = 100
 
 experiment_type = 'drug-regimen'
 
