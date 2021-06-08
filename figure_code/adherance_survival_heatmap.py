@@ -8,11 +8,11 @@ from matplotlib.patches import Patch
 import pickle
 import sys
 
-data_folder = 'results_06032021_0002'
-exp_info_file = 'experiment_info_06032021_0002.p'
+data_folder = 'results_06082021_0002'
+exp_info_file = 'experiment_info_06082021_0002.p'
 
 sys.path.append('/Users/eshanking/repos/')
-from fears.classes import experiment_class_raw
+from fears.classes import experiment_class
 
 def int_to_binary(num, pad=4):
     return bin(num)[2:].zfill(pad)
@@ -62,7 +62,7 @@ fig,ax = plt.subplots(2,1,figsize=(6.25,7.75),sharex=True)
 gap = int(p1.dose_schedule/p1.timestep_scale)
 n_scheduled_doses = int(np.ceil(p1.n_timestep/gap))
 
-exp_num = 2
+exp_num = 0
 exp = experiment_folders[exp_num]
 
 p_drop = exp[exp.find('=')+1:]
@@ -78,7 +78,7 @@ n_sims = len(sim_files)
 first_perished = True
 first_survived = True
 
-indx = 0
+indx = 5
 
 while indx < n_sims:
     

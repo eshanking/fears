@@ -17,10 +17,10 @@ options = {'doubling_time':1.5,
            'dose_schedule':24,
            'pad_right':True,
            'timestep_scale':2,
-           'plot':True,
+           'plot':False,
            'ic50_data':'cycloguanil_ic50.csv'}
 
-p = np.array([0,0.2,0.4,0.6,0.8])
+p = np.array([0.5,0.6,0.7,0.8,0.9])
 n_sims = 100
 
 experiment_type = 'drug-regimen'

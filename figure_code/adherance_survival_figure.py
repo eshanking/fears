@@ -16,7 +16,7 @@ def make_resultspath_absolute(filename):
     p = '..' + os.sep + 'results' + os.sep + filename
     return p
 
-data_folder = 'results_06032021_0000'
+data_folder = 'results_06082021_0004'
 max_cells = 10**11 # carrying capacity for determining if a population survived or not
 timestep_scale = 2
 
