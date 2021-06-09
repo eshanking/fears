@@ -45,6 +45,7 @@ class Population:
                  plot_entropy = False, # plot the entropy of the population over time underneath the timecourse
                  prob_drop=0, 
                  slope = None, 
+                 static_landscape = False,
                  timestep_scale = 1,
                  x_lim = None, # plotting
                  y_lim = None # plotting
@@ -112,6 +113,11 @@ class Population:
             self.init_counts[0] = 10**4
         else:
             self.init_counts = init_counts
+            
+        if self.constant_pop:
+            self.init_counts = self.init_counts*self.max_cells/sum(self.init_counts)
+            self.init_counts = np.floor(self.init_counts)
+            self.carrying_cap = False
         
         # Dose parameters
         self.curve_type = curve_type # linear, constant, heaviside, pharm, pulsed
@@ -147,6 +153,8 @@ class Population:
         else:
             self.drug_regimen = drug_regimen
         
+        self.static_landscape = static_landscape
+            
         # Visualization parameters
         self.plot = plot # boolean
         self.plot_entropy = plot_entropy
@@ -168,7 +176,7 @@ class Population:
         fitness = pd.read_csv(data_path)
         cols = list(fitness.columns)
         fit_array = np.array(cols)
-        fit_array = fit_array.astype(np.float)
+        fit_array = fit_array.astype('float')
         return fit_array
         
 ###############################################################################
@@ -221,8 +229,40 @@ class Population:
         
         fit_land = np.zeros(self.n_genotype)
         
-        for allele in range(self.n_genotype):
-            fit_land[allele] = self.gen_fitness(allele,conc,self.drugless_rates,self.ic50)
+        if self.fitness_data == 'generate':
+            for kk in range(self.n_genotype):
+                fit_land[kk] = self.gen_fitness(kk,conc,self.drugless_rates,self.ic50)/self.doubling_time
+        elif self.fitness_data == 'manual':
+            fit_land = self.landscape_data/self.doubling_time
+        
+        return fit_land
+    
+    def check_stop_cond():
+        return
+    
+    # Generate fitness landscape for use in the abm method
+    # Made private to avoid confusion with gen_fit_land
+    def gen_fl_for_abm(self,conc,counts):
+        
+        fit_land = self.gen_fit_land(conc)
+        
+        # takes the landscape at the max dose and scales the replication rate
+        # according to drug concentration
+        if self.static_landscape:
+            max_fitness = max(fit_land)
+            fit_land = self.gen_fit_land(self.max_dose)
+            fit_land = fit_land*max_fitness/max(fit_land)
+        
+        # Scale division rates based on carrying capacity
+        if self.carrying_cap:
+            division_scale = 1-np.sum(counts)/self.max_cells
+        else:
+            division_scale = 1
+
+        if counts.sum()>self.max_cells:
+            division_scale = 0
+        
+        fit_land = fit_land*division_scale
         
         return fit_land
     
@@ -313,6 +353,12 @@ class Population:
                 u[i] = self.max_dose
         return u
     
+    # method to generate a "death rate curve" to simulate changing drug
+    # concentration over a static landscape
+    # def gen_replication_rate_curve():
+        
+    #     return
+    
     # generates drug concentration curves
     def gen_curves(self):
         curve = np.zeros(self.n_timestep)
@@ -365,7 +411,7 @@ class Population:
         return curve, u
     
     # core evolutionary model
-    def run_abm_v2(self):
+    def abm(self):
         
         n_genotype = self.n_genotype
 
@@ -376,42 +422,26 @@ class Population:
         counts = np.zeros([self.n_timestep, n_genotype], dtype=int)
 
         counts[0,:] = self.init_counts
-    
-        for mm in range(self.n_timestep-1):
-            
-            if self.debug:
-                if np.mod(mm,10) == 0:
-                    print(str(mm))
+        
+        mm = 0
+        stop_condition = False
+        
+        while mm < self.n_timestep-1 and not stop_condition:
             
             conc = self.drug_curve[mm]
             
-            fit_land = np.zeros(self.n_genotype)
+            # gen_fl_for_abm automatically considers carrying capacity, but
+            # it does not consider timestep scale
+            fit_land = self.gen_fl_for_abm(conc, counts[mm])
             
-            if self.fitness_data == 'generate':
-                for kk in range(self.n_genotype):
-                    fit_land[kk] = self.gen_fitness(kk,conc,self.drugless_rates,self.ic50)/self.doubling_time
-                            
-            elif self.fitness_data == 'manual':
-                fit_land = self.landscape_data/self.doubling_time
-                    
             fit_land = fit_land*self.timestep_scale
-    
-            # Scale division rates based on carrying capacity
-            if self.carrying_cap:
-                division_scale = 1-np.sum(counts[mm])/self.max_cells
-            else:
-                division_scale = 1
-    
-            if counts[mm].sum()>self.max_cells:
-                division_scale = 0
-            
-            fit_land = fit_land*division_scale
-            
             death_rate = self.death_rate*self.timestep_scale
             mut_rate = self.mut_rate*self.timestep_scale
-            
-            # passage_timestep = (self.dose_schedule + self.duty_cycle*self.dose_schedule)/self.timestep_scale
-            
+                
+            if self.debug and np.mod(mm,10) == 0:
+                print(str(mm))
+                print(str(fit_land))
+                
             if mm > 0 and self.bottleneck == True and np.mod(mm-self.duty_cycle*self.dose_schedule,self.dose_schedule) == 0:
                 counts[mm] = np.round(0.1*counts[mm])
              
@@ -449,9 +479,16 @@ class Population:
             
             # Normalize to constant population            
             if self.constant_pop:
-                cur_size = np.sum(counts[mm+1])
-                counts[mm+1] = counts[mm+1]*self.init_counts[0]/cur_size
-                counts[mm+1] = np.floor(counts[mm+1])
+                # cur_size = np.sum(counts[mm+1])
+                # counts[mm+1] = counts[mm+1]/cur_size
+                # counts[mm+1] = counts[mm+1]*self.max_cells
+                # counts[mm+1] = np.floor(counts[mm+1])
+                counts_t = counts[mm+1].astype('float')
+                cur_size = np.sum(counts_t)
+                counts_t = counts_t/cur_size
+                counts_t = counts_t*self.max_cells
+                counts[mm+1] = counts_t.astype('int')
+            mm+=1
 
         return counts
 
@@ -469,7 +506,7 @@ class Population:
             if self.prob_drop > 0:
                 self.drug_curve,u = self.gen_curves()
             
-            counts_t = self.run_abm_v2()
+            counts_t = self.abm()
                 
             if any(counts_t[self.n_timestep-1,:]>0.1*self.max_cells):
                 n_survive+=1
@@ -601,7 +638,7 @@ class Population:
         if self.y_lim is not None:
             y_lim = self.y_lim
         else:
-            y_lim = np.max(counts)
+            y_lim = np.max(counts) + 0.05*np.max(counts)
         
         if self.counts_log_scale:
             ax1.set_yscale('log')
@@ -672,13 +709,12 @@ class Population:
             if plot_r0:
                 fit = fit - self.death_rate
                 ylabel = '$R_{0}$'
+                thresh = np.ones(powers.shape)
+                ax.plot(powers,thresh,linestyle='dashdot',color='black',linewidth=3)
             else:
                 ylabel = 'Growth Rate'
                 
             ax.plot(powers,fit,linewidth=3,label=str(self.int_to_binary(allele)))
-        
-        thresh = np.ones(powers.shape)
-        ax.plot(powers,thresh,linestyle='dashdot',color='black',linewidth=3)
         
         ax.legend(fontsize=15,frameon=False,loc=(1,-.10))
         ax.set_xticks([-3,-2,-1,0,1,2,3,4,5])
@@ -694,3 +730,8 @@ class Population:
         ax.set_frame_on(False)
         
         return fig, ax
+
+# p = Population(ic50_data='cycloguanil_ic50.csv',
+#                         curve_type='pharm',
+#                         constant_pop=True)
+# p.simulate()
