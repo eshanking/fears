@@ -640,12 +640,12 @@ class Population:
 
         return entropy
     
-    def plot_fitness_curves(self,fig_title=''):
-    
+    def plot_fitness_curves(self,fig_title='',plot_r0 = False):
+        
         drugless_rates = self.drugless_rates
         ic50 = self.ic50
         
-        fig, ax = plt.subplots(figsize = (13,6))
+        fig, ax = plt.subplots(figsize = (10,6))
         
         powers = np.linspace(-3,5,20)
         conc = np.power(10*np.ones(powers.shape[0]),powers)
@@ -668,8 +668,18 @@ class Population:
             #         fit[j] = self.gen_fitness(allele,conc[j],drugless_rates,ic50)
             for j in range(conc.shape[0]):
                 fit[j] = self.gen_fitness(allele,conc[j],drugless_rates,ic50)
+                
+            if plot_r0:
+                fit = fit - self.death_rate
+                ylabel = '$R_{0}$'
+            else:
+                ylabel = 'Growth Rate'
+                
             ax.plot(powers,fit,linewidth=3,label=str(self.int_to_binary(allele)))
-
+        
+        thresh = np.ones(powers.shape)
+        ax.plot(powers,thresh,linestyle='dashdot',color='black',linewidth=3)
+        
         ax.legend(fontsize=15,frameon=False,loc=(1,-.10))
         ax.set_xticks([-3,-2,-1,0,1,2,3,4,5])
         ax.set_xticklabels(['$10^{-3}$','$10^{-2}$','$10^{-1}$','$10^{0}$',
@@ -680,7 +690,7 @@ class Population:
         plt.yticks(fontsize=18)
         
         plt.xlabel('Drug concentration ($\mathrm{\mu}$M)',fontsize=20)
-        plt.ylabel('Growth Rate',fontsize=20)
+        plt.ylabel(ylabel,fontsize=20)
         ax.set_frame_on(False)
         
         return fig, ax
