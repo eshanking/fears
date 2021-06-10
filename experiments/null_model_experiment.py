@@ -69,7 +69,7 @@ options = {
            'plot':True,
            'ic50_data':'cycloguanil_ic50.csv',
            'constant_pop':True,
-           'stop_condition':True,
+           'stop_condition':False,
            'curve_type':'pharm',
            'n_sims':10,
            'plot':True

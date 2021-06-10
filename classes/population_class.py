@@ -794,7 +794,7 @@ class Population:
 
         return entropy
     
-    def plot_fitness_curves(self,fig_title='',plot_r0 = False):
+    def plot_fitness_curves(self,fig_title='',plot_r0 = False,save=False):
         
         drugless_rates = self.drugless_rates
         ic50 = self.ic50
@@ -845,6 +845,9 @@ class Population:
         plt.xlabel('Drug concentration ($\mathrm{\mu}$M)',fontsize=20)
         plt.ylabel(ylabel,fontsize=20)
         ax.set_frame_on(False)
+        
+        if save:
+            plt.savefig('fitness_curve.pdf',bbox_inches="tight")
         
         return fig, ax
 
