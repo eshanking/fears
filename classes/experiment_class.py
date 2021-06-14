@@ -18,6 +18,10 @@ class Experiment():
                  n_sims = 1,
                  curve_types = None,
                  max_doses = None,
+                 low_dose=None,
+                 mid_dose=None,
+                 max_dose=None,
+                 transition_times = None,
                  inoculants = None,
                  experiment_type = None,
                  prob_drops = None,
@@ -41,7 +45,8 @@ class Experiment():
                                'drug-regimen',
                                'dose-entropy',
                                'rate-survival',
-                               'bottleneck']
+                               'bottleneck',
+                               'ramp_up_down']
         
         if curve_types is not None:
             if not all(elem in allowed_types for elem in curve_types):
@@ -92,6 +97,17 @@ class Experiment():
         
         # if experiment_type == 'inoculant-survival' and inoculants is None:
         #     raise Exception('The experiment type is set to inoculant-survival, but no inoculants are given.')
+        
+        if self.experiment_type == 'ramp_up_down':
+            self.p_landscape = Population(consant_pop = True,
+                                          carrying_cap = False,
+                                          static_landscape = True,
+                                          **self.population_options)
+            self.p_seascape = Population(consant_pop = True,
+                                          carrying_cap = False,
+                                          **self.population_options)
+            self.set_ramp_ud(self.p_landscape)
+            self.set_ramp_ud(self.p_seascape)
         
         if self.experiment_type == 'bottleneck':
             for dc in self.duty_cycles:
@@ -359,5 +375,11 @@ class Experiment():
                 regimen[i] = 1
                 
         return regimen
+    
+    def set_ramp_ud(self,p):
+        
+        drug_curve = np.zeros()
+        
+        return drug_curve
         
 ###############################################################################

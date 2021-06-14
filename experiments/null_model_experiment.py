@@ -52,34 +52,51 @@ import matplotlib.pyplot as plt
 init_counts = np.zeros(16)
 init_counts[0] = 10**5
 
+# options = {
+#            'doubling_time':1.5,
+#            'death_rate':0.016,
+#            'mut_rate':10**-9,
+#            'carrying_cap':False,
+#            'max_cells':10**11,
+#            'n_timestep':1000,
+#            'init_counts':init_counts,
+#            'k_abs':0.001,
+#            'k_elim':10**-5,
+#            'max_dose':10**0,
+#            'dose_schedule':24,
+#            'pad_right':True,
+#            'timestep_scale':2,
+#            'plot':True,
+#            'ic50_data':'cycloguanil_ic50.csv',
+#            'constant_pop':True,
+#            'stop_condition':False,
+#            'curve_type':'pharm',
+#            'n_sims':10,
+#            'plot':True
+#            }
+
 options = {
            'doubling_time':1.5,
-           'death_rate':0.016,
-           'mut_rate':10**-9,
-           'carrying_cap':False,
-           'max_cells':10**11,
-           'n_timestep':1000,
-           'init_counts':init_counts,
+           'death_rate':0,
+           'mut_rate':10**-4,
+           'max_cells':10**6,
            'k_abs':0.001,
            'k_elim':10**-5,
-           'max_dose':10**3,
-           'dose_schedule':24,
-           'pad_right':True,
-           'timestep_scale':2,
-           'plot':True,
-           'ic50_data':'cycloguanil_ic50.csv',
-           'constant_pop':True,
-           'stop_condition':False,
+           'max_dose':10**0,
            'curve_type':'pharm',
-           'n_sims':10,
-           'plot':True
+           'timestep_scale':20,
+           'n_timestep':1000,
+           'constant_pop':True,
+           'carrying_cap':False,
+           'stop_condition':True,
+           'n_sims':10
            }
 
 p_seascape = Population(**options)
 
 seascape_fix_times = np.array(p_seascape.simulate())*(p_seascape.timestep_scale/24)
 
-p_landscape = Population(static_landscape=True,
+p_landscape = Population(static_topology=True,
                           **options)
 
 landscape_fix_times = np.array(p_landscape.simulate())*(p_landscape.timestep_scale/24)
@@ -96,6 +113,6 @@ ax.scatter(x,landscape_fix_times)
 ax.set_ylabel('Fixation time (days)',fontsize=12)
 ax.set_xticklabels(['Seascape','Landscape'],fontsize=12)
 
-ax.set_ylim([10,80])
+# ax.set_ylim([10,80])
 
-# plt.savefig('fixation_time.pdf',bbox_inches="tight")
+plt.savefig('fixation_time.pdf',bbox_inches="tight")

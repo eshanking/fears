@@ -46,6 +46,7 @@ class Population:
                  prob_drop=0, 
                  slope = None, 
                  static_landscape = False,
+                 static_topology = False,
                  stop_condition = False,
                  timestep_scale = 1,
                  x_lim = None, # plotting
@@ -156,6 +157,7 @@ class Population:
             self.drug_regimen = drug_regimen
         
         self.static_landscape = static_landscape
+        self.static_topology = static_topology
             
         # Visualization parameters
         self.plot = plot # boolean
@@ -204,11 +206,8 @@ class Population:
         for mm in range(N):
             for nn in range(N):
                 trans_mat[mm, nn] = self.hammingDistance( self.int_to_binary(mm) , self.int_to_binary(nn))
-        # Don't include mutant no. 4
-        
         trans_mat[trans_mat>1] = 0
         trans_mat = trans_mat/trans_mat.sum(axis=1)
-
         return trans_mat
     
     # compute fitness given a drug concentration
@@ -218,12 +217,24 @@ class Population:
         # logistic equation from Ogbunugafor 2016
         conc = conc/10**6 # concentration in uM, convert to M
         
+        if self.static_topology:
+            ic50_t = np.mean(ic50)
+        if self.static_landscape:
+            rnge = max(drugless_rate) - min(drugless_rate)
+            dr = ic50 - min(ic50)
+            dr = dr/max(dr)
+            dr = dr*rnge + min(drugless_rate)
+            drugless_rate = dr
+            ic50_t = np.mean(ic50)
+        else:
+            ic50_t = ic50[allele]
+        
         # ic50 is already log-ed in the dataset
         log_eqn = lambda d,i: d/(1+np.exp((i-np.log10(conc))/c))
         if conc <= 0:
             fitness = drugless_rate[allele]
         else:
-            fitness = log_eqn(drugless_rate[allele],ic50[allele])
+            fitness = log_eqn(drugless_rate[allele],ic50_t)
 
         return fitness
     
@@ -257,7 +268,7 @@ class Population:
         return stop_cond
     
     # Generate fitness landscape for use in the abm method
-    # Made private to avoid confusion with gen_fit_land
+    # Private to avoid confusion with gen_fit_land
     def __gen_fl_for_abm(self,conc,counts):
         
         fit_land = self.gen_fit_land(conc)
@@ -268,6 +279,9 @@ class Population:
             max_fitness = max(fit_land)
             fit_land = self.gen_fit_land(self.max_dose)
             fit_land = fit_land*max_fitness/max(fit_land)
+        
+        if self.static_topology:
+            fit_land = self.gen_fit_land(conc)
         
         # Scale division rates based on carrying capacity
         if self.carrying_cap:
@@ -437,10 +451,11 @@ class Population:
             
         if self.debug and np.mod(mm,10) == 0:
             print(str(mm))
-            # print(str(fit_land))
+            print(str(counts))
+            print(str(fit_land))
             
-        if mm > 0 and self.bottleneck == True and np.mod(mm-self.duty_cycle*self.dose_schedule,self.dose_schedule) == 0:
-            counts = np.round(0.1*counts)
+        # if mm > 0 and self.bottleneck == True and np.mod(mm-self.duty_cycle*self.dose_schedule,self.dose_schedule) == 0:
+        #     counts = np.round(0.1*counts)
          
         counts_t = counts
 
@@ -468,7 +483,7 @@ class Population:
 
             # Add mutating cell to their final types
             counts_t +=np.bincount( mutations , minlength=n_genotype)
-            # counts[:,3] =  0
+            
             # Substract mutating cells from that allele
             daughter_counts[genotype] -=n_mut
 
@@ -538,7 +553,7 @@ class Population:
             if self.plot is True:
                 self.plot_timecourse(counts_t = counts)
 
-        return counts, fixation_time
+        return fixation_time
     
 ##############################################################################
 # Plotting methods
@@ -604,14 +619,12 @@ class Population:
                 drug_curve = self.drug_curve
                 ax2.set_ylim(0,1.1*max(drug_curve))
         
-        #    ax2.plot(drug_curve, color=color, linewidth=3.0, linestyle = 'dashed')
             ax2.plot(drug_curve, color=color, linewidth=2.0)
             ax2.tick_params(axis='y', labelcolor=color)
                 
             ax2.legend(['Drug Conc.'],loc=(1.25,0.93),frameon=False,fontsize=15)
             
             ax2.tick_params(labelsize=15)
-        #    plt.yticks(fontsize=18)
             ax2.set_title(title,fontsize=20)
         
         # if self.normalize:
@@ -624,14 +637,11 @@ class Population:
                 ax1.plot(counts[:,allele],linewidth=3.0,label=None)
                 
         ax1.legend(loc=(1.25,-.12),frameon=False,fontsize=15)
-    #    ax.legend(frameon=False,fontsize=15)
-    #        ax.legend([str(int_to_binary(allele))])
             
         ax1.set_xlim(0,self.x_lim)
         ax1.set_facecolor(color='w')
         ax1.grid(False)
     
-        # ax1.set_xlabel('Time',fontsize=20)
         ax1.set_ylabel('Cells',fontsize=20)
         ax1.tick_params(labelsize=15)
         
@@ -662,12 +672,7 @@ class Population:
         xlabels = np.array(xlabels).astype('int')
         ax1.set_xticklabels(xlabels)
         ax1.set_xlabel('Days',fontsize=20)
-            
-            
-        # x_labels = ax1.get_xlabels()
-        # for label in xlabels:
-            
-        
+
         plt.show()
         return fig
     
@@ -681,8 +686,6 @@ class Population:
         counts_t = np.zeros(counts.shape)
         for i in range(counts.shape[0]):
             counts_t[i,:] = np.divide(counts[i,:],k[i])
-            # counts_log = np.log(counts_t[i,:]+1)
-            # entropy[i] = np.dot(counts_t[i,:],counts_log)
             entropy[i] = sp.stats.entropy(counts_t[i,:])
 
         return entropy
@@ -708,11 +711,6 @@ class Population:
         ax.set_prop_cycle(cc) 
         
         for allele in range(16):
-            # if allele == 3:
-            #     fit = np.zeros(conc.shape[0])
-            # if allele > 3:
-            #     for j in range(conc.shape[0]):
-            #         fit[j] = self.gen_fitness(allele,conc[j],drugless_rates,ic50)
             for j in range(conc.shape[0]):
                 fit[j] = self.gen_fitness(allele,conc[j],drugless_rates,ic50)
                 
@@ -743,6 +741,3 @@ class Population:
             plt.savefig('fitness_curve.pdf',bbox_inches="tight")
         
         return fig, ax
-
-# p = Population()
-# p.run_abm()
