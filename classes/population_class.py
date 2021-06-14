@@ -369,12 +369,6 @@ class Population:
                 u[i] = self.max_dose
         return u
     
-    # method to generate a "death rate curve" to simulate changing drug
-    # concentration over a static landscape
-    # def gen_replication_rate_curve():
-        
-    #     return
-    
     # generates drug concentration curves
     def gen_curves(self):
         curve = np.zeros(self.n_timestep)
@@ -499,6 +493,10 @@ class Population:
         
         mm = 0
         
+        # Two main modes:
+        # Stop condition: run until the population reaches fixation
+        # Default: run for n_timestep
+        
         if self.stop_condition:
             counts = np.zeros( [1,n_genotype] , dtype=int)
             counts[0,:] = self.init_counts
@@ -514,7 +512,6 @@ class Population:
                 stop_condition = self.check_stop_cond(counts_t,mm)    
             
         else:
-            # Initialize simulation counts
             counts = np.zeros( [self.n_timestep, n_genotype] , dtype=int)
             counts[0,:] = self.init_counts
             
@@ -523,96 +520,11 @@ class Population:
                 mm+=1
                 
         return counts, mm
-        
-            
     
-    # def abm(self):
-        
-    #     n_genotype = self.n_genotype
-
-    #     # Obtain transition matrix for mutations
-    #     P = self.random_mutations( n_genotype )
-
-    #     # Keeps track of cell counts at each generation
-    #     counts = np.zeros([self.n_timestep, n_genotype], dtype=int)
-
-    #     counts[0,:] = self.init_counts
-        
-    #     mm = 0
-    #     stop_condition = False
-        
-    #     while mm < self.n_timestep-1 and not stop_condition:
-            
-    #         conc = self.drug_curve[mm]
-            
-    #         # __gen_fl_for_abm automatically considers carrying capacity, but
-    #         # it does not consider timestep scale
-    #         fit_land = self.__gen_fl_for_abm(conc, counts[mm])
-            
-    #         fit_land = fit_land*self.timestep_scale
-    #         death_rate = self.death_rate*self.timestep_scale
-    #         mut_rate = self.mut_rate*self.timestep_scale
-                
-    #         if self.debug and np.mod(mm,10) == 0:
-    #             print(str(mm))
-    #             print(str(fit_land))
-                
-    #         if mm > 0 and self.bottleneck == True and np.mod(mm-self.duty_cycle*self.dose_schedule,self.dose_schedule) == 0:
-    #             counts[mm] = np.round(0.1*counts[mm])
-             
-    #         counts[mm+1] = counts[mm]
-    
-    #         # Kill cells
-            
-    #         counts[mm+1] = counts[mm+1] - np.random.poisson(counts[mm]*death_rate)
-            
-    #         # make sure there aren't negative numbers
-            
-    #         neg_indx = counts[mm+1] < 0
-    #         counts[mm+1,neg_indx] = 0
-            
-    #         # Divide cells
-
-    #         daughter_counts = np.random.poisson(counts[mm+1]*fit_land)
-            
-    #         for genotype in np.arange(n_genotype):
-    #             # n_mut = np.random.binomial(daughter_counts[allele],mut_rate)
-    #             n_mut = np.random.poisson(daughter_counts[genotype]*mut_rate)
-                
-    #             # Substract mutating cells from that allele
-    #             daughter_counts[genotype] -=n_mut
-                            
-    #             mutations = np.random.choice(n_genotype, size=n_mut, p=P[:,genotype]).astype(np.uint8)
-    
-    #             # Add mutating cell to their final types
-    #             counts[mm+1] +=np.bincount( mutations , minlength=n_genotype)
-    #             # counts[:,3] =  0
-    #             # Substract mutating cells from that allele
-    #             daughter_counts[genotype] -=n_mut
-    
-    #         counts[mm+1] += daughter_counts
-            
-    #         # Normalize to constant population            
-    #         if self.constant_pop:
-    #             counts_t = counts[mm+1].astype('float') # prevent overflow or underflow errors
-    #             cur_size = np.sum(counts_t)
-    #             counts_t = counts_t/cur_size
-    #             counts_t = counts_t*self.max_cells
-    #             counts[mm+1] = counts_t.astype('int')
-    #         mm+=1
-
-    #     return counts
-##############################################################################
-    
-    # TODO: rewrite simulate method
-    # Runs abm simulation n_sim times and averages results. Then sets self.counts to final result. Also quantifies survival number
     def simulate(self):
-        
-        counts_t = np.zeros([self.n_timestep,self.n_genotype])
+    
+        counts = np.zeros([self.n_timestep,self.n_genotype])
         fixation_time = []
-        # counts = np.zeros([self.n_timestep,self.n_genotype])
-        # counts_survive = np.zeros([self.n_timestep,self.n_genotype])
-        # counts_extinct = np.zeros([self.n_timestep,self.n_genotype])
         
         # n_survive = 0
         for i in range(self.n_sims):
@@ -620,36 +532,17 @@ class Population:
             if self.prob_drop > 0:
                 self.drug_curve,u = self.gen_curves()
             
-            counts_t, mm = self.run_abm()
-            
+            counts, mm = self.run_abm()
             fixation_time.append(mm)
-                
-        #     if any(counts_t[-1,:]>0.1*self.max_cells):
-        #         n_survive+=1
-        #         counts_survive += counts_t
-            if self.plot is True:
-                # title_t = 'Dose = ' + str(self.max_dose) + ' uM, survived'
-                self.plot_timecourse(counts_t = counts_t)
-        #     else:
-        #         counts_extinct += counts_t
-        #         if self.plot is True:
-        #             # title_t = 'Dose = ' + str(self.max_dose) + ' uM, extinct'
-        #             self.plot_timecourse(counts_t = counts_t)           
 
-            # counts+=counts_t
-                                                                                                      
-        # counts = counts/self.n_sims
-        # counts_survive = counts_survive/n_survive
-        # if  (self.n_sims - n_survive) > 0:
-        #     counts_extinct = counts_extinct/(self.n_sims-n_survive)
-        
-        # self.counts = counts
-        # self.counts_survive = counts_survive
-        # self.counts_extinct = counts_extinct
-        
-        # return counts, n_survive
-        return fixation_time
+            if self.plot is True:
+                self.plot_timecourse(counts_t = counts)
+
+        return counts, fixation_time
     
+##############################################################################
+# Plotting methods
+  
     def plot_timecourse(self,counts_t=None,title_t=None):
         
         if (self.counts == 0).all() and counts_t is None:
