@@ -1,11 +1,12 @@
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-from cycler import cycler
-import seaborn as sns
-import scipy as sp
+# import matplotlib.pyplot as plt
+# from cycler import cycler
+# import seaborn as sns
+# import scipy as sp
 import math
 from fears.src import utils
+from fears.utilities import plotter, pharm, fitness
 
 class Population:
 ###############################################################################    
@@ -210,47 +211,7 @@ class Population:
         trans_mat = trans_mat/trans_mat.sum(axis=1)
         return trans_mat
     
-    # compute fitness given a drug concentration
-    def gen_fitness(self,allele,conc,drugless_rate,ic50):        
-        c = -.6824968 # empirical curve fit
-
-        # logistic equation from Ogbunugafor 2016
-        conc = conc/10**6 # concentration in uM, convert to M
-        
-        if self.static_topology:
-            ic50_t = np.mean(ic50)
-        if self.static_landscape:
-            rnge = max(drugless_rate) - min(drugless_rate)
-            dr = ic50 - min(ic50)
-            dr = dr/max(dr)
-            dr = dr*rnge + min(drugless_rate)
-            drugless_rate = dr
-            ic50_t = np.mean(ic50)
-        else:
-            ic50_t = ic50[allele]
-        
-        # ic50 is already log-ed in the dataset
-        log_eqn = lambda d,i: d/(1+np.exp((i-np.log10(conc))/c))
-        if conc <= 0:
-            fitness = drugless_rate[allele]
-        else:
-            fitness = log_eqn(drugless_rate[allele],ic50_t)
-
-        return fitness
-    
-    def gen_fit_land(self,conc):
-        
-        fit_land = np.zeros(self.n_genotype)
-        
-        if self.fitness_data == 'generate':
-            for kk in range(self.n_genotype):
-                fit_land[kk] = self.gen_fitness(kk,conc,self.drugless_rates,self.ic50)/self.doubling_time
-        elif self.fitness_data == 'manual':
-            fit_land = self.landscape_data/self.doubling_time
-        
-        return fit_land
-    
-    # check if the most fit mutant is the most prevalent
+        # check if the most fit mutant is the most prevalent
     def check_stop_cond(self,counts,mm):
         final_landscape = self.gen_fit_land(self.max_dose)
         fittest_genotype = final_landscape.argmax()
@@ -266,173 +227,6 @@ class Population:
             stop_cond = True
             
         return stop_cond
-    
-    # Generate fitness landscape for use in the abm method
-    # Private to avoid confusion with gen_fit_land
-    def __gen_fl_for_abm(self,conc,counts):
-        
-        fit_land = self.gen_fit_land(conc)
-        
-        # takes the landscape at the max dose and scales the replication rate
-        # according to drug concentration
-        if self.static_landscape:
-            max_fitness = max(fit_land)
-            fit_land = self.gen_fit_land(self.max_dose)
-            fit_land = fit_land*max_fitness/max(fit_land)
-        
-        if self.static_topology:
-            fit_land = self.gen_fit_land(conc)
-        
-        # Scale division rates based on carrying capacity
-        if self.carrying_cap:
-            division_scale = 1-np.sum(counts)/self.max_cells
-        else:
-            division_scale = 1
-
-        if counts.sum()>self.max_cells:
-            division_scale = 0
-        
-        fit_land = fit_land*division_scale
-        
-        return fit_land
-    
-###############################################################################
-    # Methods for generating drug curves
-    
-    # Equation for a simple 1 compartment pharmacokinetic model
-    def pharm_eqn(self,t,k_elim=None,k_abs=None,max_dose=None):
-        
-        # scale constants according to timestep scale
-        
-        if k_elim is None:
-            k_elim = self.k_elim
-        if k_abs is None:
-            k_abs = self.k_abs
-        if max_dose is None:
-            max_dose = self.max_dose
-        
-        k_elim = k_elim*self.timestep_scale
-        k_abs = k_abs*self.timestep_scale
-        
-        conc = np.exp(-k_elim*t)-np.exp(-k_abs*t)
-        t_max = np.log(k_elim/k_abs)/(k_elim-k_abs)
-        conc = conc/(np.exp(-k_elim*t_max)-np.exp(-k_abs*t_max))
-        conc = conc*max_dose
-        return conc
-
-    # Convolve dose regimen u with pharmacokinetic model
-    def convolve_pharm(self,u):
-                       # k_elim=0.01,
-                       # k_abs=0.1,
-                       # max_dose=1):
-        k_elim = self.k_elim
-        k_abs = self.k_abs
-        max_dose = self.max_dose
-        
-        pharm = np.zeros(self.n_timestep)
-        for i in range(self.n_timestep):
-            pharm[i] = self.pharm_eqn(i,k_elim=k_elim,k_abs=k_abs,max_dose=max_dose)
-        
-        conv = np.convolve(u,pharm)
-        conv = conv[0:self.n_timestep]
-        return conv
-    
-    # Generates an impulse train to input to convolve_pharm()
-    def gen_impulses(self):
-        
-        u = np.zeros(self.n_timestep)
-        impulse_indx = [0]
-        
-        i = 0
-        
-        # generate the drug dose regimen
-        while impulse_indx[i] < self.n_timestep*self.timestep_scale-self.dose_schedule:
-            impulse_indx.append(self.dose_schedule*(i+1))
-            i+=1
-        
-        impulse_indx = np.array(impulse_indx)/self.timestep_scale
-        
-        # eliminate random doses
-        keep_indx = np.random.rand(len(impulse_indx)) > self.prob_drop
-        
-        impulse_indx = impulse_indx[keep_indx]
-        
-        impulse_indx = impulse_indx.astype(int)
-        
-        u[impulse_indx]=1 # list of impulses at the simulated drug dosage times
-        return u
-    
-    # method to simulate an evolutionary on_off by pulsing drug 
-    # concentration
-    def gen_on_off_regimen(self,duty_cycle=None):
-        
-        if duty_cycle is None:
-            duty_cycle= self.duty_cycle
-        if duty_cycle is None:
-            duty_cycle = 0.5
-            
-        u = np.zeros(self.n_timestep)
-        on = False
-        for i in range(self.n_timestep):
-            if np.mod(i,self.dose_schedule/self.timestep_scale) == 0:
-                on = True
-                off_time = i + round((self.dose_schedule*duty_cycle))/self.timestep_scale
-            if i == off_time:
-                on = False
-            if on:
-                u[i] = self.max_dose
-        return u
-    
-    # generates drug concentration curves
-    def gen_curves(self):
-        curve = np.zeros(self.n_timestep)
-        # print('hi')
-        u = None
-        if self.curve_type == 'linear': # aka ramp linearly till timestep defined by steepness
-            # cur_dose = 0
-            for i in range(self.n_timestep):
-                # if i <= self.steepness:
-                #     slope = (self.max_dose-10**(-3))/self.steepness
-                #     conc = slope*i+10**-3
-                # else:
-                #     # step = self.steepness
-                #     slope = (self.max_dose-10**(-3))/self.steepness
-                # if cur_dose < self.max_dose:
-                conc = self.slope*i*self.timestep_scale
-                
-                if conc > self.max_dose:
-                    conc=self.max_dose
-                # else:
-                #     conc = self.max_dose
-                # cur_dose = conc
-                    # conc = slope*i+10**-3
-                curve[i]=conc
-                
-        elif self.curve_type == 'constant':
-            curve[:] = self.max_dose
-            # print('here')
-
-        elif self.curve_type == 'heaviside':
-            for i in range(self.n_timestep):
-                if i <= self.h_step:
-                    curve[i] = self.min_dose
-                else:
-                    curve[i] = self.max_dose 
-        
-        # Two compartment pharmacokinetic model
-        elif self.curve_type == 'pharm':
-            for i in range(self.n_timestep):
-                curve[i] = self.pharm_eqn(i)
-        
-        # Pulsed convolves an impulse train with the 1-compartment model
-        elif self.curve_type == 'pulsed':
-            u = self.gen_impulses()
-            curve = self.convolve_pharm(u)
-            
-        elif self.curve_type == 'on_off':
-            curve = self.gen_on_off_regimen()
-            
-        return curve, u
 
 ##############################################################################
     # core evolutionary model
@@ -552,192 +346,58 @@ class Population:
 
             if self.plot is True:
                 self.plot_timecourse(counts_t = counts)
-
+                
+        self.counts = counts
         return fixation_time
-    
+
 ##############################################################################
-# Plotting methods
+# Wrapper methods for fitness
+
+    def gen_fitness(self,allele,conc,drugless_rate,ic50):
+        fit = fitness.gen_fitness(self,allele,conc,drugless_rate,ic50)
+        return fit
+    
+    def gen_fit_land(self,conc):
+        fit_land = fitness.gen_fit_land(self,conc)
+        return fit_land
+    
+    # Private to avoid confusion with gen_fit_land
+    def __gen_fl_for_abm(self,conc,counts):
+        fit_land = fitness.gen_fl_for_abm(self,conc,counts)
+        return fit_land
+    
+###############################################################################
+# Wrapper methods for generating drug concentration curves
+
+    def pharm_eqn(self,t,k_elim=None,k_abs=None,max_dose=None):
+        conc = pharm.pharm_eqn(self,t,k_elim=k_elim,k_abs=k_abs,max_dose=max_dose)
+        return conc
+    
+    def convolve_pharm(self,u):
+        conv = pharm.convolve_pharm(self,u)
+        return conv
+    
+    def gen_impulses(self):
+        u = pharm.gen_impulses(self)
+        return u
+    
+    def gen_on_off(self,duty_cycle=None):
+        u = pharm.gen_on_off(self,duty_cycle=duty_cycle)
+        return u
+    
+    def gen_curves(self):
+        curve, u = pharm.gen_curves(self)
+        return curve, u
+##############################################################################
+# Wrapper methods for plotting
   
     def plot_timecourse(self,counts_t=None,title_t=None):
-        
-        if (self.counts == 0).all() and counts_t is None:
-            print('No data to plot!')
-            return
-        elif counts_t is None:
-            counts = self.counts
-        else:
-            counts = counts_t # an input other than self overrides self
-        if title_t is not None:
-            title = title_t
-        else:
-            title = self.fig_title    
-            
-        left = 0.1
-        width = 0.8
-        
-        if self.plot_entropy == True:
-            fig,(ax1,ax3) = plt.subplots(2,1,figsize=(6,4),sharex=True) 
-            ax3.set_position([left, 0.2, width, 0.2]) # ax3 is entropy
-        else:
-            fig,ax1 = plt.subplots(1,1,figsize=(6,4),sharex=True)
-        
-        ax1.set_position([left, 0.5, width, 0.6]) # ax1 is the timecourse
-                
-        counts_total = np.sum(counts,axis=0)
-        
-        sorted_index = counts_total.argsort()
-        sorted_index_big = sorted_index[-8:]
-        
-        colors = sns.color_palette('bright')
-        colors = np.concatenate((colors[0:9],colors[0:7]),axis=0)
-        
-        # shuffle colors
-        colors[[14,15]] = colors[[15,14]]
-        
-        cc = (cycler(color=colors) + 
-              cycler(linestyle=['-', '-','-','-','-','-','-','-','-',
-                                '--','--','--','--','--','--','--']))
-        
-        ax1.set_prop_cycle(cc)
-
-        color = [0.5,0.5,0.5]
-        
-        if self.fitness_data == 'generate':
-            ax2 = ax1.twinx() # ax2 is the drug timecourse
-            ax2.set_position([left, 0.5, width, 0.6])
-            ax2.set_ylabel('Drug Concentration (uM)', color=color,fontsize=20) # we already handled the x-label with ax1
-            
-            if self.drug_log_scale:
-                if all(self.drug_curve>0):
-                    drug_curve = np.log10(self.drug_curve)
-                yticks = np.log10([10**-4,10**-3,10**-2,10**-1,10**0,10**1,10**2,10**3])    
-                ax2.set_yticks(yticks)
-                ax2.set_yticklabels(['0','$10^{-3}$','$10^{-2}$','$10^{-1}$','$10^{0}$',
-                                 '$10^1$','$10^2$','$10^3$'])
-                ax2.set_ylim(-4,3)
-            else:
-                drug_curve = self.drug_curve
-                ax2.set_ylim(0,1.1*max(drug_curve))
-        
-            ax2.plot(drug_curve, color=color, linewidth=2.0)
-            ax2.tick_params(axis='y', labelcolor=color)
-                
-            ax2.legend(['Drug Conc.'],loc=(1.25,0.93),frameon=False,fontsize=15)
-            
-            ax2.tick_params(labelsize=15)
-            ax2.set_title(title,fontsize=20)
-        
-        # if self.normalize:
-        #     counts = counts/np.max(counts)
-            
-        for allele in range(counts.shape[1]):
-            if allele in sorted_index_big:
-                ax1.plot(counts[:,allele],linewidth=3.0,label=str(self.int_to_binary(allele)))
-            else:
-                ax1.plot(counts[:,allele],linewidth=3.0,label=None)
-                
-        ax1.legend(loc=(1.25,-.12),frameon=False,fontsize=15)
-            
-        ax1.set_xlim(0,self.x_lim)
-        ax1.set_facecolor(color='w')
-        ax1.grid(False)
-    
-        ax1.set_ylabel('Cells',fontsize=20)
-        ax1.tick_params(labelsize=15)
-        
-        if self.plot_entropy == True:
-            e = self.entropy(counts)
-            
-            ax3.plot(e,color='black')
-            ax3.set_xlabel('Time',fontsize=20)
-            ax3.set_ylabel('Entropy',fontsize=20)
-            if self.entropy_lim is not None:
-                ax3.set_ylim(0,self.entropy_lim)
-            ax3.tick_params(labelsize=15)
-        
-        if self.y_lim is not None:
-            y_lim = self.y_lim
-        else:
-            y_lim = np.max(counts) + 0.05*np.max(counts)
-        
-        if self.counts_log_scale:
-            ax1.set_yscale('log')
-            ax1.set_ylim(1,5*10**5)
-        else:
-            ax1.set_ylim(0,y_lim)
-        
-        xlabels = ax1.get_xticks()
-        xlabels = xlabels*self.timestep_scale
-        xlabels = xlabels/24
-        xlabels = np.array(xlabels).astype('int')
-        ax1.set_xticklabels(xlabels)
-        ax1.set_xlabel('Days',fontsize=20)
-
-        plt.show()
+        fig = plotter.plot_timecourse(self,counts_t=counts_t,title_t=title_t)
         return fig
     
-    # Calculate the shannon-gibbs entropy (normalized population size)
-    def entropy(self,counts=None):
-        if counts is None:
-            counts = self.counts
-
-        k = np.sum(counts,1)
-        entropy = np.zeros(counts.shape[0])
-        counts_t = np.zeros(counts.shape)
-        for i in range(counts.shape[0]):
-            counts_t[i,:] = np.divide(counts[i,:],k[i])
-            entropy[i] = sp.stats.entropy(counts_t[i,:])
-
-        return entropy
-    
     def plot_fitness_curves(self,fig_title='',plot_r0 = False,save=False):
-        
-        drugless_rates = self.drugless_rates
-        ic50 = self.ic50
-        
-        fig, ax = plt.subplots(figsize = (10,6))
-        
-        powers = np.linspace(-3,5,20)
-        conc = np.power(10*np.ones(powers.shape[0]),powers)
-        fit = np.zeros(conc.shape[0])
-        
-        colors = sns.color_palette('bright')
-        colors = np.concatenate((colors[0:9],colors[0:7]),axis=0)
-        colors[[14,15]] = colors[[15,14]]
-        
-        cc = (cycler(color=colors) + 
-               cycler(linestyle=['-', '-','-','-','-','-','-','-','-',
-                                '--','--','--','--','--','--','--']))
-        ax.set_prop_cycle(cc) 
-        
-        for allele in range(16):
-            for j in range(conc.shape[0]):
-                fit[j] = self.gen_fitness(allele,conc[j],drugless_rates,ic50)
-                
-            if plot_r0:
-                fit = fit - self.death_rate
-                ylabel = '$R_{0}$'
-                thresh = np.ones(powers.shape)
-                ax.plot(powers,thresh,linestyle='dashdot',color='black',linewidth=3)
-            else:
-                ylabel = 'Growth Rate'
-                
-            ax.plot(powers,fit,linewidth=3,label=str(self.int_to_binary(allele)))
-        
-        ax.legend(fontsize=15,frameon=False,loc=(1,-.10))
-        ax.set_xticks([-3,-2,-1,0,1,2,3,4,5])
-        ax.set_xticklabels(['$10^{-3}$','$10^{-2}$','$10^{-1}$','$10^{0}$',
-                             '$10^1$','$10^2$','$10^3$','$10^4$','$10^5$'])
-        
-        plt.title(fig_title,fontsize=20)
-        plt.xticks(fontsize=18)
-        plt.yticks(fontsize=18)
-        
-        plt.xlabel('Drug concentration ($\mathrm{\mu}$M)',fontsize=20)
-        plt.ylabel(ylabel,fontsize=20)
-        ax.set_frame_on(False)
-        
-        if save:
-            plt.savefig('fitness_curve.pdf',bbox_inches="tight")
-        
-        return fig, ax
+        fig = plotter.plot_fitness_curves(self,fig_title='',plot_r0 = plot_r0,save=save)
+        return fig
+    
+# p = Population()
+# p.simulate()
