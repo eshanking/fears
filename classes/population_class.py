@@ -9,6 +9,67 @@ from fears.src import utils
 from fears.utilities import plotter, pharm, fitness
 
 class Population:
+    
+    """Population class: the fundamental object of FEArS.
+    
+    Contains basic information about the organism being simulated, the 
+    environment, and the evolutionary algorithm.
+    ...
+    
+    Attributes
+    __________
+    passage : bool
+        if true, simulates passaging cells by reducing the population to 10% 
+        at intervals given by drug_regimen.
+    carrying_cap : bool
+        if true, sets the carrying capacity to max_cells.
+    curve_type : str
+        determines the drug concentration curve. 
+        Allowed types:
+            constant: constant at max dose.
+            linear: linear ramp to max_dose at a rate given by slope.
+            heaviside: jumps drug concentration from min_dose to max_dose at a
+                timestep given by h_step
+            pharm: drug curve follows 1-compartment pharmacokinetic model. 
+                k_abs: absorption coefficient
+                k_elim: eliminiation coefficient
+            pulsed: simulates a patient taking a drug dose at intervals given 
+                by dose_schedule
+            on_off: switches between 'on' (max_dose) and 'off' (min_dose) at
+                intervals given by dose_schedule. On/off ratio set by 
+                duty_cycle
+    counts_log_scale : bool
+        if true, plots the results on a log scale
+    constant_pop : enforces a constant population size (max_cells)
+    drugless_data : str
+        filename for the drugless growth rates (ogbunugafor_ic50.csv by 
+        default). Searches for files in the fears/data folder.
+    death_rate : float
+        death rate
+    doubling_time : float
+        average doubling time of the model organism (hours)
+    dose_schedule : int
+        timesteps between simulated doses
+    drug_log_scale : bool
+        if true, plots the drug concentration curve on a log scale
+    drug_curve : array
+        optional custom drug concentration curve. Overrides all other drug 
+        concentration options.
+    debug : bool
+        if true, prints every 10th timestep
+    duty_cycle : float
+        on/off ratio of the on/off regimen.
+    entropy_lim : list
+        y axis limits for plotting the entropy curve
+    fig_title : str
+        optional figure title
+    fitness_data : str
+        generate: generate the fitness data based on the drugless growth rates
+        and ic50.
+        manual: get fitness data from self.landscape_data
+    h_step: 
+    
+    """
 ###############################################################################    
     # Initializer
     def __init__(self,
@@ -23,7 +84,6 @@ class Population:
                  dose_schedule=12, # dose every x hours
                  drug_log_scale = False, # plot the drug concentration curve on a log scale
                  drug_curve = None, # input a custom drug concentration curve
-                 drug_regimen = None, # for modeling drug regimens
                  debug=False, # print the current time step
                  duty_cycle = None,
                  entropy_lim = None, # entropy plotting limits
@@ -57,6 +117,12 @@ class Population:
         # Evolutionary parameters
         
         # Number of generations (time steps)
+        
+        if carrying_cap is False and constant_pop is False:
+            print('\nWarning: no limit set on population size! Consider'
+                          + ' enforcing a carrying capacity or constant'
+                          + ' population.')
+        
         self.n_timestep = n_timestep
         self.stop_condition = stop_condition
         self.max_cells = max_cells
@@ -151,11 +217,6 @@ class Population:
             self.drug_curve,u = self.gen_curves()
         else:
             self.drug_curve = drug_curve
-            
-        if drug_regimen is None:
-            self.drug_regimen = u
-        else:
-            self.drug_regimen = drug_regimen
         
         self.static_landscape = static_landscape
         self.static_topology = static_topology
@@ -211,7 +272,7 @@ class Population:
         trans_mat = trans_mat/trans_mat.sum(axis=1)
         return trans_mat
     
-        # check if the most fit mutant is the most prevalent
+    # check if the most fit mutant is the most prevalent
     def check_stop_cond(self,counts,mm):
         final_landscape = self.gen_fit_land(self.max_dose)
         fittest_genotype = final_landscape.argmax()
