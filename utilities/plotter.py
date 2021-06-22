@@ -2,6 +2,8 @@ import matplotlib.pyplot as plt
 from cycler import cycler
 import seaborn as sns
 import numpy as np
+import os
+from fears.src import utils
 
 def plot_timecourse(pop,counts_t=None,title_t=None):
     
@@ -172,3 +174,88 @@ def plot_fitness_curves(pop,fig_title='',plot_r0 = False,save=False):
         plt.savefig('fitness_curve.pdf',bbox_inches="tight")
     
     return fig
+
+def plot_msw(pop,fitness_curves,conc,genotypes,save=False):
+    """
+    plot_msw: method for plotting mutant selection window figures.
+
+    Parameters
+    ----------
+    pop : population_class object
+        
+    fitness_curves : numpy array
+        Columns 1-N represents a genotype that is a neighbor of column 0 
+        (ancestor). Rows represent drug concentration.
+    conc : numpy array
+        Drug concentration used to calculate fitness_curves
+    genotypes : list of ints
+        Genotypes that were used to calculate the fitness_curves.
+    save : bool
+    
+    Returns
+    -------
+    fig : figure object
+        MSW figures
+
+    """
+    n_genotype = fitness_curves.shape[1]
+    rows = int((n_genotype-1)/2)
+    fig, ax = plt.subplots(rows,2)
+    g = 1
+    wt_fitness_curve = fitness_curves[:,0]
+    for r in range(rows):
+        for col in range(2):
+           
+            ax[r,col].plot(conc,wt_fitness_curve,label='wt',linewidth=3)
+            
+            cur_fitness_curve = fitness_curves[:,g]
+            gt = genotypes[g]
+            bitstring = pop.int_to_binary(gt)    
+            ax[r,col].plot(conc,cur_fitness_curve,label=bitstring,linewidth=3)
+            
+            msw_left_assigned = False
+            msw_right_assigned = False
+            if wt_fitness_curve[0] > cur_fitness_curve[0] \
+                and any(cur_fitness_curve>wt_fitness_curve):
+                for c in range(len(conc)):
+                    if wt_fitness_curve[c] < cur_fitness_curve[c] \
+                        and msw_left_assigned is False:
+                        msw_left = conc[c]
+                        msw_left_assigned = True
+                    if (cur_fitness_curve[c] < 1 
+                        and msw_right_assigned is False):
+                        msw_right = conc[c]
+                        msw_right_assigned = True
+                if msw_left < msw_right:
+                    ax[r,col].axvspan(msw_left, msw_right, 
+                                      facecolor='#2ca02c',alpha=0.5,
+                                      label='MSW')
+            
+            ax[r,col].set_xscale('log')
+            ax[r,col].legend(fontsize=10,frameon=False)
+
+            g+=1
+            
+    for r in range(rows):
+        ax[r,0].set_ylabel('$R_{0}$',fontsize=10)
+    for c in range(2):
+        ax[rows-1,c].set_xlabel('Drug concentration ($\mathrm{\mu}$M)',
+                              fontsize=10)
+    if save:
+        r = utils.get_project_root()
+        savename = str(r) + os.sep + 'figures' + os.sep + 'msw.pdf'
+        plt.savefig(savename,bbox_inches="tight")
+    
+    return fig
+
+
+
+
+
+
+
+
+
+
+
+

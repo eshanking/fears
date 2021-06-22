@@ -1,15 +1,12 @@
-# Non-interactive class for running experiments and saving raw data.
-# Does not produce images by default.
-
 from fears.classes.population_class import Population
+from fears.src import utils
+from fears.utilities import plotter
 import numpy as np
-# import matplotlib.pyplot as plt
 import pandas as pd
-import warnings
+# import warnings
 import os
 import time
 import pickle
-from fears.src import utils
 
 class Experiment():
     
@@ -85,7 +82,7 @@ class Experiment():
         
         if experiment_type is None:
             self.experiment_type = 'dose-survival'
-            warnings.warn('No experiment type given - set to dose-survival by default.')
+            # warnings.warn('No experiment type given - set to dose-survival by default.')
         else:
             self.experiment_type = experiment_type
         
@@ -375,11 +372,53 @@ class Experiment():
                 regimen[i] = 1
                 
         return regimen
-    
+        
     def set_ramp_ud(self,p):
         
         drug_curve = np.zeros()
         
         return drug_curve
+    
+    def calculate_msw(self,genotype,pop=None,save=False):
+        if pop is None:
+            pop=self.populations[0]
+        
+        # calculate neighbors in bit-string network model
+        neighbors = self.gen_neighbors(pop,genotype)
+        genotypes = [genotype] + neighbors
+        
+        powers = np.linspace(-3,5,40)
+        conc = np.power(10*np.ones(powers.shape[0]),powers)
+        
+        fitness_curves = np.zeros((len(powers),len(genotypes)))
+        
+        drugless_rates = pop.drugless_rates
+        ic50 = pop.ic50
+        
+        for j in range(len(genotypes)):
+            for i in range(len(conc)):
+                
+                f = pop.gen_fitness(genotypes[j],
+                                    conc[i],
+                                    drugless_rates,
+                                    ic50)
+                r_0 = f-pop.death_rate
+                fitness_curves[i,j] = r_0
+        fig = plotter.plot_msw(pop,fitness_curves,conc,genotypes,save=save)
+        return fig
         
 ###############################################################################
+# Helper methods
+    def gen_neighbors(self,pop,genotype):
+        mut = range(pop.n_allele)
+        neighbors = [genotype ^ (1 << m) for m in mut]
+        
+        # neighbors = []
+        
+        # for i in range(pop.n_genotype):
+        #     s1 = pop.int_to_binary(genotype)
+        #     s2 = pop.int_to_binary(i)
+        #     if pop.hammingDistance(s1,s2) == 1:
+        #         neighbors.append(i)
+        return neighbors
+    

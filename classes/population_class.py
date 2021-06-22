@@ -184,6 +184,8 @@ class Population:
         else:
             self.init_counts = init_counts
             
+        self.n_allele = int(np.log2(self.n_genotype))
+        
         if self.constant_pop:
             self.init_counts = self.init_counts*self.max_cells/sum(self.init_counts)
             self.init_counts = np.floor(self.init_counts)
