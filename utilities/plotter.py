@@ -132,7 +132,7 @@ def plot_fitness_curves(pop,fig_title='',plot_r0 = False,save=False):
     
     powers = np.linspace(-3,5,20)
     conc = np.power(10*np.ones(powers.shape[0]),powers)
-    fit = np.zeros(conc.shape[0])
+    
     
     colors = sns.color_palette('bright')
     colors = np.concatenate((colors[0:9],colors[0:7]),axis=0)
@@ -143,19 +143,40 @@ def plot_fitness_curves(pop,fig_title='',plot_r0 = False,save=False):
                             '--','--','--','--','--','--','--']))
     ax.set_prop_cycle(cc) 
     
-    for allele in range(16):
-        for j in range(conc.shape[0]):
-            fit[j] = pop.gen_fitness(allele,conc[j],drugless_rates,ic50)
+    fit = np.zeros((pop.n_genotype,conc.shape[0]))
+    
+    for j in range(conc.shape[0]):
+        fit[:,j] = pop.gen_fit_land(conc[j])
+    
+    if plot_r0:
+        fit = fit-pop.death_rate
+        ylabel = '$R_{0}$'
+        thresh = np.ones(powers.shape)
+        ax.plot(powers,thresh,linestyle='dashdot',color='black',linewidth=3)
+    else:
+        ylabel = 'Growth Rate'
+    
+    for gen in range(pop.n_genotype):
+        ax.plot(powers,fit[gen,:],linewidth=3,label=str(pop.int_to_binary(gen)))
+        
+    # for allele in range(16):
+        
+    #     if pop.static_topology:
+    #         for j in range(conc.shape[0]):
+    #                fit[j] = pop.gen_fitness(allele,conc[j],drugless_rates,ic50)            
+    #     else:
+    #         for j in range(conc.shape[0]):
+    #             fit[j] = pop.gen_fitness(allele,conc[j],drugless_rates,ic50)
             
-        if plot_r0:
-            fit = fit - pop.death_rate
-            ylabel = '$R_{0}$'
-            thresh = np.ones(powers.shape)
-            ax.plot(powers,thresh,linestyle='dashdot',color='black',linewidth=3)
-        else:
-            ylabel = 'Growth Rate'
+    #     if plot_r0:
+    #         fit = fit - pop.death_rate
+    #         ylabel = '$R_{0}$'
+    #         thresh = np.ones(powers.shape)
+    #         ax.plot(powers,thresh,linestyle='dashdot',color='black',linewidth=3)
+    #     else:
+    #         ylabel = 'Growth Rate'
             
-        ax.plot(powers,fit,linewidth=3,label=str(pop.int_to_binary(allele)))
+    #     ax.plot(powers,fit,linewidth=3,label=str(pop.int_to_binary(allele)))
     
     ax.legend(fontsize=15,frameon=False,loc=(1,-.10))
     ax.set_xticks([-3,-2,-1,0,1,2,3,4,5])
