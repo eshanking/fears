@@ -1,9 +1,5 @@
 import numpy as np
 import pandas as pd
-# import matplotlib.pyplot as plt
-# from cycler import cycler
-# import seaborn as sns
-# import scipy as sp
 import math
 from fears.utils import plotter, pharm, fitness, dir_manager
 
@@ -162,8 +158,8 @@ class Population:
                 self.ic50_data = dir_manager.make_datapath_absolute(ic50_data)
             
             # load the data
-            self.drugless_rates = self.load_fitness(self.drugless_data)
-            self.ic50 = self.load_fitness(self.ic50_data)
+            self.drugless_rates = dir_manager.load_fitness(self.drugless_data)
+            self.ic50 = dir_manager.load_fitness(self.ic50_data)
             
             self.max_replication_rate = max(self.drugless_rates)
             self.n_genotype = self.drugless_rates.shape[0]
@@ -171,7 +167,7 @@ class Population:
         # load fitness landscape from excel file
         elif fitness_data == 'manual':
             self.landscape_path = landscape_path
-            self.landscape_data = self.load_fitness(self.landscape_path)
+            self.landscape_data = dir_manager.load_fitness(self.landscape_path)
             
             self.max_replication_rate = max(self.landscape_data)
             self.n_genotype = self.landscape_data.shape[0]
@@ -236,17 +232,7 @@ class Population:
            self.x_lim = x_lim 
         self.y_lim = y_lim
         self.entropy_lim = entropy_lim
-###############################################################################       
-        
-    # Load data
-    # also use to load ic50 and drugless growth rate (anything from a csv)
-    def load_fitness(self,data_path):
-        fitness = pd.read_csv(data_path)
-        cols = list(fitness.columns)
-        fit_array = np.array(cols)
-        fit_array = fit_array.astype('float')
-        return fit_array
-        
+
 ###############################################################################
     # ABM helper methods
     
@@ -330,13 +316,11 @@ class Population:
         daughter_counts = np.random.poisson(counts_t*fit_land)
         
         for genotype in np.arange(n_genotype):
+            
+            n_allele = int(np.log2(n_genotype))
+            
+            n_mut = np.random.poisson(daughter_counts[genotype]*mut_rate*self.n_allele)
 
-            n_mut = np.random.poisson(daughter_counts[genotype]*mut_rate)
-            # if n_mut > 0 and np.mod(mm,200)==0:
-            #     print('timestep: ' + str(mm) + 
-            #           '\ngenotype: ' + str(genotype) + 
-            #           '\ndaughters: ' + str(daughter_counts[genotype]) +
-            #           '\nn_mut: ' + str(n_mut))
             # Substract mutating cells from that allele
             daughter_counts[genotype] -= n_mut
                         
@@ -352,11 +336,6 @@ class Population:
         
         # Normalize to constant population            
         if self.constant_pop:
-            # c = counts_t.astype('float') # prevent overflow or underflow errors
-            # cur_size = np.sum(c)
-            # c = c/cur_size
-            # c = c*self.max_cells
-            # counts_t = c.astype('int')
             scale = self.max_cells/np.sum(counts_t)
             counts_t = counts_t*scale
             counts_t = np.ceil(counts_t).astype('int')
@@ -418,9 +397,9 @@ class Population:
 
             if self.plot is True:
                 self.plot_timecourse(counts_t = counts)
-                
-        self.counts = counts
+        
         avg_counts = avg_counts/self.n_sims
+        self.counts = avg_counts
         return avg_counts, fixation_time
 
 ##############################################################################
@@ -471,10 +450,3 @@ class Population:
     def plot_fitness_curves(self,fig_title='',plot_r0 = False,save=False,savename=None):
         fig = plotter.plot_fitness_curves(self,fig_title=fig_title,plot_r0 = plot_r0,save=save,savename=savename)
         return fig
-    
-    
-    
-# p2 = Population(max_cells=10**9,mut_rate=10**-3)
-# np.random.seed(10)
-# p2.simulate()
-    

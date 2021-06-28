@@ -10,6 +10,7 @@ transition_times = [800,1100]
 options = {'doubling_time':1.5,
            'death_rate':0,
            'mut_rate':10**-6,
+           'n_sims':10,
            # 'carrying_cap':False,
            'max_cells':10**9,
            'n_timestep':2000,

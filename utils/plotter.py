@@ -3,7 +3,9 @@ from cycler import cycler
 import seaborn as sns
 import numpy as np
 import os
-from fears.utils import dir_manager
+import math
+from fears.utils import dir_manager, results_manager
+import networkx as nx
 
 def plot_timecourse(pop,counts_t=None,title_t=None):
     
@@ -90,7 +92,7 @@ def plot_timecourse(pop,counts_t=None,title_t=None):
         
     for allele in range(counts.shape[1]):
         if allele in sorted_index_big:
-            ax1.plot(counts[:,allele],linewidth=3.0,label=str(pop.int_to_binary(allele)))
+            ax1.plot(counts[:,allele],linewidth=3.0,label=str(helpers.int_to_binary(allele)))
         else:
             ax1.plot(counts[:,allele],linewidth=3.0,label=None)
             
@@ -138,12 +140,19 @@ def plot_fitness_curves(pop,
                         fig_title='',
                         plot_r0 = False,
                         save=False,
-                        savename=None):
+                        savename=None,
+                        ax=None,
+                        labelsize=20,
+                        linewidth=3):
     
     # drugless_rates = pop.drugless_rates
     # ic50 = pop.ic50
     
-    fig, ax = plt.subplots(figsize = (10,6))
+    if ax is None:
+        fig, ax = plt.subplots(figsize = (10,6))
+        show_legend=True
+    else:
+        show_legend = False
     
     powers = np.linspace(-3,5,20)
     conc = np.power(10*np.ones(powers.shape[0]),powers)
@@ -167,12 +176,12 @@ def plot_fitness_curves(pop,
         fit = fit-pop.death_rate
         ylabel = '$R_{0}$'
         thresh = np.ones(powers.shape)
-        ax.plot(powers,thresh,linestyle='dashdot',color='black',linewidth=3)
+        ax.plot(powers,thresh,linestyle='dashdot',color='black',linewidth=linewidth)
     else:
         ylabel = 'Growth Rate'
     
     for gen in range(pop.n_genotype):
-        ax.plot(powers,fit[gen,:],linewidth=3,label=str(pop.int_to_binary(gen)))
+        ax.plot(powers,fit[gen,:],linewidth=linewidth,label=str(helpers.int_to_binary(gen)))
         
     # for allele in range(16):
         
@@ -193,17 +202,18 @@ def plot_fitness_curves(pop,
             
     #     ax.plot(powers,fit,linewidth=3,label=str(pop.int_to_binary(allele)))
     
-    ax.legend(fontsize=15,frameon=False,loc=(1,-.10))
+    if show_legend:
+        ax.legend(fontsize=labelsize,frameon=False,loc=(1,-.10))
     ax.set_xticks([-3,-2,-1,0,1,2,3,4,5])
     ax.set_xticklabels(['$10^{-3}$','$10^{-2}$','$10^{-1}$','$10^{0}$',
                          '$10^1$','$10^2$','$10^3$','$10^4$','$10^5$'])
     
-    plt.title(fig_title,fontsize=20)
-    plt.xticks(fontsize=18)
-    plt.yticks(fontsize=18)
+    plt.title(fig_title,fontsize=labelsize)
+    plt.xticks(fontsize=labelsize)
+    plt.yticks(fontsize=labelsize)
     
-    plt.xlabel('Drug concentration ($\mathrm{\mu}$M)',fontsize=20)
-    plt.ylabel(ylabel,fontsize=20)
+    plt.xlabel('Drug concentration ($\mathrm{\mu}$M)',fontsize=labelsize)
+    plt.ylabel(ylabel,fontsize=labelsize)
     ax.set_frame_on(False)
     
     if save:
@@ -213,7 +223,7 @@ def plot_fitness_curves(pop,
         savename = str(r) + os.sep + 'figures' + os.sep + savename
         plt.savefig(savename,bbox_inches="tight")
     
-    return fig
+    return ax
 
 def plot_msw(pop,fitness_curves,conc,genotypes,save=False):
     """
@@ -288,7 +298,12 @@ def plot_msw(pop,fitness_curves,conc,genotypes,save=False):
     
     return fig
 
-def gen_timecourse_axes(pop,counts,counts_ax,drug_curve=None,drug_ax=None):
+def gen_timecourse_axes(pop,
+                        counts,
+                        counts_ax,drug_curve=None,
+                        drug_ax=None,
+                        labelsize=15,
+                        linewidth=3):
     
     # if pop is not None:
     #     drug_log_scale = pop.drug_log_scale
@@ -325,14 +340,14 @@ def gen_timecourse_axes(pop,counts,counts_ax,drug_curve=None,drug_ax=None):
             drug_ax.set_ylim(axmin,2*max(drug_curve))
         else:
             drug_ax.set_ylim(0,1.1*max(drug_curve))
-        drug_ax.tick_params(labelsize=15)
+        drug_ax.tick_params(labelsize=labelsize)
     
     for genotype in range(counts.shape[1]):
         if genotype in sorted_index_big:
-            counts_ax.plot(counts[:,genotype],linewidth=3.0,
+            counts_ax.plot(counts[:,genotype],linewidth=linewidth,
                            label=str(pop.int_to_binary(genotype)))
         else:
-            counts_ax.plot(counts[:,genotype],linewidth=3.0,label=None)
+            counts_ax.plot(counts[:,genotype],linewidth=linewidth,label=None)
     
     if pop.counts_log_scale:
         counts_ax.set_yscale('log')
@@ -344,11 +359,11 @@ def gen_timecourse_axes(pop,counts,counts_ax,drug_curve=None,drug_ax=None):
     counts_ax.set_facecolor(color='w')
     counts_ax.grid(False)
     # counts_ax.set_ylabel('Cells',fontsize=20)
-    counts_ax.tick_params(labelsize=15)
+    counts_ax.tick_params(labelsize=labelsize)
 
     xlabels = counts_ax.get_xticks()
     xlabels = xlabels*pop.timestep_scale
-    print(str(pop.timestep_scale))
+    # print(str(pop.timestep_scale))
     xlabels = xlabels/24
     xlabels = np.array(xlabels).astype('int')
     counts_ax.set_xticklabels(xlabels)
@@ -356,11 +371,92 @@ def gen_timecourse_axes(pop,counts,counts_ax,drug_curve=None,drug_ax=None):
     return counts_ax, drug_ax
 
 
+def plot_landscape(p,conc=10**0,fitness=None,relative=True):
+    """
+    Plots a graph representation of this landscape on the current matplotlib figure.
+    If p is set to a vector of occupation probabilities, the edges in the graph will
+    have thickness proportional to the transition probability between nodes.
+    """
+    if fitness is None:
+        fitness = p.gen_fit_land(conc)
+    
+    if relative:
+        fitness = fitness-min(fitness)
+        fitness = fitness/max(fitness)
+    
+    # Figure out the length of the bit sequences we're working with
+    N = int(np.log2(len(fitness)))
 
+    # Generate all possible N-bit sequences
+    n_genotype = len(fitness)
+    genotypes = np.arange(2**N)
+    genotypes = [p.int_to_binary(g) for g in genotypes]
 
+    # Turn the unique bit sequences array into a list of tuples with the bit sequence and its corresponding fitness
+    # The tuples can still be used as nodes because they are hashable objects
+    genotypes = [(genotypes[i], fitness[i]) for i in range(len(genotypes))]
 
+    # Build hierarchical structure for N-bit sequences that differ by 1 bit at each level
+    hierarchy = [[] for i in range(N+1)]
+    for g in genotypes: hierarchy[g[0].count("1")].append(g)
 
+    # Add all unique bit sequences as nodes to the graph
+    G = nx.DiGraph()
+    G.add_nodes_from(genotypes)
 
+    # Add edges with appropriate weights depending on the TM
+    sf = 5 # edge thickness scale factor
+    TM = p.random_mutations(len(genotypes))
+    for i in range(len(TM)):
+        for j in range(len(TM[i])):
+            if TM[i][j] != 0 and i != j:
+                G.add_edge(genotypes[i], genotypes[j], weight=1)
+    
 
+    # just using spring layout to generate an initial dummy pos dict
+    pos = nx.spring_layout(G)
 
+    # # calculate how many entires in the longest row, it will be N choose N/2
+    # # because the longest row will have every possible way of putting N/2 1s (or 0s) into N bits
+    maxLen = math.factorial(N) / math.factorial(N//2)**2
 
+    # Position the nodes in a layered hierarchical structure by modifying pos dict
+    y = 1
+    for row in hierarchy:
+        if len(row) > maxLen: maxLen = len(row)
+    for i in range(len(hierarchy)):
+        levelLen = len(hierarchy[i])
+        # algorithm for horizontal spacing.. may not be 100% correct?
+        offset = (maxLen - levelLen + 1) / maxLen
+        xs = np.linspace(0 + offset / 2, 1 - offset / 2, levelLen)
+        for j in range(len(hierarchy[i])):
+            pos[hierarchy[i][j]] = (xs[j], y)
+            # labels[hierarchy[i][j]] = hierarchy[i][j][0]
+        y -= 1 / N
+
+    node_size = 800
+    
+    labels = dict(pos)
+    for k in labels.keys():
+        labels[k] = k[0]
+    
+    # # Draw the graph
+    plt.axis('off')
+    cmap='plasma'
+    
+    nx.draw(G, pos, with_labels=False, linewidths=1, node_color=fitness,
+            node_size=node_size,arrows=False,
+            vmin = min(fitness), vmax=max(fitness),cmap=cmap)
+    nx.draw_networkx_labels(G,pos,labels,font_size=10,font_color='red')
+    
+    # node_colors = 
+    # pc = mpl.collections.PatchCollection(edges, cmap=cmap)
+    # pc.set_array(edge_colors)
+    
+    sm = plt.cm.ScalarMappable(cmap=cmap, norm=plt.Normalize(vmin = min(fitness), vmax=max(fitness)))
+    sm._A = []
+    cb = plt.colorbar(sm,drawedges=False)
+    cb.outline.set_visible(False)
+    
+    ax = plt.gca()
+    return ax

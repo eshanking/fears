@@ -477,13 +477,6 @@ class Experiment():
     def gen_neighbors(self,pop,genotype):
         mut = range(pop.n_allele)
         neighbors = [genotype ^ (1 << m) for m in mut]
-        
-        # neighbors = []
-        
-        # for i in range(pop.n_genotype):
-        #     s1 = pop.int_to_binary(genotype)
-        #     s2 = pop.int_to_binary(i)
-        #     if pop.hammingDistance(s1,s2) == 1:
-        #         neighbors.append(i)
+
         return neighbors
     

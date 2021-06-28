@@ -1,5 +1,7 @@
 from pathlib import Path
 import os
+import pandas as pd
+import numpy as np
 
 def get_project_root() -> Path:
     return Path(__file__).parent.parent
@@ -27,3 +29,12 @@ def make_figurepath_absolute(filename):
 def make_directory(folder):
     if not os.path.exists(folder):
         os.mkdir(folder)
+        
+    # Load data
+    # also use to load ic50 and drugless growth rate (anything from a csv)
+def load_fitness(data_path):
+    fitness = pd.read_csv(data_path)
+    cols = list(fitness.columns)
+    fit_array = np.array(cols)
+    fit_array = fit_array.astype('float')
+    return fit_array
