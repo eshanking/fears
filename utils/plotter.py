@@ -3,7 +3,7 @@ from cycler import cycler
 import seaborn as sns
 import numpy as np
 import os
-from fears.src import utils
+from fears.utils import dir_manager
 
 def plot_timecourse(pop,counts_t=None,title_t=None):
     
@@ -54,25 +54,36 @@ def plot_timecourse(pop,counts_t=None,title_t=None):
         ax2.set_position([left, 0.5, width, 0.6])
         ax2.set_ylabel('Drug Concentration (uM)', color=color,fontsize=20) # we already handled the x-label with ax1
         
-        if pop.drug_log_scale:
-            if all(pop.drug_curve>0):
-                drug_curve = np.log10(pop.drug_curve)
-            yticks = np.log10([10**-4,10**-3,10**-2,10**-1,10**0,10**1,10**2,10**3])    
-            ax2.set_yticks(yticks)
-            ax2.set_yticklabels(['0','$10^{-3}$','$10^{-2}$','$10^{-1}$','$10^{0}$',
-                             '$10^1$','$10^2$','$10^3$'])
-            ax2.set_ylim(-4,3)
-        else:
-            drug_curve = pop.drug_curve
-            ax2.set_ylim(0,1.1*max(drug_curve))
-    
-        ax2.plot(drug_curve, color=color, linewidth=2.0)
+        # if pop.drug_log_scale:
+        #     if all(pop.drug_curve>0):
+        #         drug_curve = np.log10(pop.drug_curve)
+        #     yticks = np.log10([10**-4,10**-3,10**-2,10**-1,10**0,10**1,10**2,10**3])    
+        #     ax2.set_yticks(yticks)
+        #     ax2.set_yticklabels(['0','$10^{-3}$','$10^{-2}$','$10^{-1}$','$10^{0}$',
+        #                      '$10^1$','$10^2$','$10^3$'])
+        #     ax2.set_ylim(-4,3)
+        # else:
+        drug_curve = pop.drug_curve
+        ax2.plot(drug_curve, color='black', linewidth=2.0)
         ax2.tick_params(axis='y', labelcolor=color)
-            
-        ax2.legend(['Drug Conc.'],loc=(1.25,0.93),frameon=False,fontsize=15)
         
+        if pop.drug_log_scale:
+            ax2.set_yscale('log')
+            if min(drug_curve) <= 0:
+                axmin = 10**-3
+            else:
+                axmin = min(drug_curve)
+            ax2.set_ylim(axmin,2*max(drug_curve))
+            ax2.legend(['Drug Conc.'],loc=(1.3,0.93),frameon=False,fontsize=15)
+            
+        else:
+            ax2.set_ylim(0,1.1*max(drug_curve))
+            ax2.legend(['Drug Conc.'],loc=(1.25,0.93),frameon=False,fontsize=15)
+
+            
         ax2.tick_params(labelsize=15)
         ax2.set_title(title,fontsize=20)
+        
     
     # if pop.normalize:
     #     counts = counts/np.max(counts)
@@ -109,7 +120,7 @@ def plot_timecourse(pop,counts_t=None,title_t=None):
     
     if pop.counts_log_scale:
         ax1.set_yscale('log')
-        ax1.set_ylim(1,5*10**5)
+        # ax1.set_ylim(1,5*10**5)
     else:
         ax1.set_ylim(0,y_lim)
     
@@ -123,10 +134,14 @@ def plot_timecourse(pop,counts_t=None,title_t=None):
     plt.show()
     return fig
 
-def plot_fitness_curves(pop,fig_title='',plot_r0 = False,save=False):
+def plot_fitness_curves(pop,
+                        fig_title='',
+                        plot_r0 = False,
+                        save=False,
+                        savename=None):
     
-    drugless_rates = pop.drugless_rates
-    ic50 = pop.ic50
+    # drugless_rates = pop.drugless_rates
+    # ic50 = pop.ic50
     
     fig, ax = plt.subplots(figsize = (10,6))
     
@@ -192,7 +207,11 @@ def plot_fitness_curves(pop,fig_title='',plot_r0 = False,save=False):
     ax.set_frame_on(False)
     
     if save:
-        plt.savefig('fitness_curve.pdf',bbox_inches="tight")
+        if savename is None:
+            savename = 'fitness_seascape.pdf'
+        r = dir_manager.get_project_root()
+        savename = str(r) + os.sep + 'figures' + os.sep + savename
+        plt.savefig(savename,bbox_inches="tight")
     
     return fig
 
@@ -263,13 +282,78 @@ def plot_msw(pop,fitness_curves,conc,genotypes,save=False):
         ax[rows-1,c].set_xlabel('Drug concentration ($\mathrm{\mu}$M)',
                               fontsize=10)
     if save:
-        r = utils.get_project_root()
+        r = dir_manager.get_project_root()
         savename = str(r) + os.sep + 'figures' + os.sep + 'msw.pdf'
         plt.savefig(savename,bbox_inches="tight")
     
     return fig
 
+def gen_timecourse_axes(pop,counts,counts_ax,drug_curve=None,drug_ax=None):
+    
+    # if pop is not None:
+    #     drug_log_scale = pop.drug_log_scale
+    #     x_lim = pop.x_lim
+    # else:
+    #     drug_log_scale = False
+    #     x_lim = counts.shape[0]
+    
+    counts_total = np.sum(counts,axis=0)
+    sorted_index = counts_total.argsort()
+    sorted_index_big = sorted_index[-8:]    
+    colors = sns.color_palette('bright')
+    colors = np.concatenate((colors[0:9],colors[0:7]),axis=0)
+    colors[[14,15]] = colors[[15,14]]
+    
+    cc = (cycler(color=colors) + 
+          cycler(linestyle=['-', '-','-','-','-','-','-','-','-',
+                            '--','--','--','--','--','--','--']))
+    
+    counts_ax.set_prop_cycle(cc)
+    
+    # color = [0.5,0.5,0.5]
+    
+    if drug_curve is not None:
+        if drug_ax is None:
+            raise Exception('No drug axes given')
+        drug_ax.plot(drug_curve,color='black',linewidth=2)
+        if pop.drug_log_scale:
+            drug_ax.set_yscale('log')
+            if min(drug_curve) <= 0:
+                axmin = 10**-3
+            else:
+                axmin = min(drug_curve)
+            drug_ax.set_ylim(axmin,2*max(drug_curve))
+        else:
+            drug_ax.set_ylim(0,1.1*max(drug_curve))
+        drug_ax.tick_params(labelsize=15)
+    
+    for genotype in range(counts.shape[1]):
+        if genotype in sorted_index_big:
+            counts_ax.plot(counts[:,genotype],linewidth=3.0,
+                           label=str(pop.int_to_binary(genotype)))
+        else:
+            counts_ax.plot(counts[:,genotype],linewidth=3.0,label=None)
+    
+    if pop.counts_log_scale:
+        counts_ax.set_yscale('log')
+        yl = counts_ax.get_ylim()
+        yl = [10**1,yl[1]]
+        counts_ax.set_ylim(yl)
+    
+    counts_ax.set_xlim(0,pop.x_lim)
+    counts_ax.set_facecolor(color='w')
+    counts_ax.grid(False)
+    # counts_ax.set_ylabel('Cells',fontsize=20)
+    counts_ax.tick_params(labelsize=15)
 
+    xlabels = counts_ax.get_xticks()
+    xlabels = xlabels*pop.timestep_scale
+    print(str(pop.timestep_scale))
+    xlabels = xlabels/24
+    xlabels = np.array(xlabels).astype('int')
+    counts_ax.set_xticklabels(xlabels)
+
+    return counts_ax, drug_ax
 
 
 

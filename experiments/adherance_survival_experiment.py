@@ -31,4 +31,4 @@ e = Experiment(experiment_type=experiment_type,
                population_options = options,
                debug=False)
 
-e.run_experiment()
+e.run_experiment(experiment_type='ramp_up_down')

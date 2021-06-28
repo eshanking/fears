@@ -5,8 +5,7 @@ import pandas as pd
 # import seaborn as sns
 # import scipy as sp
 import math
-from fears.src import utils
-from fears.utilities import plotter, pharm, fitness
+from fears.utils import plotter, pharm, fitness, dir_manager
 
 class Population:
     
@@ -106,8 +105,8 @@ class Population:
                  plot_entropy = False, # plot the entropy of the population over time underneath the timecourse
                  prob_drop=0, 
                  slope = None, 
-                 static_landscape = False,
                  static_topology = False,
+                 static_topo_dose = 10**5,
                  stop_condition = False,
                  timestep_scale = 1,
                  x_lim = None, # plotting
@@ -150,17 +149,17 @@ class Population:
         if fitness_data == 'generate':
             # Data paths
             if drugless_data is None:
-                self.drugless_data = utils.make_datapath_absolute('ogbunugafor_drugless.csv')
+                self.drugless_data = dir_manager.make_datapath_absolute('ogbunugafor_drugless.csv')
             else:
-                self.drugless_data = utils.make_datapath_absolute(drugless_data)
+                self.drugless_data = dir_manager.make_datapath_absolute(drugless_data)
                 
             if ic50_data is None:
                 # self.ic50_data = "C:\\Users\\Eshan\\Documents\\python scripts\\theory division\\abm_variable_fitness\\data\\pyrimethamine_ic50.csv"
                 # self.ic50_data = self.make_datapath_absolute('pyrimethamine_ic50.csv')
-                self.ic50_data = utils.make_datapath_absolute('pyrimethamine_ic50.csv')
+                self.ic50_data = dir_manager.make_datapath_absolute('pyrimethamine_ic50.csv')
             else:
                 # self.ic50_data = self.make_datapath_absolute(ic50_data)
-                self.ic50_data = utils.make_datapath_absolute(ic50_data)
+                self.ic50_data = dir_manager.make_datapath_absolute(ic50_data)
             
             # load the data
             self.drugless_rates = self.load_fitness(self.drugless_data)
@@ -220,8 +219,9 @@ class Population:
         else:
             self.drug_curve = drug_curve
         
-        self.static_landscape = static_landscape
+        # self.static_landscape = static_landscape
         self.static_topology = static_topology
+        self.static_topo_dose = static_topo_dose
             
         # Visualization parameters
         self.plot = plot # boolean
@@ -330,11 +330,15 @@ class Population:
         daughter_counts = np.random.poisson(counts_t*fit_land)
         
         for genotype in np.arange(n_genotype):
-            # n_mut = np.random.binomial(daughter_counts[allele],mut_rate)
+
             n_mut = np.random.poisson(daughter_counts[genotype]*mut_rate)
-            
+            # if n_mut > 0 and np.mod(mm,200)==0:
+            #     print('timestep: ' + str(mm) + 
+            #           '\ngenotype: ' + str(genotype) + 
+            #           '\ndaughters: ' + str(daughter_counts[genotype]) +
+            #           '\nn_mut: ' + str(n_mut))
             # Substract mutating cells from that allele
-            daughter_counts[genotype] -=n_mut
+            daughter_counts[genotype] -= n_mut
                         
             mutations = np.random.choice(n_genotype, size=n_mut, p=P[:,genotype]).astype(np.uint8)
 
@@ -348,11 +352,14 @@ class Population:
         
         # Normalize to constant population            
         if self.constant_pop:
-            c = counts_t.astype('float') # prevent overflow or underflow errors
-            cur_size = np.sum(c)
-            c = c/cur_size
-            c = c*self.max_cells
-            counts_t = c.astype('int')
+            # c = counts_t.astype('float') # prevent overflow or underflow errors
+            # cur_size = np.sum(c)
+            # c = c/cur_size
+            # c = c*self.max_cells
+            # counts_t = c.astype('int')
+            scale = self.max_cells/np.sum(counts_t)
+            counts_t = counts_t*scale
+            counts_t = np.ceil(counts_t).astype('int')
         
         return counts_t
     
@@ -396,6 +403,7 @@ class Population:
     def simulate(self):
     
         counts = np.zeros([self.n_timestep,self.n_genotype])
+        avg_counts = np.zeros([self.n_timestep,self.n_genotype])
         fixation_time = []
         
         # n_survive = 0
@@ -405,13 +413,15 @@ class Population:
                 self.drug_curve,u = self.gen_curves()
             
             counts, mm = self.run_abm()
+            avg_counts += counts
             fixation_time.append(mm)
 
             if self.plot is True:
                 self.plot_timecourse(counts_t = counts)
                 
         self.counts = counts
-        return fixation_time
+        avg_counts = avg_counts/self.n_sims
+        return avg_counts, fixation_time
 
 ##############################################################################
 # Wrapper methods for fitness
@@ -458,9 +468,13 @@ class Population:
         fig = plotter.plot_timecourse(self,counts_t=counts_t,title_t=title_t)
         return fig
     
-    def plot_fitness_curves(self,fig_title='',plot_r0 = False,save=False):
-        fig = plotter.plot_fitness_curves(self,fig_title='',plot_r0 = plot_r0,save=save)
+    def plot_fitness_curves(self,fig_title='',plot_r0 = False,save=False,savename=None):
+        fig = plotter.plot_fitness_curves(self,fig_title=fig_title,plot_r0 = plot_r0,save=save,savename=savename)
         return fig
     
-# p = Population()
-# p.simulate()
+    
+    
+# p2 = Population(max_cells=10**9,mut_rate=10**-3)
+# np.random.seed(10)
+# p2.simulate()
+    

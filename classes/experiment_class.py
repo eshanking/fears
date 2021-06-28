@@ -1,6 +1,5 @@
 from fears.classes.population_class import Population
-from fears.src import utils
-from fears.utilities import plotter
+from fears.utils import plotter, dir_manager
 import numpy as np
 import pandas as pd
 # import warnings
@@ -15,9 +14,10 @@ class Experiment():
                  n_sims = 1,
                  curve_types = None,
                  max_doses = None,
-                 low_dose=None,
-                 mid_dose=None,
-                 max_dose=None,
+                 first_dose=None,
+                 third_dose=None,
+                 second_dose=None,
+                 ramp = 100,
                  transition_times = None,
                  inoculants = None,
                  experiment_type = None,
@@ -27,7 +27,7 @@ class Experiment():
                  slopes=None,
                  debug = True): # debug = True -> no save
     
-        self.root_path = str(utils.get_project_root())
+        self.root_path = str(dir_manager.get_project_root())
         
         # list of allowed drug curve types
         allowed_types = ['linear',
@@ -94,17 +94,37 @@ class Experiment():
         
         # if experiment_type == 'inoculant-survival' and inoculants is None:
         #     raise Exception('The experiment type is set to inoculant-survival, but no inoculants are given.')
-        
+        self.ramp = ramp
         if self.experiment_type == 'ramp_up_down':
-            self.p_landscape = Population(consant_pop = True,
+            self.p_landscape = Population(constant_pop = True,
                                           carrying_cap = False,
-                                          static_landscape = True,
+                                          static_topology = True,
                                           **self.population_options)
-            self.p_seascape = Population(consant_pop = True,
-                                          carrying_cap = False,
-                                          **self.population_options)
+            self.p_seascape = Population(constant_pop = True,
+                                         carrying_cap = False,
+                                         **self.population_options)
+            
+            if second_dose is None:
+                self.second_dose = 10**5
+            else:
+                self.second_dose=second_dose
+            if third_dose is None:
+                self.third_dose = 10**1
+            else:
+                self.second_dose=second_dose
+            if first_dose is None:
+                self.first_dose = 10**-2
+            else:
+                self.first_dose = first_dose
+            if transition_times is None:
+                n_timestep = self.p_landscape.n_timestep
+                self.transition_times = [int(n_timestep/4),int(3*n_timestep/4)]
+            else:
+                self.transition_times = transition_times
+            
             self.set_ramp_ud(self.p_landscape)
             self.set_ramp_ud(self.p_seascape)
+        
         
         if self.experiment_type == 'bottleneck':
             for dc in self.duty_cycles:
@@ -198,6 +218,7 @@ class Experiment():
         # generate new save folder
                 
         if not debug:
+            
             num = 0
             num_str = str(num).zfill(4)
             
@@ -206,7 +227,9 @@ class Experiment():
             save_folder = self.root_path + os.sep + 'results' + os.sep + 'results_' + date_str + '_' + num_str
             
             # save_folder = os.getcwd() + '//results_' + date_str + '_' + num_str
-            
+            if not (os.path.exists(self.root_path + os.sep + 'results')):
+                os.mkdir(self.root_path + os.sep + 'results')
+                
             while(os.path.exists(save_folder)):
                 num += 1
                 num_str = str(num).zfill(4)
@@ -250,7 +273,19 @@ class Experiment():
                     self.n_survive[curve_number,dose_number] = n_survive_t
                     # pbar.update()
             self.perc_survive = 100*self.n_survive/self.n_sims   
-                 
+        
+        elif self.experiment_type == 'ramp_up_down':
+            counts_landscape, ft = self.p_landscape.simulate()
+            drug_curve = self.p_landscape.drug_curve
+            drug_curve= np.array([drug_curve])
+            drug_curve = np.transpose(drug_curve)
+            
+            savedata = np.concatenate((counts_landscape,drug_curve),axis=1)
+            self.save_counts(savedata, num=None, save_folder=None,prefix = 'landscape_counts')
+            counts_seascape, ft = self.p_seascape.simulate()
+            savedata = np.concatenate((counts_seascape,drug_curve),axis=1)
+            self.save_counts(savedata, num=None, save_folder=None,prefix = 'seascape_counts')
+        
         elif self.experiment_type == 'inoculant-survival':
             # pbar = tqdm(total = n_curves*n_inoc) # progress bar
             for curve_number in range(n_curves):
@@ -353,11 +388,17 @@ class Experiment():
     def save_counts(self,counts,num,save_folder,prefix='sim_'):
         
         # check if the desired save folder exists. If not, create it
+        if save_folder is None:
+            save_folder = ''
         folder_path = self.results_path + os.sep + save_folder
         if os.path.exists(folder_path) != True:
             os.mkdir(folder_path)
+        
+        if num is None:
+            num = ''
+        else:
+            num = str(num).zfill(4)
             
-        num = str(num).zfill(4)
         savename = self.results_path + os.sep + save_folder + os.sep + prefix + num + '.csv'
         np.savetxt(savename, counts, delimiter=",")
         return
@@ -375,7 +416,31 @@ class Experiment():
         
     def set_ramp_ud(self,p):
         
-        drug_curve = np.zeros()
+        n_timestep = p.n_timestep
+        drug_curve = np.zeros(n_timestep)
+        slope = (self.second_dose-self.first_dose)/self.ramp
+        buffer = self.ramp/2
+        
+        times = [self.transition_times[0]-buffer,
+                 self.transition_times[0]+buffer,
+                 self.transition_times[1]-buffer,
+                 self.transition_times[1]+buffer]
+        
+        for t in range(n_timestep):
+            if t<times[0]:
+                drug_curve[t] = self.first_dose
+            elif t<times[1]:
+                drug_curve[t] = drug_curve[t-1]+slope
+            elif t<times[2]:
+                drug_curve[t] = self.second_dose
+            elif (t<times[3] and 
+                  drug_curve[t-1]-slope>self.third_dose):
+                drug_curve[t] = drug_curve[t-1]-slope
+            else:
+                drug_curve[t] = self.third_dose
+                
+        p.drug_curve = drug_curve
+        
         
         return drug_curve
     
