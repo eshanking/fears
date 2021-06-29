@@ -2,9 +2,10 @@ import os
 import pickle
 import pandas as pd
 from fears.utils import dir_manager
-from fears.classes.experiment_class import Experiment
+# from fears.classes.experiment_class import Experiment
 
 def get_experiment_results(data_folder, exp_info_file):
+    from fears.classes.experiment_class import Experiment
     """
     
 

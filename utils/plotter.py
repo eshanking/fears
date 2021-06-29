@@ -5,7 +5,6 @@ import numpy as np
 import os
 import math
 from fears.utils import dir_manager, results_manager
-import networkx as nx
 
 def plot_timecourse(pop,counts_t=None,title_t=None):
     
@@ -141,18 +140,20 @@ def plot_fitness_curves(pop,
                         plot_r0 = False,
                         save=False,
                         savename=None,
+                        fig=None,
                         ax=None,
                         labelsize=20,
-                        linewidth=3):
+                        linewidth=3,
+                        show_legend=True):
     
     # drugless_rates = pop.drugless_rates
     # ic50 = pop.ic50
     
     if ax is None:
         fig, ax = plt.subplots(figsize = (10,6))
-        show_legend=True
-    else:
-        show_legend = False
+    #     show_legend=True
+    # else:
+    #     show_legend = False
     
     powers = np.linspace(-3,5,20)
     conc = np.power(10*np.ones(powers.shape[0]),powers)
@@ -181,7 +182,7 @@ def plot_fitness_curves(pop,
         ylabel = 'Growth Rate'
     
     for gen in range(pop.n_genotype):
-        ax.plot(powers,fit[gen,:],linewidth=linewidth,label=str(helpers.int_to_binary(gen)))
+        ax.plot(powers,fit[gen,:],linewidth=linewidth,label=str(pop.int_to_binary(gen)))
         
     # for allele in range(16):
         
@@ -223,7 +224,7 @@ def plot_fitness_curves(pop,
         savename = str(r) + os.sep + 'figures' + os.sep + savename
         plt.savefig(savename,bbox_inches="tight")
     
-    return ax
+    return fig,ax
 
 def plot_msw(pop,fitness_curves,conc,genotypes,save=False):
     """
@@ -300,7 +301,8 @@ def plot_msw(pop,fitness_curves,conc,genotypes,save=False):
 
 def gen_timecourse_axes(pop,
                         counts,
-                        counts_ax,drug_curve=None,
+                        counts_ax,
+                        drug_curve=None,
                         drug_ax=None,
                         labelsize=15,
                         linewidth=3):
@@ -371,18 +373,32 @@ def gen_timecourse_axes(pop,
     return counts_ax, drug_ax
 
 
-def plot_landscape(p,conc=10**0,fitness=None,relative=True):
+def plot_landscape(p,conc=10**0,
+                   fitness=None,
+                   relative=True,
+                   ax=None,
+                   ignore_zero=True,
+                   colorbar_lim=None,
+                   colorbar=True,
+                   node_size = 800,
+                   textsize=11):
     """
     Plots a graph representation of this landscape on the current matplotlib figure.
     If p is set to a vector of occupation probabilities, the edges in the graph will
     have thickness proportional to the transition probability between nodes.
     """
+    from matplotlib.collections import LineCollection
+    import networkx as nx
+    
     if fitness is None:
         fitness = p.gen_fit_land(conc)
     
     if relative:
         fitness = fitness-min(fitness)
         fitness = fitness/max(fitness)
+        
+    if ax is None:
+        fig,ax=plt.subplots()
     
     # Figure out the length of the bit sequences we're working with
     N = int(np.log2(len(fitness)))
@@ -433,8 +449,6 @@ def plot_landscape(p,conc=10**0,fitness=None,relative=True):
             pos[hierarchy[i][j]] = (xs[j], y)
             # labels[hierarchy[i][j]] = hierarchy[i][j][0]
         y -= 1 / N
-
-    node_size = 800
     
     labels = dict(pos)
     for k in labels.keys():
@@ -444,19 +458,74 @@ def plot_landscape(p,conc=10**0,fitness=None,relative=True):
     plt.axis('off')
     cmap='plasma'
     
-    nx.draw(G, pos, with_labels=False, linewidths=1, node_color=fitness,
-            node_size=node_size,arrows=False,
-            vmin = min(fitness), vmax=max(fitness),cmap=cmap)
-    nx.draw_networkx_labels(G,pos,labels,font_size=10,font_color='red')
+    xy = np.asarray([pos[v] for v in list(G)])
     
-    # node_colors = 
-    # pc = mpl.collections.PatchCollection(edges, cmap=cmap)
-    # pc.set_array(edge_colors)
+    # draw edges
     
-    sm = plt.cm.ScalarMappable(cmap=cmap, norm=plt.Normalize(vmin = min(fitness), vmax=max(fitness)))
-    sm._A = []
-    cb = plt.colorbar(sm,drawedges=False)
-    cb.outline.set_visible(False)
+    edgelist = list(G.edges())
+    edge_pos = np.asarray([(pos[e[0]], pos[e[1]]) for e in edgelist])
+    edge_collection = LineCollection(
+        edge_pos,
+        linewidths=1,
+        antialiaseds=(1,),
+        linestyle='solid',
+        zorder=1)
+    edge_collection.set_zorder(1)
+    ax.add_collection(edge_collection)
     
-    ax = plt.gca()
+    # draw nodes
+    
+    if colorbar_lim is not None:
+        vmin = colorbar_lim[0]
+        vmax = colorbar_lim[1]
+    else:
+        vmin=min(fitness)
+        vmax=max(fitness)
+    
+    ax.scatter(xy[:,0],xy[:,1],s=node_size,c=fitness,linewidths=1,
+               vmin=vmin,vmax=vmax,cmap=cmap)
+    
+    # nx.draw(G, pos, with_labels=False, linewidths=1, node_color=fitness,
+    #         node_size=node_size,arrows=False,
+    #         vmin = min(fitness), vmax=max(fitness),cmap=cmap)
+    # nx.draw_networkx_labels(G,pos,labels,font_size=10,font_color='red')
+    
+    
+    # labels = {n: n for n in G.nodes()}
+    text_items = {}  # there is no text collection so we'll fake one
+    for n, label in labels.items():
+        (x, y) = pos[n]
+        if not isinstance(label, str):
+            label = str(label)  # this makes "1" and 1 labeled the same
+        t = ax.text(
+            x,
+            y,
+            label,
+            size=textsize,
+            color='black',
+            horizontalalignment='center',
+            verticalalignment='center',
+            transform=ax.transData,
+            clip_on=True,
+        )
+        
+    # display colorbar    
+    if colorbar:
+        sm = plt.cm.ScalarMappable(cmap=cmap, 
+                                   norm=plt.Normalize(vmin = vmin, vmax=vmax))
+        sm._A = []
+        cb = plt.colorbar(sm,drawedges=False)
+        cb.outline.set_visible(False)
+    
+    xl = ax.get_xlim()
+    xl = [0, 1.1*xl[1]]
+    ax.set_xlim(xl)
+    
+    yl = ax.get_ylim()
+    yl = [-0.1,1.1*yl[1]]
+    ax.set_ylim(yl)
+    
+    ax.set_axis_off()
+
     return ax
+    
