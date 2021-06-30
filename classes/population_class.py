@@ -68,6 +68,7 @@ class Population:
 ###############################################################################    
     # Initializer
     def __init__(self,
+                 n_allele = 4,
                  bottleneck = False,
                  carrying_cap = True,
                  curve_type='constant', # drug concentration curve
@@ -96,8 +97,11 @@ class Population:
                  max_dose = 1, 
                  n_timestep=1000, # number of generations
                  n_sims = 1, # number of simulations to average together
+                 null_seascape=False,
+                 null_seascape_dose=10**1,
                  pad_right = False,
                  plot=True, # plot the result of simulate()
+                 plot_drug_curve=True,
                  plot_entropy = False, # plot the entropy of the population over time underneath the timecourse
                  prob_drop=0, 
                  slope = None, 
@@ -171,6 +175,11 @@ class Population:
             
             self.max_replication_rate = max(self.landscape_data)
             self.n_genotype = self.landscape_data.shape[0]
+        
+        elif fitness_data == 'random':
+            self.drugless_rates,self.ic50, = \
+                fitness.gen_random_seascape(n_allele)
+            self.n_genotype = 2**n_allele
             
         # Initial number of cells (default = 10,000 at 0000)
         if init_counts is None:
@@ -222,6 +231,7 @@ class Population:
         # Visualization parameters
         self.plot = plot # boolean
         self.plot_entropy = plot_entropy
+        self.plot_drug_curve=plot_drug_curve
         self.drug_log_scale = drug_log_scale # plot drugs on log scale
         self.counts_log_scale = counts_log_scale # plot counts on log scale
         self.fig_title = fig_title
@@ -232,6 +242,10 @@ class Population:
            self.x_lim = x_lim 
         self.y_lim = y_lim
         self.entropy_lim = entropy_lim
+        
+        if null_seascape:
+            self.null_seascape_dose=null_seascape_dose
+            self.set_null_seascape(self.null_seascape_dose)
 
 ###############################################################################
     # ABM helper methods
@@ -417,6 +431,20 @@ class Population:
     def __gen_fl_for_abm(self,conc,counts):
         fit_land = fitness.gen_fl_for_abm(self,conc,counts)
         return fit_land
+    
+    def randomize_seascape(self,
+                           drugless_limits=[1,1.5],
+                           ic50_limits=[-6.5,-1.5]):
+        fitness.randomize_seascape(self,
+                                   drugless_limits=drugless_limits,
+                                   ic50_limits=ic50_limits)
+        
+    def gen_null_seascape(self,conc):
+        drugless_rates_new,ic50_new = fitness.gen_null_seascape(self,conc)
+        return drugless_rates_new,ic50_new
+    
+    def set_null_seascape(self,conc):
+        self.drugless_rates,self.ic50 = self.gen_null_seascape(conc)
     
 ###############################################################################
 # Wrapper methods for generating drug concentration curves

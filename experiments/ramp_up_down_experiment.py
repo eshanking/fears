@@ -27,4 +27,4 @@ e = Experiment(debug=False,
                ramp = 200,
                transition_times=transition_times,
                population_options=options)
-e.run_experiment()
+# e.run_experiment()

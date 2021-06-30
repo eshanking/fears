@@ -15,6 +15,33 @@ def gen_fitness(pop,allele,conc,drugless_rate,ic50):
 
     return fitness
 
+def logistic_equation(conc,drugless_rate,ic50):
+    """
+    Logistic equation from ogbunugafor et al, PLOS CB, 2016
+
+    Parameters
+    ----------
+    dugless_rate : float
+        Drugless growth rate of genotype.
+    ic50 : float
+        ic50 of genotype.
+    conc : float
+        Drug concentration (in Molarity (M)).
+    c : float, optional
+        Logistic curve steepness parameter. The default is -0.6824968.
+
+    Returns
+    -------
+    f : float
+        Replication rate.
+
+    """
+    c=-0.6824968
+    conc = conc/10**6
+    f = drugless_rate/(1+np.exp((ic50-np.log10(conc))/c))
+    
+    return f
+
 def gen_static_landscape(pop,conc):
 
     # get final landscape and seascape
@@ -32,6 +59,7 @@ def gen_static_landscape(pop,conc):
         min_landscape = min(landscape_t)
     else:
         min_landscape = min(landscape)
+        zero_indx_land = []
     
     seascape = np.zeros(pop.n_genotype)
     for gen in range(pop.n_genotype):
@@ -54,21 +82,25 @@ def gen_static_landscape(pop,conc):
     landscape[zero_indx_land] = 0
     return landscape
 
-def gen_fit_land(pop,conc):
+def gen_fit_land(pop,conc,mode=None):
     
     fit_land = np.zeros(pop.n_genotype)
-    
-    if pop.fitness_data == 'generate':
+            
+    if pop.fitness_data == 'manual' or mode=='manual':
+        fit_land = pop.landscape_data/pop.doubling_time
+   
+    else:
         
         if pop.static_topology:
             fit_land = gen_static_landscape(pop,conc)
             
         else:
             for kk in range(pop.n_genotype):
-                fit_land[kk] = gen_fitness(pop,kk,conc,pop.drugless_rates,pop.ic50)/pop.doubling_time
-            
-    elif pop.fitness_data == 'manual':
-        fit_land = pop.landscape_data/pop.doubling_time
+                fit_land[kk] = gen_fitness(pop,
+                                           kk,
+                                           conc,
+                                           pop.drugless_rates,
+                                           pop.ic50)/pop.doubling_time
     
     return fit_land
 
@@ -101,6 +133,125 @@ def gen_fl_for_abm(pop,conc,counts):
     
     return fit_land
 
+def gen_random_seascape(n_allele,
+                        drugless_limits=[1,1.5],
+                        ic50_limits=[-6.5,-1.5]):
+    
+    n_genotype = 2**n_allele
+    
+    drugless_rates = np.random.uniform(min(drugless_limits),
+                                      max(drugless_limits),
+                                      n_genotype)
+    
+    ic50 = np.random.uniform(min(ic50_limits),
+                             max(ic50_limits),
+                             n_genotype)
+    
+    return drugless_rates,ic50
 
+def randomize_seascape(pop,
+                       drugless_limits=[1,1.5],
+                       ic50_limits=[-6.5,-1.5]):
+    
+    n_genotype = pop.n_genotype
+    
+    pop.drugless_rates = np.random.uniform(min(drugless_limits),
+                                           max(drugless_limits),
+                                           n_genotype)
 
+    pop.ic50 = np.random.uniform(min(ic50_limits),
+                                 max(ic50_limits),
+                                 n_genotype)
+    
+def fit_logistic_curve(xdata,ydata):
+    from scipy.optimize import curve_fit
+    
+    popt,var = curve_fit(logistic_equation,xdata,ydata)
+    
+    return popt
 
+def gen_null_seascape(pop,conc):
+    
+    # if ic50 is None:
+    #     ic50=pop.ic50
+    # if drugless_rate is None:
+    #     drugless_rates=pop.drugless_rates
+    
+    landscape = gen_fit_land(pop,conc)
+    start_rates = gen_fit_land(pop,10**-3)
+    final_rates = gen_fit_land(pop,10**5)
+    # mid_rates = gen_fit_land(pop,10**1)
+    
+    start_points = scale_and_ignore_zeros(landscape,start_rates)
+    end_points = scale_and_ignore_zeros(landscape,final_rates)
+    # mid_points = scale_and_ignore_zeros(landscape,mid_rates)
+    mid_points = landscape
+    
+    xdata = [10**-3,conc,10**5]
+    
+    ic50_new = []
+    drugless_rates_new = []
+    
+    for genotype in range(len(landscape)):
+        ydata = [start_points[genotype],
+                 mid_points[genotype],
+                 end_points[genotype]]
+        params = fit_logistic_curve(xdata,ydata)
+        ic50_new.append(params[1])
+        drugless_rates_new.append(params[0])
+    # find the null landscape drugless rates
+    
+    return drugless_rates_new,ic50_new
+
+def scale_and_ignore_zeros(data,target):
+    """
+    Scale data to range of target while ignoring the zero values in data and
+    target.
+
+    Parameters
+    ----------
+    data : numpy array
+        Data to be scaled to the range of target.
+    target : numpy array
+        Target data range.
+
+    Returns
+    -------
+    scaled_data : numpy array
+        Scaled data to range of target. Zero values in data are set to zero
+        in scaled_data and zero values in target are not used to calculate
+        range.
+
+    """
+    # make sure inputs are numpy arrays
+    
+    if not isinstance(data,np.ndarray):
+        raise Exception('data must be a numpy array!')
+    if not isinstance(target,np.ndarray):
+        raise Exception('target must be a numpy array!')
+    
+    if min(data) == 0:
+        zero_indx_data = np.argwhere(data==0)
+        data_t = np.delete(data,zero_indx_data)
+        min_data = min(data_t)
+    else:
+        min_data = min(data)
+        zero_indx_data = []
+        
+    if min(target) == 0:
+        zero_indx_target = np.argwhere(target==0)
+        target_t = np.delete(target,zero_indx_target)
+        min_target = min(target_t)
+    else:
+        min_target = min(target)
+        
+    data = data - min_data
+    data = data/max(data)
+
+    rng = max(target) - min_target
+    
+    scaled_data = data*rng + min_target
+
+    scaled_data[zero_indx_data] = 0
+    
+    return scaled_data

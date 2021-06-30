@@ -50,7 +50,7 @@ def plot_timecourse(pop,counts_t=None,title_t=None):
 
     color = [0.5,0.5,0.5]
     
-    if pop.fitness_data == 'generate':
+    if pop.plot_drug_curve:
         ax2 = ax1.twinx() # ax2 is the drug timecourse
         ax2.set_position([left, 0.5, width, 0.6])
         ax2.set_ylabel('Drug Concentration (uM)', color=color,fontsize=20) # we already handled the x-label with ax1
@@ -91,7 +91,7 @@ def plot_timecourse(pop,counts_t=None,title_t=None):
         
     for allele in range(counts.shape[1]):
         if allele in sorted_index_big:
-            ax1.plot(counts[:,allele],linewidth=3.0,label=str(helpers.int_to_binary(allele)))
+            ax1.plot(counts[:,allele],linewidth=3.0,label=str(pop.int_to_binary(allele)))
         else:
             ax1.plot(counts[:,allele],linewidth=3.0,label=None)
             
@@ -157,7 +157,6 @@ def plot_fitness_curves(pop,
     
     powers = np.linspace(-3,5,20)
     conc = np.power(10*np.ones(powers.shape[0]),powers)
-    
     
     colors = sns.color_palette('bright')
     colors = np.concatenate((colors[0:9],colors[0:7]),axis=0)
@@ -528,4 +527,3 @@ def plot_landscape(p,conc=10**0,
     ax.set_axis_off()
 
     return ax
-    

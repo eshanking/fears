@@ -8,16 +8,19 @@ import time
 import pickle
 
 class Experiment():
-    
+
     # Initializer
     def __init__(self,
                  n_sims = 1,
                  curve_types = None,
                  max_doses = None,
-                 first_dose=None,
-                 third_dose=None,
-                 second_dose=None,
+                 first_dose = None,
+                 third_dose = None,
+                 second_dose = None,
                  ramp = 100,
+                 fitness_data = 'generate',
+                 n_allele = 4,
+                 null_seascape_dose=None,
                  transition_times = None,
                  inoculants = None,
                  experiment_type = None,
@@ -98,11 +101,20 @@ class Experiment():
         if self.experiment_type == 'ramp_up_down':
             self.p_landscape = Population(constant_pop = True,
                                           carrying_cap = False,
-                                          static_topology = True,
+                                          fitness_data=fitness_data,
+                                          n_allele=n_allele,
                                           **self.population_options)
             self.p_seascape = Population(constant_pop = True,
                                          carrying_cap = False,
+                                         fitness_data=fitness_data,
+                                         n_allele=n_allele,
                                          **self.population_options)
+            
+            if fitness_data=='random':
+                self.p_seascape.ic50 = self.p_landscape.ic50
+                self.p_seascape.drugless_rates = self.p_landscape.drugless_rates
+                self.p_landscape.set_null_seascape(null_seascape_dose)
+            self.null_seascape_dose = null_seascape_dose
             
             if second_dose is None:
                 self.second_dose = 10**5
@@ -111,7 +123,7 @@ class Experiment():
             if third_dose is None:
                 self.third_dose = 10**1
             else:
-                self.second_dose=second_dose
+                self.third_dose=third_dose
             if first_dose is None:
                 self.first_dose = 10**-2
             else:
@@ -216,7 +228,9 @@ class Experiment():
             # self.rate_survival_results = pd.DataFrame(columns=[])
             
         # generate new save folder
-                
+        
+        self.debug=debug
+        
         if not debug:
             
             num = 0
@@ -279,12 +293,14 @@ class Experiment():
             drug_curve = self.p_landscape.drug_curve
             drug_curve= np.array([drug_curve])
             drug_curve = np.transpose(drug_curve)
-            
-            savedata = np.concatenate((counts_landscape,drug_curve),axis=1)
-            self.save_counts(savedata, num=None, save_folder=None,prefix = 'landscape_counts')
             counts_seascape, ft = self.p_seascape.simulate()
-            savedata = np.concatenate((counts_seascape,drug_curve),axis=1)
-            self.save_counts(savedata, num=None, save_folder=None,prefix = 'seascape_counts')
+            
+            if not self.debug:
+                savedata = np.concatenate((counts_landscape,drug_curve),axis=1)
+                self.save_counts(savedata, num=None, save_folder=None,prefix = 'landscape_counts')
+                
+                savedata = np.concatenate((counts_seascape,drug_curve),axis=1)
+                self.save_counts(savedata, num=None, save_folder=None,prefix = 'seascape_counts')
         
         elif self.experiment_type == 'inoculant-survival':
             # pbar = tqdm(total = n_curves*n_inoc) # progress bar
@@ -434,8 +450,8 @@ class Experiment():
             elif t<times[2]:
                 drug_curve[t] = self.second_dose
             elif (t<times[3] and 
-                  drug_curve[t-1]-slope>self.third_dose):
-                drug_curve[t] = drug_curve[t-1]-slope
+                  drug_curve[t-1]+slope<self.third_dose):
+                drug_curve[t] = drug_curve[t-1]+slope
             else:
                 drug_curve[t] = self.third_dose
                 
