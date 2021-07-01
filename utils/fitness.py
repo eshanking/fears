@@ -201,6 +201,9 @@ def gen_null_seascape(pop,conc):
         drugless_rates_new.append(params[0])
     # find the null landscape drugless rates
     
+    drugless_rates_new = scale_and_ignore_zeros(drugless_rates_new,
+                                                pop.drugless_rates)
+    
     return drugless_rates_new,ic50_new
 
 def scale_and_ignore_zeros(data,target):
@@ -226,9 +229,9 @@ def scale_and_ignore_zeros(data,target):
     # make sure inputs are numpy arrays
     
     if not isinstance(data,np.ndarray):
-        raise Exception('data must be a numpy array!')
+        data=np.array(data)
     if not isinstance(target,np.ndarray):
-        raise Exception('target must be a numpy array!')
+        target=np.array(target)
     
     if min(data) == 0:
         zero_indx_data = np.argwhere(data==0)
@@ -255,3 +258,23 @@ def scale_and_ignore_zeros(data,target):
     scaled_data[zero_indx_data] = 0
     
     return scaled_data
+
+# def calc_cum_fitness_flux(pop,counts=None):
+    
+#     return cum_flux
+
+# def calc_fitness_flux(pop,t,conc,counts=None):
+#     if t == len(counts[:,0]):
+#         flux = 0
+#     else:
+#         c_t0 = counts[:,t]
+#         c_t1 = counts[:,t+1]
+        
+#         c_t0 = c_t0/sum(c_t0)
+#         c_t1 = c_t1/sum(c_t1)
+#         delta_c = c_t1-c_t0
+        
+#         f_l = pop.gen_fit_land(pop,conc)
+#         flux = np.multiply(delta_c,f_l)
+    
+#     return flux

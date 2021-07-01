@@ -142,9 +142,10 @@ def plot_fitness_curves(pop,
                         savename=None,
                         fig=None,
                         ax=None,
-                        labelsize=20,
+                        labelsize=15,
                         linewidth=3,
-                        show_legend=True):
+                        show_legend=True,
+                        show_axes_labels=True):
     
     # drugless_rates = pop.drugless_rates
     # ic50 = pop.ic50
@@ -155,8 +156,10 @@ def plot_fitness_curves(pop,
     # else:
     #     show_legend = False
     
-    powers = np.linspace(-3,5,20)
-    conc = np.power(10*np.ones(powers.shape[0]),powers)
+    # powers = np.linspace(-3,5,20)
+    # conc = np.power(10*np.ones(powers.shape[0]),powers)
+    
+    conc = np.logspace(-3,5,50)
     
     colors = sns.color_palette('bright')
     colors = np.concatenate((colors[0:9],colors[0:7]),axis=0)
@@ -176,12 +179,12 @@ def plot_fitness_curves(pop,
         fit = fit-pop.death_rate
         ylabel = '$R_{0}$'
         thresh = np.ones(powers.shape)
-        ax.plot(powers,thresh,linestyle='dashdot',color='black',linewidth=linewidth)
+        ax.plot(conc,thresh,linestyle='dashdot',color='black',linewidth=linewidth)
     else:
         ylabel = 'Growth Rate'
     
     for gen in range(pop.n_genotype):
-        ax.plot(powers,fit[gen,:],linewidth=linewidth,label=str(pop.int_to_binary(gen)))
+        ax.plot(conc,fit[gen,:],linewidth=linewidth,label=str(pop.int_to_binary(gen)))
         
     # for allele in range(16):
         
@@ -204,16 +207,23 @@ def plot_fitness_curves(pop,
     
     if show_legend:
         ax.legend(fontsize=labelsize,frameon=False,loc=(1,-.10))
-    ax.set_xticks([-3,-2,-1,0,1,2,3,4,5])
-    ax.set_xticklabels(['$10^{-3}$','$10^{-2}$','$10^{-1}$','$10^{0}$',
-                         '$10^1$','$10^2$','$10^3$','$10^4$','$10^5$'])
+        
+    # ax.set_xticks([-3,-2,-1,0,1,2,3,4,5])
+    # ax.set_xticklabels(['$10^{-3}$','$10^{-2}$','$10^{-1}$','$10^{0}$',
+    #                      '$10^1$','$10^2$','$10^3$','$10^4$','$10^5$'])
     
-    plt.title(fig_title,fontsize=labelsize)
-    plt.xticks(fontsize=labelsize)
-    plt.yticks(fontsize=labelsize)
+    ax.set_xscale('log')
     
-    plt.xlabel('Drug concentration ($\mathrm{\mu}$M)',fontsize=labelsize)
-    plt.ylabel(ylabel,fontsize=labelsize)
+    ax.set_title(fig_title,fontsize=labelsize)
+    # ax.xticks(fontsize=labelsize)
+    # ylabels = ax.get_yticklabels()
+    # ax.set_yticklabels(ylabels,fontsize=labelsize)
+    
+    ax.tick_params(labelsize=labelsize)
+    
+    if show_axes_labels:
+        ax.xlabel('Drug concentration ($\mathrm{\mu}$M)',fontsize=labelsize)
+        ax.ylabel(ylabel,fontsize=labelsize)
     ax.set_frame_on(False)
     
     if save:
@@ -298,13 +308,48 @@ def plot_msw(pop,fitness_curves,conc,genotypes,save=False):
     
     return fig
 
-def gen_timecourse_axes(pop,
+def plot_timecourse_to_axes(pop,
                         counts,
                         counts_ax,
                         drug_curve=None,
                         drug_ax=None,
                         labelsize=15,
                         linewidth=3):
+    """
+    Plots simulation timecourse to user defined axes (counts_ax).
+
+    Parameters
+    ----------
+    pop : Population class object
+        Population class object containing population visualization options.
+    counts : numpy array
+        Simulation data to be plotted.
+    counts_ax : matplotlib axes object
+        Axes on which data is plotted.
+    drug_curve : numpy array, optional
+        Optional drug concentration curve to plot. Requires additional drug
+        axes. The default is None.
+    drug_ax : matplotlib axes, optional
+        Axes on which drug curve is plotted. The default is None.
+    labelsize : float, optional
+        Font size of the labels. The default is 15.
+    linewidth : float, optional
+        Width parameter passed to matplotlib plot function. The default is 3.
+
+    Raises
+    ------
+    Exception
+        Error given if no drug axes are provided but the drug curve is not 
+        None (drug data needs drug axes to plot to).
+
+    Returns
+    -------
+    counts_ax : matplotlib axes
+        Axes with counts data plotted.
+    drug_ax : matplotlib axes
+        Axes with drug curve data plotted.
+
+    """
     
     # if pop is not None:
     #     drug_log_scale = pop.drug_log_scale
@@ -362,12 +407,25 @@ def gen_timecourse_axes(pop,
     # counts_ax.set_ylabel('Cells',fontsize=20)
     counts_ax.tick_params(labelsize=labelsize)
 
-    xlabels = counts_ax.get_xticks()
+    xticks = counts_ax.get_xticks()
+    xlabels = xticks
     xlabels = xlabels*pop.timestep_scale
     # print(str(pop.timestep_scale))
     xlabels = xlabels/24
     xlabels = np.array(xlabels).astype('int')
+    counts_ax.set_xticks(xticks)
+    
     counts_ax.set_xticklabels(xlabels)
+    
+    xl = [0,len(counts[:,0])]
+    counts_ax.set_xlim(xl)
+    counts_ax.spines["top"].set_visible(False)
+    counts_ax.spines["right"].set_visible(False)
+    # counts_ax.ticklabel_format(style='sci',axis='y')
+    # counts_ax.spines["left"].set_visible(False)
+    # counts_ax.spines["bottom"].set_visible(False)
+    
+    # ax.set_title(fig_title,fontsize=labelsize)
 
     return counts_ax, drug_ax
 
@@ -380,7 +438,10 @@ def plot_landscape(p,conc=10**0,
                    colorbar_lim=None,
                    colorbar=True,
                    node_size = 800,
-                   textsize=11):
+                   textsize=11,
+                   resize_param=0.2,
+                   square=False,
+                   textcolor='black'):
     """
     Plots a graph representation of this landscape on the current matplotlib figure.
     If p is set to a vector of occupation probabilities, the edges in the graph will
@@ -454,7 +515,7 @@ def plot_landscape(p,conc=10**0,
         labels[k] = k[0]
     
     # # Draw the graph
-    plt.axis('off')
+    # plt.axis('off')
     cmap='plasma'
     
     xy = np.asarray([pos[v] for v in list(G)])
@@ -481,8 +542,14 @@ def plot_landscape(p,conc=10**0,
         vmin=min(fitness)
         vmax=max(fitness)
     
+    # if square:
+    #     y_range = max(xy[:,1])-min(xy[:,1])
+    #     x_range = max(xy[:,0])-min(xy[:,0])
+    #     xy[:,0] = xy[:,0]*y_range/x_range
+    #     ax.set_aspect('equal')
+        
     ax.scatter(xy[:,0],xy[:,1],s=node_size,c=fitness,linewidths=1,
-               vmin=vmin,vmax=vmax,cmap=cmap)
+               vmin=vmin,vmax=vmax,cmap=cmap,clip_on=False)
     
     # nx.draw(G, pos, with_labels=False, linewidths=1, node_color=fitness,
     #         node_size=node_size,arrows=False,
@@ -501,7 +568,7 @@ def plot_landscape(p,conc=10**0,
             y,
             label,
             size=textsize,
-            color='black',
+            color=textcolor,
             horizontalalignment='center',
             verticalalignment='center',
             transform=ax.transData,
@@ -516,14 +583,36 @@ def plot_landscape(p,conc=10**0,
         cb = plt.colorbar(sm,drawedges=False)
         cb.outline.set_visible(False)
     
+    if square:
+        ydata_range = max(xy[:,1])-min(xy[:,1])
+        # yl = ax.get_ylim()
+        # ylim_range = yl[1]-yl[0]
+        # y_ratio = ydata_range/ylim_range
+        
+        # xl = ax.get_xlim()
+        xdata_range = max(xy[:,0])-min(xy[:,0])
+        # xlim_range = xl[1]-xl[0]
+        # x_ratio = xdata_range/xlim_range
+        
+        # ylim_range = ydata_range/x_ratio
+        # yl = [y*ylim_range for y in yl]
+        ax.set_aspect(xdata_range/ydata_range)
+        
+        
+    
     xl = ax.get_xlim()
-    xl = [0, 1.1*xl[1]]
+    xrange = xl[1]-xl[0]
+    xl = [xl[0]-resize_param*xrange,xl[1]+xrange*resize_param]
     ax.set_xlim(xl)
     
     yl = ax.get_ylim()
-    yl = [-0.1,1.1*yl[1]]
+    # print(str(yl))
+    yrange = yl[1]-yl[0]
+    yl = [yl[0]-resize_param*yrange,yl[1]+yrange*resize_param]
+    # print(str(yl))
     ax.set_ylim(yl)
     
     ax.set_axis_off()
+    
 
-    return ax
+    return edge_pos

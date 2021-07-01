@@ -57,10 +57,10 @@ def get_data(sim_path):
     
     return data
 
-def save_fig(fig,savename):
+def save_fig(fig,savename,bbox_inches='tight'):
     # fig.margins(0,0)
     savename = dir_manager.make_figurepath_absolute(savename)
-    fig.savefig(savename,bbox_inches="tight",
+    fig.savefig(savename,bbox_inches=bbox_inches,
                 dpi=400,
                 transparent=True,
                 facecolor='w',
