@@ -2,26 +2,28 @@ from fears.utils import plotter, results_manager
 import matplotlib.pyplot as plt
 import numpy as np
 
-data_folder = 'results_07012021_0002'
-exp_info_file = 'experiment_info_07012021_0002.p'
+data_folder = 'results_07022021_0000'
+exp_info_file = 'experiment_info_07022021_0000.p'
 exp_folder,exp_info = results_manager.get_experiment_results(data_folder,
                                                              exp_info_file)
 # fitness axes
 fig,ax = plt.subplots(nrows=2,ncols=2,figsize=(7,5))
 linewidth = 2
 
+labelsize=8
+
 f,ax[0,0] = plotter.plot_fitness_curves(exp_info.p_landscape,
                                     ax=ax[0,0],
                                     show_legend=False,
                                     show_axes_labels=False,
-                                    labelsize=10,
+                                    labelsize=labelsize,
                                     linewidth=linewidth)
 
 f,ax[0,1] = plotter.plot_fitness_curves(exp_info.p_seascape,
-                                    ax=ax[0,1],
+                                    ax=ax[0,1], 
                                     show_legend=False,
                                     show_axes_labels=False,
-                                    labelsize=10,
+                                    labelsize=labelsize,
                                     linewidth=linewidth)
 
 # timecourse axes
@@ -32,7 +34,7 @@ counts = data[:,0:4]
 ax[1,0],d = plotter.plot_timecourse_to_axes(exp_info.p_landscape,
                                     counts,
                                     ax[1,0],
-                                    labelsize=10,
+                                    labelsize=labelsize,
                                     linewidth=linewidth)
 
 seascape_exp = exp_folder[1]
@@ -41,91 +43,56 @@ counts = data[:,0:4]
 ax[1,1],d = plotter.plot_timecourse_to_axes(exp_info.p_landscape,
                                     counts,
                                     ax[1,1],
-                                    labelsize=10,
+                                    labelsize=labelsize,
                                     linewidth=linewidth)
 
 # plot the location of drug conc transition in the timecourse axes
 
-ydata = np.logspace(1,11)
-xdata = np.ones(len(ydata))*exp_info.transition_times[0]
-ax[1,0].plot(xdata,ydata,color='gray',alpha=0.5,linewidth=5)
-ax[1,1].plot(xdata,ydata,color='gray',alpha=0.5,linewidth=5)
+# ydata = np.logspace(1,11)
+# xdata = np.ones(len(ydata))*exp_info.transition_times[0]
+# ax[1,0].plot(xdata,ydata,color='gray',alpha=0.5,linewidth=5)
+# ax[1,1].plot(xdata,ydata,color='gray',alpha=0.5,linewidth=5)
 
-ydata = np.logspace(1,11)
-xdata = np.ones(len(ydata))*exp_info.transition_times[1]
-ax[1,0].plot(xdata,ydata,color='gray',alpha=0.5,linewidth=5)
-ax[1,1].plot(xdata,ydata,color='gray',alpha=0.5,linewidth=5)
+# ydata = np.logspace(1,11)
+# xdata = np.ones(len(ydata))*exp_info.transition_times[1]
+# ax[1,0].plot(xdata,ydata,color='gray',alpha=0.5,linewidth=5)
+# ax[1,1].plot(xdata,ydata,color='gray',alpha=0.5,linewidth=5)
 
 # landscape axes
 
-def get_pos_in_log_space(center,width):
-    """
-    Returns x or y coordinates to pass to inset_axes when the axis is a log 
-    scale in order to make the inset axes uniform sizes.
-
-    Parameters
-    ----------
-    center : float
-        Center point of the axes in data points (not log-ed).
-    width : float
-        Visual width of the axes (in log units).
-
-    Returns
-    -------
-    x : list of floats
-        x[0] = left point, x[1] = right point.
-        log10(x[1]-x[0]) = width
-
-    """
-    
-    center = np.log10(center)
-    x0 = center - width/2
-    x1 = center + width/2
-    
-    x = [10**x0,10**x1]
-    
-    return x
-
 null_ax = ax[0,0]
 conc = [exp_info.first_dose,exp_info.second_dose,exp_info.third_dose]
+cmap = 'Blues'
+edgecolor='black'
+textcolor='gray'
 
 for c in conc:
-    x = get_pos_in_log_space(c,3)
-    l1 = null_ax.inset_axes([x[0],1,x[1]-x[0],0.5],transform=null_ax.transData)
-    l1 = plotter.plot_landscape(exp_info.p_landscape,c,ax=l1,node_size=200,
-                            colorbar=False,
-                            textcolor='gray',
-                            square=True)
-    
-    yl = null_ax.get_ylim()
-    ydata = np.arange(yl[0],yl[1],0.1)
-    xdata = np.ones(len(ydata))*c
-    null_ax.plot(xdata,ydata,'--',color='black',alpha=0.5)
-    
-    # xl = null_ax.get_xlim()
-    # null_ax.set_xlim([xl[0]/10,xl[1]*10])
+    plotter.add_landscape_to_fitness_curve(c,null_ax,exp_info.p_landscape,
+                                           textcolor=textcolor,
+                                           cmap=cmap,
+                                           edgecolor=edgecolor,
+                                           linewidths=0.5,
+                                           textsize=9)
     
 sea_ax = ax[0,1]
-for c in conc:
-    x = get_pos_in_log_space(c,3)
-    l1 = sea_ax.inset_axes([x[0],1,x[1]-x[0],0.5],transform=sea_ax.transData)
-    l1 = plotter.plot_landscape(exp_info.p_seascape,c,ax=l1,node_size=200,
-                            colorbar=False,
-                            textcolor='gray',
-                            square=True)
-    
-    yl = sea_ax.get_ylim()
-    ydata = np.arange(yl[0],yl[1],0.1)
-    xdata = np.ones(len(ydata))*c
-    sea_ax.plot(xdata,ydata,'--',color='black',alpha=0.5)
-    
-# cb.show()
-    
 
-# pos00 = ax[0,0].get_position()
-# pos01 = ax[0,1].get_position()
-# pos10 = ax[1,0].get_position()
-# pos11 = ax[1,1].get_position()
+for i in range(len(conc)-1):
+    c = conc[i]
+    plotter.add_landscape_to_fitness_curve(c,sea_ax,exp_info.p_seascape,
+                                           textcolor=textcolor,
+                                           cmap=cmap,
+                                           edgecolor=edgecolor,
+                                           linewidths=0.5,
+                                           textsize=9)
+
+c = conc[-1]
+# cbax = fig.add_subplot()
+l1 = plotter.add_landscape_to_fitness_curve(c,sea_ax,exp_info.p_seascape,
+                                            cmap=cmap,
+                                            edgecolor=edgecolor,
+                                            linewidths=0.5,
+                                            textsize=9,
+                                            colorbar=True)
 
 # reposition axes
 w = 0.3

@@ -178,7 +178,7 @@ def plot_fitness_curves(pop,
     if plot_r0:
         fit = fit-pop.death_rate
         ylabel = '$R_{0}$'
-        thresh = np.ones(powers.shape)
+        thresh = np.ones(conc.shape)
         ax.plot(conc,thresh,linestyle='dashdot',color='black',linewidth=linewidth)
     else:
         ylabel = 'Growth Rate'
@@ -441,7 +441,9 @@ def plot_landscape(p,conc=10**0,
                    textsize=11,
                    resize_param=0.2,
                    square=False,
-                   textcolor='black'):
+                   textcolor='black',
+                   cbax=None,
+                   **kwargs):
     """
     Plots a graph representation of this landscape on the current matplotlib figure.
     If p is set to a vector of occupation probabilities, the edges in the graph will
@@ -464,7 +466,7 @@ def plot_landscape(p,conc=10**0,
     N = int(np.log2(len(fitness)))
 
     # Generate all possible N-bit sequences
-    n_genotype = len(fitness)
+    # n_genotype = len(fitness)
     genotypes = np.arange(2**N)
     genotypes = [p.int_to_binary(g) for g in genotypes]
 
@@ -481,7 +483,7 @@ def plot_landscape(p,conc=10**0,
     G.add_nodes_from(genotypes)
 
     # Add edges with appropriate weights depending on the TM
-    sf = 5 # edge thickness scale factor
+    # sf = 5 # edge thickness scale factor
     TM = p.random_mutations(len(genotypes))
     for i in range(len(TM)):
         for j in range(len(TM[i])):
@@ -516,7 +518,7 @@ def plot_landscape(p,conc=10**0,
     
     # # Draw the graph
     # plt.axis('off')
-    cmap='plasma'
+    # cmap=cmap
     
     xy = np.asarray([pos[v] for v in list(G)])
     
@@ -548,8 +550,15 @@ def plot_landscape(p,conc=10**0,
     #     xy[:,0] = xy[:,0]*y_range/x_range
     #     ax.set_aspect('equal')
         
-    ax.scatter(xy[:,0],xy[:,1],s=node_size,c=fitness,linewidths=1,
-               vmin=vmin,vmax=vmax,cmap=cmap,clip_on=False)
+    ax.scatter(xy[:,0],xy[:,1],
+               s=node_size,
+               c=fitness,
+               # linewidths=linewidths,
+               vmin=vmin,
+               vmax=vmax,
+               clip_on=False,
+               **kwargs)
+               # edgecolor=edgecolor)
     
     # nx.draw(G, pos, with_labels=False, linewidths=1, node_color=fitness,
     #         node_size=node_size,arrows=False,
@@ -558,12 +567,12 @@ def plot_landscape(p,conc=10**0,
     
     
     # labels = {n: n for n in G.nodes()}
-    text_items = {}  # there is no text collection so we'll fake one
+    # text_items = {}  # there is no text collection so we'll fake one
     for n, label in labels.items():
         (x, y) = pos[n]
         if not isinstance(label, str):
             label = str(label)  # this makes "1" and 1 labeled the same
-        t = ax.text(
+        ax.text(
             x,
             y,
             label,
@@ -577,10 +586,29 @@ def plot_landscape(p,conc=10**0,
         
     # display colorbar    
     if colorbar:
-        sm = plt.cm.ScalarMappable(cmap=cmap, 
-                                   norm=plt.Normalize(vmin = vmin, vmax=vmax))
+        if 'cmap' in kwargs:
+            cmap=kwargs['cmap']
+            sm = plt.cm.ScalarMappable(cmap=cmap, 
+                                        norm=plt.Normalize(vmin = vmin, vmax=vmax))
+        else:
+            sm = plt.cm.ScalarMappable(norm=plt.Normalize(
+                vmin = vmin, vmax=vmax))
         sm._A = []
-        cb = plt.colorbar(sm,drawedges=False)
+        # cbaxes = ax.inset_axes([0.8,0.2,0.3,0.3])
+        # if cbax is None:
+        #     cbax = ax
+        
+        cbax = ax.inset_axes([0.4,-0.35,0.3,0.5])
+        cbax.set_frame_on(False)
+        cbax.set_xticks([])
+        cbax.set_yticks([])
+        
+        cb = plt.colorbar(sm,
+                          drawedges=False,
+                          ax=cbax,
+                          location='right',
+                          aspect=10)
+        # cb = plt.colorbar()
         cb.outline.set_visible(False)
     
     if square:
@@ -615,4 +643,57 @@ def plot_landscape(p,conc=10**0,
     ax.set_axis_off()
     
 
-    return edge_pos
+    return ax
+
+def add_landscape_to_fitness_curve(c,ax,pop,
+                                   textcolor='gray',
+                                   colorbar=False,
+                                   square=True,
+                                   vert_lines=True,
+                                   **kwargs):
+    
+    x = get_pos_in_log_space(c, 3)
+    l = ax.inset_axes([x[0],1,x[1]-x[0],0.5],transform=ax.transData)
+    l = plot_landscape(pop,c,ax=l,node_size=200,
+                        colorbar=colorbar,
+                        textcolor=textcolor,
+                        square=square,
+                        **kwargs)
+    
+    if vert_lines:
+        yl = ax.get_ylim()
+        ydata = np.arange(yl[0],yl[1],0.1)
+        xdata = np.ones(len(ydata))*c
+        ax.plot(xdata,ydata,'--',color='black',alpha=0.5)        
+    
+    return l
+
+# Helper methods
+
+def get_pos_in_log_space(center,width):
+    """
+    Returns x or y coordinates to pass to inset_axes when the axis is a log 
+    scale in order to make the inset axes uniform sizes.
+
+    Parameters
+    ----------
+    center : float
+        Center point of the axes in data points (not log-ed).
+    width : float
+        Visual width of the axes (in log units).
+
+    Returns
+    -------
+    x : list of floats
+        x[0] = left point, x[1] = right point.
+        log10(x[1]-x[0]) = width
+
+    """
+    
+    center = np.log10(center)
+    x0 = center - width/2
+    x1 = center + width/2
+    
+    x = [10**x0,10**x1]
+    
+    return x
