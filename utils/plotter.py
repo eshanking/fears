@@ -4,7 +4,8 @@ import seaborn as sns
 import numpy as np
 import os
 import math
-from fears.utils import dir_manager, results_manager
+import scipy.stats
+from fears.utils import dir_manager
 
 def plot_timecourse(pop,counts_t=None,title_t=None):
     
@@ -185,39 +186,13 @@ def plot_fitness_curves(pop,
     
     for gen in range(pop.n_genotype):
         ax.plot(conc,fit[gen,:],linewidth=linewidth,label=str(pop.int_to_binary(gen)))
-        
-    # for allele in range(16):
-        
-    #     if pop.static_topology:
-    #         for j in range(conc.shape[0]):
-    #                fit[j] = pop.gen_fitness(allele,conc[j],drugless_rates,ic50)            
-    #     else:
-    #         for j in range(conc.shape[0]):
-    #             fit[j] = pop.gen_fitness(allele,conc[j],drugless_rates,ic50)
-            
-    #     if plot_r0:
-    #         fit = fit - pop.death_rate
-    #         ylabel = '$R_{0}$'
-    #         thresh = np.ones(powers.shape)
-    #         ax.plot(powers,thresh,linestyle='dashdot',color='black',linewidth=3)
-    #     else:
-    #         ylabel = 'Growth Rate'
-            
-    #     ax.plot(powers,fit,linewidth=3,label=str(pop.int_to_binary(allele)))
     
     if show_legend:
         ax.legend(fontsize=labelsize,frameon=False,loc=(1,-.10))
-        
-    # ax.set_xticks([-3,-2,-1,0,1,2,3,4,5])
-    # ax.set_xticklabels(['$10^{-3}$','$10^{-2}$','$10^{-1}$','$10^{0}$',
-    #                      '$10^1$','$10^2$','$10^3$','$10^4$','$10^5$'])
     
     ax.set_xscale('log')
     
     ax.set_title(fig_title,fontsize=labelsize)
-    # ax.xticks(fontsize=labelsize)
-    # ylabels = ax.get_yticklabels()
-    # ax.set_yticklabels(ylabels,fontsize=labelsize)
     
     ax.tick_params(labelsize=labelsize)
     
@@ -312,6 +287,7 @@ def plot_timecourse_to_axes(pop,
                         counts,
                         counts_ax,
                         drug_curve=None,
+                        drug_curve_label=True,
                         drug_ax=None,
                         labelsize=15,
                         linewidth=3):
@@ -351,13 +327,6 @@ def plot_timecourse_to_axes(pop,
 
     """
     
-    # if pop is not None:
-    #     drug_log_scale = pop.drug_log_scale
-    #     x_lim = pop.x_lim
-    # else:
-    #     drug_log_scale = False
-    #     x_lim = counts.shape[0]
-    
     counts_total = np.sum(counts,axis=0)
     sorted_index = counts_total.argsort()
     sorted_index_big = sorted_index[-8:]    
@@ -371,12 +340,16 @@ def plot_timecourse_to_axes(pop,
     
     counts_ax.set_prop_cycle(cc)
     
-    # color = [0.5,0.5,0.5]
-    
     if drug_curve is not None:
         if drug_ax is None:
-            raise Exception('No drug axes given')
-        drug_ax.plot(drug_curve,color='black',linewidth=2)
+            drug_ax = counts_ax.twinx() # ax2 is the drug timecourse
+            # left = 0.1
+            # width = 0.8
+            # drug_ax.set_position([left, 0.5, width, 0.6])
+            if drug_curve_label:
+                drug_ax.set_ylabel('Drug Concentration (uM)', color='gray',fontsize=labelsize)
+        drug_ax.plot(drug_curve,'--',color='gray',linewidth=2,alpha=0.7)
+        
         if pop.drug_log_scale:
             drug_ax.set_yscale('log')
             if min(drug_curve) <= 0:
@@ -386,7 +359,10 @@ def plot_timecourse_to_axes(pop,
             drug_ax.set_ylim(axmin,2*max(drug_curve))
         else:
             drug_ax.set_ylim(0,1.1*max(drug_curve))
-        drug_ax.tick_params(labelsize=labelsize)
+            
+        # drug_ax.yaxis.label.set_color('gray')
+        drug_ax.tick_params(labelsize=labelsize,color='gray')
+        plt.setp(drug_ax.get_yticklabels(), color='gray')
     
     for genotype in range(counts.shape[1]):
         if genotype in sorted_index_big:
@@ -433,6 +409,7 @@ def plot_timecourse_to_axes(pop,
 def plot_landscape(p,conc=10**0,
                    fitness=None,
                    relative=True,
+                   rank=True,
                    ax=None,
                    ignore_zero=True,
                    colorbar_lim=None,
@@ -443,6 +420,7 @@ def plot_landscape(p,conc=10**0,
                    square=False,
                    textcolor='black',
                    cbax=None,
+                   cblabel='',
                    **kwargs):
     """
     Plots a graph representation of this landscape on the current matplotlib figure.
@@ -461,6 +439,10 @@ def plot_landscape(p,conc=10**0,
         
     if ax is None:
         fig,ax=plt.subplots()
+        
+    if rank:
+        fitness = scipy.stats.rankdata(fitness)
+        cblabel = 'Rank'
     
     # Figure out the length of the bit sequences we're working with
     N = int(np.log2(len(fitness)))
@@ -509,16 +491,11 @@ def plot_landscape(p,conc=10**0,
         xs = np.linspace(0 + offset / 2, 1 - offset / 2, levelLen)
         for j in range(len(hierarchy[i])):
             pos[hierarchy[i][j]] = (xs[j], y)
-            # labels[hierarchy[i][j]] = hierarchy[i][j][0]
         y -= 1 / N
     
     labels = dict(pos)
     for k in labels.keys():
         labels[k] = k[0]
-    
-    # # Draw the graph
-    # plt.axis('off')
-    # cmap=cmap
     
     xy = np.asarray([pos[v] for v in list(G)])
     
@@ -544,30 +521,14 @@ def plot_landscape(p,conc=10**0,
         vmin=min(fitness)
         vmax=max(fitness)
     
-    # if square:
-    #     y_range = max(xy[:,1])-min(xy[:,1])
-    #     x_range = max(xy[:,0])-min(xy[:,0])
-    #     xy[:,0] = xy[:,0]*y_range/x_range
-    #     ax.set_aspect('equal')
-        
     ax.scatter(xy[:,0],xy[:,1],
                s=node_size,
                c=fitness,
-               # linewidths=linewidths,
                vmin=vmin,
                vmax=vmax,
                clip_on=False,
                **kwargs)
-               # edgecolor=edgecolor)
     
-    # nx.draw(G, pos, with_labels=False, linewidths=1, node_color=fitness,
-    #         node_size=node_size,arrows=False,
-    #         vmin = min(fitness), vmax=max(fitness),cmap=cmap)
-    # nx.draw_networkx_labels(G,pos,labels,font_size=10,font_color='red')
-    
-    
-    # labels = {n: n for n in G.nodes()}
-    # text_items = {}  # there is no text collection so we'll fake one
     for n, label in labels.items():
         (x, y) = pos[n]
         if not isinstance(label, str):
@@ -594,9 +555,7 @@ def plot_landscape(p,conc=10**0,
             sm = plt.cm.ScalarMappable(norm=plt.Normalize(
                 vmin = vmin, vmax=vmax))
         sm._A = []
-        # cbaxes = ax.inset_axes([0.8,0.2,0.3,0.3])
-        # if cbax is None:
-        #     cbax = ax
+
         
         cbax = ax.inset_axes([0.4,-0.35,0.3,0.5])
         cbax.set_frame_on(False)
@@ -610,20 +569,21 @@ def plot_landscape(p,conc=10**0,
                           aspect=10)
         # cb = plt.colorbar()
         cb.outline.set_visible(False)
+        cb.set_label(cblabel,fontsize=8)
+        
+        if rank:
+            ticks = [min(fitness),max(fitness)]
+            cb.set_ticks(ticks)
+            ticks = [max(fitness),min(fitness)]
+            ticks = np.array(ticks).astype('int')
+            ticks = [str(t) for t in ticks]
+            # print(str(ticks))
+            # ticks = ['4','1']
+            cb.set_ticklabels(ticks)
     
     if square:
         ydata_range = max(xy[:,1])-min(xy[:,1])
-        # yl = ax.get_ylim()
-        # ylim_range = yl[1]-yl[0]
-        # y_ratio = ydata_range/ylim_range
-        
-        # xl = ax.get_xlim()
         xdata_range = max(xy[:,0])-min(xy[:,0])
-        # xlim_range = xl[1]-xl[0]
-        # x_ratio = xdata_range/xlim_range
-        
-        # ylim_range = ydata_range/x_ratio
-        # yl = [y*ylim_range for y in yl]
         ax.set_aspect(xdata_range/ydata_range)
         
         
@@ -634,15 +594,11 @@ def plot_landscape(p,conc=10**0,
     ax.set_xlim(xl)
     
     yl = ax.get_ylim()
-    # print(str(yl))
     yrange = yl[1]-yl[0]
     yl = [yl[0]-resize_param*yrange,yl[1]+yrange*resize_param]
-    # print(str(yl))
     ax.set_ylim(yl)
     
     ax.set_axis_off()
-    
-
     return ax
 
 def add_landscape_to_fitness_curve(c,ax,pop,

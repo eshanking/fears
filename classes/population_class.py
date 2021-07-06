@@ -1,5 +1,4 @@
 import numpy as np
-import pandas as pd
 import math
 from fears.utils import plotter, pharm, fitness, dir_manager
 
@@ -14,8 +13,8 @@ class Population:
     Attributes
     __________
     passage : bool
-        if true, simulates passaging cells by reducing the population to 10% 
-        at intervals given by drug_regimen.
+        if true, simulates passaging cells by reducing the population by a 
+        factor of self.dilution at intervals given by passage_time.
     carrying_cap : bool
         if true, sets the carrying capacity to max_cells.
     curve_type : str
@@ -34,42 +33,55 @@ class Population:
                 intervals given by dose_schedule. On/off ratio set by 
                 duty_cycle
     counts_log_scale : bool
-        if true, plots the results on a log scale
-    constant_pop : enforces a constant population size (max_cells)
+        If true, plots the results on a log scale.
+    constant_pop : bool
+        Enforces a constant population size (max_cells).
     drugless_data : str
-        filename for the drugless growth rates (ogbunugafor_ic50.csv by 
+        Filename for the drugless growth rates (ogbunugafor_drugless.csv by 
         default). Searches for files in the fears/data folder.
     death_rate : float
-        death rate
+        Death rate
     doubling_time : float
-        average doubling time of the model organism (hours)
+        Average doubling time of the model organism (hours).
     dose_schedule : int
-        timesteps between simulated doses
+        Timesteps between simulated doses.
     drug_log_scale : bool
-        if true, plots the drug concentration curve on a log scale
+        If true, plots the drug concentration curve on a log scale.
     drug_curve : array
-        optional custom drug concentration curve. Overrides all other drug 
+        Optional custom drug concentration curve. Overrides all other drug 
         concentration options.
     debug : bool
-        if true, prints every 10th timestep
+        If true, prints every 10th timestep.
     duty_cycle : float
-        on/off ratio of the on/off regimen.
+        On/off ratio of the on/off regimen.
     entropy_lim : list
-        y axis limits for plotting the entropy curve
+        Y axis limits for plotting the entropy curve.
     fig_title : str
-        optional figure title
+        Optional figure title.
     fitness_data : str
         generate: generate the fitness data based on the drugless growth rates
         and ic50.
-        manual: get fitness data from self.landscape_data
-    h_step: 
+        manual: get fitness data from self.landscape_data.
+    h_step : int
+        Time at which the drug concentration steps from min_dose to max_dose.
+    ic50_data : str
+        Filename for the ic50 data (pyrimethamine_ic50.csv by 
+        default). Searches for files in the fears/data folder.
+    init_counts : numpy array
+        Initial simulation counts. 
+        Defaults: 10**4 cells at genotype 0.
+    k_elim : float
+        Pharmacokinetic elimination rate.
+    k_abs : float
+        Pharamcokinetic absorption rate.
     
     """
 ###############################################################################    
     # Initializer
     def __init__(self,
                  n_allele = 4,
-                 bottleneck = False,
+                 passage = False,
+                 passage_time = 48, # hours
                  carrying_cap = True,
                  curve_type='constant', # drug concentration curve
                  counts_log_scale = False, # plot counts on log scale
@@ -81,6 +93,7 @@ class Population:
                  drug_log_scale = False, # plot the drug concentration curve on a log scale
                  drug_curve = None, # input a custom drug concentration curve
                  debug=False, # print the current time step
+                 dilution = 40,
                  duty_cycle = None,
                  entropy_lim = None, # entropy plotting limits
                  fig_title = '',
@@ -112,7 +125,8 @@ class Population:
                  x_lim = None, # plotting
                  y_lim = None # plotting
                  ):
-                
+        """
+        """        
         # Evolutionary parameters
         
         # Number of generations (time steps)
@@ -139,7 +153,9 @@ class Population:
         
         self.fitness_data = fitness_data
         
-        self.bottleneck = bottleneck
+        self.passage = passage
+        self.passage_time = passage_time
+        self.dilution = dilution
 
         self.counts = np.zeros([self.n_timestep,16])
         self.counts_extinct = np.zeros([self.n_timestep,16])
@@ -246,12 +262,33 @@ class Population:
         if null_seascape:
             self.null_seascape_dose=null_seascape_dose
             self.set_null_seascape(self.null_seascape_dose)
+        
+        if passage:
+            if not np.mod(passage_time,timestep_scale) == 0:
+                raise Exception('To reduce ambiguity, please ensure that' 
+                                + ' timestep_scale divides evenly into'
+                                + ' passage_time.')
 
 ###############################################################################
     # ABM helper methods
     
     # converts decimals to binary
     def int_to_binary(self,num):
+        """
+        Converts an integer to binary representation with the number of 
+        digits equal to the number of alleles in the model.
+
+        Parameters
+        ----------
+        num : int
+            Number to be converted.
+
+        Returns
+        -------
+        str
+            Binary representation.
+
+        """
         pad = int(math.log(self.n_genotype,2))
         return bin(num)[2:].zfill(pad)
     
@@ -290,6 +327,31 @@ class Population:
             stop_cond = True
             
         return stop_cond
+    
+    def passage_cells(self,mm,counts):
+        """
+        If self.passage is true, dilute cells according to self.dilution when
+        the timestep is a multiple of self.passage_time.
+
+        Parameters
+        ----------
+        mm : int
+            Timestep.
+        counts : numpy array
+            Matrix of simulated cell counts.
+
+        Returns
+        -------
+        counts : numpy array
+            Matrix of simulated cell counts; diluted if the timestep is
+            appropriate.
+
+        """
+        
+        if np.mod(mm*self.timestep_scale,self.passage_time) == 0:
+            counts = counts/self.dilution
+        
+        return counts
 
 ##############################################################################
     # core evolutionary model
@@ -310,11 +372,10 @@ class Population:
             print(str(mm))
             print(str(counts))
             print(str(fit_land))
-            
-        # if mm > 0 and self.bottleneck == True and np.mod(mm-self.duty_cycle*self.dose_schedule,self.dose_schedule) == 0:
-        #     counts = np.round(0.1*counts)
          
         counts_t = counts
+        
+        counts_t = self.passage_cells(mm,counts)
 
         # Kill cells
         
@@ -330,8 +391,6 @@ class Population:
         daughter_counts = np.random.poisson(counts_t*fit_land)
         
         for genotype in np.arange(n_genotype):
-            
-            n_allele = int(np.log2(n_genotype))
             
             n_mut = np.random.poisson(daughter_counts[genotype]*mut_rate*self.n_allele)
 
