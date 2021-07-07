@@ -29,6 +29,6 @@ e = Experiment(experiment_type=experiment_type,
                n_sims=n_sims,
                prob_drops=p,
                population_options = options,
-               debug=False)
+               debug=True)
 
 e.run_experiment(experiment_type='ramp_up_down')

@@ -6,19 +6,21 @@ import pandas as pd
 import numpy as np
 import seaborn as sns
 from cycler import cycler
+from fears.utils import dir_manager
 # from population_class import int_to_binary
 
 # method for computing binary allele label from allele number
 def int_to_binary(num, pad=4):
     return bin(num)[2:].zfill(pad)
 
-data_folder = 'results_09172020_0001'
-max_cells = 0.6*10**6 # carrying capacity for determining if a population survived or not
+data_folder = 'results_07072021_0000'
+results_dir = dir_manager.make_resultspath_absolute(data_folder)
+max_cells = 0.6*10**11 # carrying capacity for determining if a population survived or not
 
 ###############################################################################
 # generate figure and axes
 
-results_dir = os.getcwd() + os.sep + data_folder # folder containing all of the results
+# results_dir = os.getcwd() + os.sep + data_folder # folder containing all of the results
 experiment_folders = os.listdir(path=results_dir) # each of these folders corresponds to a different k_abs
 
 n_params = len(experiment_folders)

@@ -66,6 +66,10 @@ def plot_timecourse(pop,counts_t=None,title_t=None):
         #     ax2.set_ylim(-4,3)
         # else:
         drug_curve = pop.drug_curve
+        # drug_curve = np.log(drug_curve)
+        
+        # drug_curve = -np.log(1-drug_curve/pop.max_dose)
+        
         ax2.plot(drug_curve, color='black', linewidth=2.0)
         ax2.tick_params(axis='y', labelcolor=color)
         
@@ -197,8 +201,8 @@ def plot_fitness_curves(pop,
     ax.tick_params(labelsize=labelsize)
     
     if show_axes_labels:
-        ax.xlabel('Drug concentration ($\mathrm{\mu}$M)',fontsize=labelsize)
-        ax.ylabel(ylabel,fontsize=labelsize)
+        ax.set_xlabel('Drug concentration ($\mathrm{\mu}$M)',fontsize=labelsize)
+        ax.set_ylabel(ylabel,fontsize=labelsize)
     ax.set_frame_on(False)
     
     if save:

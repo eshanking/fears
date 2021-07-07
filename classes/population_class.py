@@ -348,9 +348,9 @@ class Population:
 
         """
         
-        if np.mod(mm*self.timestep_scale,self.passage_time) == 0:
-            counts = counts/self.dilution
-        
+        if (np.mod(mm*self.timestep_scale,self.passage_time) == 0 
+            and not mm == 0 and self.passage):
+            counts = np.divide(counts,self.dilution)
         return counts
 
 ##############################################################################
@@ -373,9 +373,11 @@ class Population:
             print(str(counts))
             print(str(fit_land))
          
-        counts_t = counts
+        # passage cells
         
-        counts_t = self.passage_cells(mm,counts)
+        counts = self.passage_cells(mm, counts)
+        
+        counts_t = counts
 
         # Kill cells
         
@@ -537,3 +539,10 @@ class Population:
     def plot_fitness_curves(self,fig_title='',plot_r0 = False,save=False,savename=None):
         fig = plotter.plot_fitness_curves(self,fig_title=fig_title,plot_r0 = plot_r0,save=save,savename=savename)
         return fig
+    
+    
+    
+    
+    
+    
+    

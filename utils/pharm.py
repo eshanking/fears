@@ -17,10 +17,14 @@ def pharm_eqn(pop,t,k_elim=None,k_abs=None,max_dose=None):
     k_elim = k_elim*pop.timestep_scale
     k_abs = k_abs*pop.timestep_scale
     
-    conc = np.exp(-k_elim*t)-np.exp(-k_abs*t)
-    t_max = np.log(k_elim/k_abs)/(k_elim-k_abs)
-    conc = conc/(np.exp(-k_elim*t_max)-np.exp(-k_abs*t_max))
-    conc = conc*max_dose
+    if k_elim == 0:
+        conc = 1 - np.exp(-k_abs*t)
+        conc = conc*max_dose
+    else:
+        conc = np.exp(-k_elim*t)-np.exp(-k_abs*t) 
+        t_max = np.log(k_elim/k_abs)/(k_elim-k_abs)
+        conc = conc/(np.exp(-k_elim*t_max)-np.exp(-k_abs*t_max))
+        conc = conc*max_dose
     return conc
 
 # Convolve dose regimen u with pharmacokinetic model

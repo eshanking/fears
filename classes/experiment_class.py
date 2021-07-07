@@ -218,6 +218,12 @@ class Experiment():
                                                         curve_type='pharm',
                                                         n_sims=1,
                                                         **self.population_options))
+                elif curve_types[0] == 'pulsed':
+                    self.populations.append(Population(max_dose=self.max_doses[0],
+                                                        k_abs=slope,
+                                                        curve_type='pulsed',
+                                                        n_sims=1,
+                                                        **self.population_options))
                 else:
                     self.populations.append(Population(max_dose=self.max_doses[0],
                                                         slope=slope,
@@ -383,13 +389,15 @@ class Experiment():
                     drug = np.transpose(drug)
                     counts = np.concatenate((counts,drug),axis=1)
                     
-                    if self.curve_types[0] == 'pharm':
-                        save_folder = 'k_abs=' + str(p.k_abs)
-                        save_folder.replace('.','pnt')
-                    else:
-                        save_folder = 'slope=' + str(p.slope)
-                        save_folder.replace('.','pnt')
-                    self.save_counts(counts,n,save_folder)
+                    if self.debug is False:
+                        if (self.curve_types[0] == 'pharm' or 
+                            self.curve_types[0] == 'pulsed'):
+                            save_folder = 'k_abs=' + str(p.k_abs)
+                            save_folder.replace('.','pnt')
+                        else:
+                            save_folder = 'slope=' + str(p.slope)
+                            save_folder.replace('.','pnt')
+                        self.save_counts(counts,n,save_folder)
         
         
                     
