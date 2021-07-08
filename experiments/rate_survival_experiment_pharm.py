@@ -2,8 +2,9 @@ from fears.classes.experiment_class import Experiment
 import numpy as np
 import time
 # import numpy as np
+np.random.seed(2021)
 
-max_doses = [0.5*10**5]
+max_doses = [10**4]
 curve_types = ['pharm']
 experiment_type = 'rate-survival'
 n_sims = 100
@@ -12,7 +13,7 @@ n_sims = 100
 # slopes = np.linspace(0.0005,0.0045,5)
 # slopes = np.array([0.0002,0.0004,0.0006,0.0008,0.001])
 # slopes = np.array([.05])*10**-3
-slopes = np.array([0.1,0.2,0.4,0.8])*10**-3
+slopes = np.array([0.05,0.1,0.2])*10**-3
 # slopes = np.linspace(0.0001,0.01,num=3)
 
 init_counts = np.zeros(16)
@@ -23,7 +24,7 @@ options = {'doubling_time':1.5,
            'mut_rate':10**-9,
            'carrying_cap':True,
            'max_cells':10**11,
-           'n_timestep':5000,
+           'n_timestep':2000,
            'init_counts':init_counts,
            # 'k_abs':0.95,
            # 'k_elim':0.00839,
@@ -33,7 +34,7 @@ options = {'doubling_time':1.5,
            'pad_right':False,
            'timestep_scale':2,
            'plot':False,
-           'ic50_data':'pyrimethamine_ic50.csv'
+           'ic50_data':'cycloguanil_ic50.csv'
            }
 
 e = Experiment(max_doses=max_doses,

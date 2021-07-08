@@ -7,6 +7,18 @@ import math
 import scipy.stats
 from fears.utils import dir_manager
 
+def gen_color_cycler():
+    colors = sns.color_palette('bright')
+    colors = np.concatenate((colors[0:9],colors[0:7]),axis=0)
+    colors[[14,15]] = colors[[15,14]]
+    
+    colors[[7,8]] = colors[[8,7]]
+    
+    cc = (cycler(color=colors) + 
+           cycler(linestyle=['-', '-','-','-','-','-','-','-','-',
+                            '--','--','--','--','--','--','--']))
+    return cc
+
 def plot_timecourse(pop,counts_t=None,title_t=None):
     
     if (pop.counts == 0).all() and counts_t is None:
@@ -37,15 +49,17 @@ def plot_timecourse(pop,counts_t=None,title_t=None):
     sorted_index = counts_total.argsort()
     sorted_index_big = sorted_index[-8:]
     
-    colors = sns.color_palette('bright')
-    colors = np.concatenate((colors[0:9],colors[0:7]),axis=0)
+    # colors = sns.color_palette('bright')
+    # colors = np.concatenate((colors[0:9],colors[0:7]),axis=0)
     
-    # shuffle colors
-    colors[[14,15]] = colors[[15,14]]
+    # # shuffle colors
+    # colors[[14,15]] = colors[[15,14]]
     
-    cc = (cycler(color=colors) + 
-          cycler(linestyle=['-', '-','-','-','-','-','-','-','-',
-                            '--','--','--','--','--','--','--']))
+    # cc = (cycler(color=colors) + 
+    #       cycler(linestyle=['-', '-','-','-','-','-','-','-','-',
+    #                         '--','--','--','--','--','--','--']))
+    
+    cc = gen_color_cycler()
     
     ax1.set_prop_cycle(cc)
 
@@ -166,13 +180,16 @@ def plot_fitness_curves(pop,
     
     conc = np.logspace(-3,5,50)
     
-    colors = sns.color_palette('bright')
-    colors = np.concatenate((colors[0:9],colors[0:7]),axis=0)
-    colors[[14,15]] = colors[[15,14]]
+    # colors = sns.color_palette('bright')
+    # colors = np.concatenate((colors[0:9],colors[0:7]),axis=0)
+    # colors[[14,15]] = colors[[15,14]]
     
-    cc = (cycler(color=colors) + 
-           cycler(linestyle=['-', '-','-','-','-','-','-','-','-',
-                            '--','--','--','--','--','--','--']))
+    # cc = (cycler(color=colors) + 
+    #        cycler(linestyle=['-', '-','-','-','-','-','-','-','-',
+    #                         '--','--','--','--','--','--','--']))
+    
+    cc = gen_color_cycler()
+    
     ax.set_prop_cycle(cc) 
     
     fit = np.zeros((pop.n_genotype,conc.shape[0]))
@@ -294,7 +311,9 @@ def plot_timecourse_to_axes(pop,
                         drug_curve_label=True,
                         drug_ax=None,
                         labelsize=15,
-                        linewidth=3):
+                        linewidth=3,
+                        grayscale=False,
+                        **kwargs):
     """
     Plots simulation timecourse to user defined axes (counts_ax).
 
@@ -333,26 +352,27 @@ def plot_timecourse_to_axes(pop,
     
     counts_total = np.sum(counts,axis=0)
     sorted_index = counts_total.argsort()
-    sorted_index_big = sorted_index[-8:]    
-    colors = sns.color_palette('bright')
-    colors = np.concatenate((colors[0:9],colors[0:7]),axis=0)
-    colors[[14,15]] = colors[[15,14]]
+    sorted_index_big = sorted_index[-8:]
     
-    cc = (cycler(color=colors) + 
-          cycler(linestyle=['-', '-','-','-','-','-','-','-','-',
-                            '--','--','--','--','--','--','--']))
+    if grayscale is False:    
+        # colors = sns.color_palette('bright')
+        # colors = np.concatenate((colors[0:9],colors[0:7]),axis=0)
+        # colors[[14,15]] = colors[[15,14]]
+        
+        # cc = (cycler(color=colors) + 
+        #       cycler(linestyle=['-', '-','-','-','-','-','-','-','-',
+        #                         '--','--','--','--','--','--','--']))
+        
+        cc = gen_color_cycler()
     
-    counts_ax.set_prop_cycle(cc)
+        counts_ax.set_prop_cycle(cc)
     
     if drug_curve is not None:
         if drug_ax is None:
             drug_ax = counts_ax.twinx() # ax2 is the drug timecourse
-            # left = 0.1
-            # width = 0.8
-            # drug_ax.set_position([left, 0.5, width, 0.6])
             if drug_curve_label:
                 drug_ax.set_ylabel('Drug Concentration (uM)', color='gray',fontsize=labelsize)
-        drug_ax.plot(drug_curve,'--',color='gray',linewidth=2,alpha=0.7)
+        drug_ax.plot(drug_curve,color='black',linewidth=2,alpha=0.7)
         
         if pop.drug_log_scale:
             drug_ax.set_yscale('log')
@@ -371,7 +391,7 @@ def plot_timecourse_to_axes(pop,
     for genotype in range(counts.shape[1]):
         if genotype in sorted_index_big:
             counts_ax.plot(counts[:,genotype],linewidth=linewidth,
-                           label=str(pop.int_to_binary(genotype)))
+                           label=str(pop.int_to_binary(genotype)),**kwargs)
         else:
             counts_ax.plot(counts[:,genotype],linewidth=linewidth,label=None)
     
@@ -406,7 +426,7 @@ def plot_timecourse_to_axes(pop,
     # counts_ax.spines["bottom"].set_visible(False)
     
     # ax.set_title(fig_title,fontsize=labelsize)
-
+    
     return counts_ax, drug_ax
 
 
