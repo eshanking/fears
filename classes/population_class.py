@@ -1,5 +1,8 @@
+import sys
+sys.path.append('/Users/kinge2/repos/')
 import numpy as np
 import math
+import random
 from fears.utils import plotter, pharm, fitness, dir_manager
 
 class Population:
@@ -272,6 +275,16 @@ class Population:
 ###############################################################################
     # ABM helper methods
     
+    def fast_choice(self,options, probs):
+        x = random.random()
+        cum = 0
+        for i, p in enumerate(probs):
+            cum += p
+            if x < cum:
+                return options[i]
+        return options[-1]
+    
+    
     # converts decimals to binary
     def int_to_binary(self,num):
         """
@@ -398,7 +411,8 @@ class Population:
 
             # Substract mutating cells from that allele
             daughter_counts[genotype] -= n_mut
-                        
+            
+            # mutate cells
             mutations = np.random.choice(n_genotype, size=n_mut, p=P[:,genotype]).astype(np.uint8)
 
             # Add mutating cell to their final types
@@ -529,6 +543,10 @@ class Population:
     def gen_curves(self):
         curve, u = pharm.gen_curves(self)
         return curve, u
+    
+    def gen_passage_drug_protocol(self):
+        drug_curve = pharm.gen_passage_drug_protocol(self)
+        return drug_curve
 ##############################################################################
 # Wrapper methods for plotting
   
@@ -544,5 +562,6 @@ class Population:
     
     
     
-    
+# p = Population(plot=False)
+# p.simulate()
     

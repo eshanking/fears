@@ -93,7 +93,6 @@ def gen_on_off_regimen(pop,duty_cycle=None):
 # generates drug concentration curves
 def gen_curves(pop):
     curve = np.zeros(pop.n_timestep)
-    # print('hi')
     u = None
     if pop.curve_type == 'linear': # aka ramp linearly till timestep defined by steepness
         # cur_dose = 0
@@ -117,7 +116,6 @@ def gen_curves(pop):
             
     elif pop.curve_type == 'constant':
         curve[:] = pop.max_dose
-        # print('here')
 
     elif pop.curve_type == 'heaviside':
         for i in range(pop.n_timestep):
@@ -128,8 +126,11 @@ def gen_curves(pop):
     
     # Two compartment pharmacokinetic model
     elif pop.curve_type == 'pharm':
-        for i in range(pop.n_timestep):
-            curve[i] = pop.pharm_eqn(i)
+        if pop.passage:
+            curve = gen_passage_drug_protocol(pop)
+        else:
+            for i in range(pop.n_timestep):
+                curve[i] = pop.pharm_eqn(i)
     
     # Pulsed convolves an impulse train with the 1-compartment model
     elif pop.curve_type == 'pulsed':
@@ -140,3 +141,19 @@ def gen_curves(pop):
         curve = pop.gen_on_off_regimen()
         
     return curve, u
+
+def gen_passage_drug_protocol(pop):
+    
+    drug_curve = np.zeros(pop.n_timestep)
+    
+    gt = 0 # time in growth phase
+    tc = 0 # time for calculating drug concentration
+    
+    for t in range(pop.n_timestep):
+        if gt > pop.passage_time/pop.timestep_scale:
+            gt = 0
+            tc = t
+        gt += 1
+        drug_curve[t] = pharm_eqn(pop,tc)
+    
+    return drug_curve

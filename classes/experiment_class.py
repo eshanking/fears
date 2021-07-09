@@ -28,6 +28,8 @@ class Experiment():
                  n_impulse=1,
                  population_options = {},
                  slopes=None,
+                 passage=False,
+                 passage_time = 48,
                  debug = True): # debug = True -> no save
     
         self.root_path = str(dir_manager.get_project_root())
@@ -217,18 +219,24 @@ class Experiment():
                                                         k_abs=slope,
                                                         curve_type='pharm',
                                                         n_sims=1,
+                                                        passage=passage,
+                                                        passage_time=passage_time,
                                                         **self.population_options))
                 elif curve_types[0] == 'pulsed':
                     self.populations.append(Population(max_dose=self.max_doses[0],
                                                         k_abs=slope,
                                                         curve_type='pulsed',
                                                         n_sims=1,
+                                                        passage=passage,
+                                                        passage_time=passage_time,
                                                         **self.population_options))
                 else:
                     self.populations.append(Population(max_dose=self.max_doses[0],
                                                         slope=slope,
                                                         curve_type='linear',
                                                         n_sims=1,
+                                                        passage=passage,
+                                                        passage_time=passage_time,
                                                         **self.population_options))                        
                     
             # self.rate_survival_results = pd.DataFrame(columns=[])
@@ -381,6 +389,7 @@ class Experiment():
             # pbar = tqdm(total=len(self.populations))
             
             for p in self.populations:
+                
                 for n in range(self.n_sims):
                     counts,n_survive = p.simulate()
                     
