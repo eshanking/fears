@@ -16,7 +16,7 @@ n_sims = 100
 # slopes = np.array([0.0002,0.0004,0.0006,0.0008,0.001])
 # slopes = np.array([.05])*10**-3
 # slopes = np.array([0.05,0.1,0.2])*10**-3
-slopes = np.array([0.2,0.3,0.4,0.5,0.6])*10**-3
+slopes = np.array([0.4,0.5,0.6])*10**-3
 # slopes = np.linspace(0.0001,0.01,num=3)
 
 init_counts = np.zeros(16)

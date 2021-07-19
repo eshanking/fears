@@ -386,7 +386,7 @@ class Population:
             print(str(counts))
             print(str(fit_land))
          
-        # passage cells
+        # Passage cells
         
         counts = self.passage_cells(mm, counts)
         
@@ -396,7 +396,7 @@ class Population:
         
         counts_t = counts_t - np.random.poisson(counts*death_rate)
         
-        # make sure there aren't negative numbers
+        # Make sure there aren't negative numbers
         
         neg_indx = counts_t < 0
         counts_t[neg_indx] = 0
@@ -412,7 +412,7 @@ class Population:
             # Substract mutating cells from that allele
             daughter_counts[genotype] -= n_mut
             
-            # mutate cells
+            # Mutate cells
             mutations = np.random.choice(n_genotype, size=n_mut, p=P[:,genotype]).astype(np.uint8)
 
             # Add mutating cell to their final types
@@ -554,14 +554,14 @@ class Population:
         fig = plotter.plot_timecourse(self,counts_t=counts_t,title_t=title_t)
         return fig
     
-    def plot_fitness_curves(self,fig_title='',plot_r0 = False,save=False,savename=None):
-        fig = plotter.plot_fitness_curves(self,fig_title=fig_title,plot_r0 = plot_r0,save=save,savename=savename)
-        return fig
+    def plot_fitness_curves(self,fig_title='',plot_r0 = False,save=False,
+                            savename=None,**kwargs):
+        fig,ax = plotter.plot_fitness_curves(self,fig_title=fig_title,
+                                          plot_r0 = plot_r0,save=save,
+                                          savename=savename,**kwargs)
+        return fig,ax
     
-    
-    
-    
-    
+
 # p = Population(plot=False)
 # p.simulate()
     

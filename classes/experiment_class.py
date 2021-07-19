@@ -351,7 +351,8 @@ class Experiment():
   
                     save_folder = 'p_drop=' + str(p.prob_drop)
                     save_folder = save_folder.replace('.',',')
-                    self.save_counts(counts,i,save_folder)
+                    if not self.debug:
+                        self.save_counts(counts,i,save_folder)
                 # kk+=1
                 # pbar.update()
                 self.perc_survive = 100*self.n_survive/self.n_sims
@@ -512,4 +513,10 @@ class Experiment():
         neighbors = [genotype ^ (1 << m) for m in mut]
 
         return neighbors
+    
+    def extinction_time(self,pop):
+        
+        
+        
+        return
     

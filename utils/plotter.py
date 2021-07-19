@@ -10,7 +10,7 @@ from fears.utils import dir_manager
 def gen_color_cycler():
     colors = sns.color_palette('bright')
     colors = np.concatenate((colors[0:9],colors[0:7]),axis=0)
-    colors[[14,15]] = colors[[15,14]]
+    # colors[[14,15]] = colors[[15,14]]
     
     colors[[7,8]] = colors[[8,7]]
     
@@ -309,10 +309,14 @@ def plot_timecourse_to_axes(pop,
                         counts_ax,
                         drug_curve=None,
                         drug_curve_label=True,
+                        drug_curve_linestyle='--',
+                        drug_ax_sci_notation=False,
                         drug_ax=None,
                         labelsize=15,
                         linewidth=3,
+                        legend_labels = True,
                         grayscale=False,
+                        drug_kwargs = {},
                         **kwargs):
     """
     Plots simulation timecourse to user defined axes (counts_ax).
@@ -354,25 +358,20 @@ def plot_timecourse_to_axes(pop,
     sorted_index = counts_total.argsort()
     sorted_index_big = sorted_index[-8:]
     
-    if grayscale is False:    
-        # colors = sns.color_palette('bright')
-        # colors = np.concatenate((colors[0:9],colors[0:7]),axis=0)
-        # colors[[14,15]] = colors[[15,14]]
-        
-        # cc = (cycler(color=colors) + 
-        #       cycler(linestyle=['-', '-','-','-','-','-','-','-','-',
-        #                         '--','--','--','--','--','--','--']))
-        
+    if grayscale is False:     
         cc = gen_color_cycler()
-    
         counts_ax.set_prop_cycle(cc)
     
     if drug_curve is not None:
         if drug_ax is None:
             drug_ax = counts_ax.twinx() # ax2 is the drug timecourse
             if drug_curve_label:
-                drug_ax.set_ylabel('Drug Concentration (uM)', color='gray',fontsize=labelsize)
-        drug_ax.plot(drug_curve,color='black',linewidth=2,alpha=0.7)
+                if 'color' in drug_kwargs:
+                    color = drug_kwargs['color']
+                else:
+                    color='black'
+                drug_ax.set_ylabel('Drug Concentration (uM)', color=color,fontsize=labelsize)
+        drug_ax.plot(drug_curve,linestyle=drug_curve_linestyle,**drug_kwargs)
         
         if pop.drug_log_scale:
             drug_ax.set_yscale('log')
@@ -385,13 +384,18 @@ def plot_timecourse_to_axes(pop,
             drug_ax.set_ylim(0,1.1*max(drug_curve))
             
         # drug_ax.yaxis.label.set_color('gray')
-        drug_ax.tick_params(labelsize=labelsize,color='gray')
-        plt.setp(drug_ax.get_yticklabels(), color='gray')
+        drug_ax.tick_params(labelsize=labelsize,color=color)
+        plt.setp(drug_ax.get_yticklabels(), color=color)
+        if drug_ax_sci_notation:
+            drug_ax.ticklabel_format(style='scientific',axis='y')
     
     for genotype in range(counts.shape[1]):
         if genotype in sorted_index_big:
-            counts_ax.plot(counts[:,genotype],linewidth=linewidth,
-                           label=str(pop.int_to_binary(genotype)),**kwargs)
+            if legend_labels:
+                counts_ax.plot(counts[:,genotype],linewidth=linewidth,
+                               label=str(pop.int_to_binary(genotype)),**kwargs)
+            else:
+                counts_ax.plot(counts[:,genotype],linewidth=linewidth,**kwargs)
         else:
             counts_ax.plot(counts[:,genotype],linewidth=linewidth,label=None)
     
@@ -410,7 +414,6 @@ def plot_timecourse_to_axes(pop,
     xticks = counts_ax.get_xticks()
     xlabels = xticks
     xlabels = xlabels*pop.timestep_scale
-    # print(str(pop.timestep_scale))
     xlabels = xlabels/24
     xlabels = np.array(xlabels).astype('int')
     counts_ax.set_xticks(xticks)
@@ -421,11 +424,6 @@ def plot_timecourse_to_axes(pop,
     counts_ax.set_xlim(xl)
     counts_ax.spines["top"].set_visible(False)
     counts_ax.spines["right"].set_visible(False)
-    # counts_ax.ticklabel_format(style='sci',axis='y')
-    # counts_ax.spines["left"].set_visible(False)
-    # counts_ax.spines["bottom"].set_visible(False)
-    
-    # ax.set_title(fig_title,fontsize=labelsize)
     
     return counts_ax, drug_ax
 
@@ -677,3 +675,38 @@ def get_pos_in_log_space(center,width):
     x = [10**x0,10**x1]
     
     return x
+
+def plot_population_count(pop,
+                          c,
+                          ax=None,
+                          thresh=None,
+                          normalize=False,
+                          max_cells=None,
+                          logscale=True,
+                          **kwargs):
+    if ax is None:
+        fig,ax = plt.subplots(figsize=(6,4))
+    if thresh is None:
+        thresh = pop.max_cells/10
+    
+    if c[-1] < thresh:
+        if normalize:
+            c = c/pop.max_cells
+        ax.plot(c,color='gray',label='extinct',**kwargs)
+    else:
+        if normalize:
+            c = c/pop.max_cells
+        ax.plot(c,color='black',label='resistant',**kwargs)
+    
+    xticks = ax.get_xticks()
+    xlabels = xticks
+    xlabels = xlabels*pop.timestep_scale
+    xlabels = xlabels/24
+    xlabels = np.array(xlabels).astype('int')
+    ax.set_xticks(xticks)
+    ax.set_xticklabels(xlabels)
+    
+    if logscale:
+        ax.set_yscale('log')
+    
+    return ax

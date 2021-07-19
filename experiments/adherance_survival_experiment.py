@@ -1,6 +1,8 @@
 from fears.classes.experiment_class import Experiment
 import numpy as np
 
+np.random.seed(2021)
+
 init_counts = np.zeros(16)
 init_counts[0] = 10**5
 
@@ -18,9 +20,9 @@ options = {'doubling_time':1.5,
            'pad_right':True,
            'timestep_scale':2,
            'plot':False,
-           'ic50_data':'cycloguanil_ic50.csv'}
+           'ic50_data':'pyrimethamine_ic50.csv'}
 
-p = np.array([0.5,0.6,0.7,0.8,0.9])
+p = np.array([0.2,0.4,0.6,0.8])
 n_sims = 100
 
 experiment_type = 'drug-regimen'
@@ -29,6 +31,6 @@ e = Experiment(experiment_type=experiment_type,
                n_sims=n_sims,
                prob_drops=p,
                population_options = options,
-               debug=True)
+               debug=False)
 
-e.run_experiment(experiment_type='ramp_up_down')
+e.run_experiment()

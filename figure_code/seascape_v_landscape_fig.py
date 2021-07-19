@@ -2,8 +2,8 @@ from fears.utils import plotter, results_manager
 import matplotlib.pyplot as plt
 import numpy as np
 
-data_folder = 'results_07062021_0003'
-exp_info_file = 'experiment_info_07062021_0003.p'
+data_folder = 'results_07122021_0000'
+exp_info_file = 'experiment_info_07122021_0000.p'
 exp_folder,exp_info = results_manager.get_experiment_results(data_folder,
                                                              exp_info_file)
 # fitness axes
@@ -41,6 +41,7 @@ ax[1,0],drug_ax = plotter.plot_timecourse_to_axes(exp_info.p_landscape,
                                     labelsize=labelsize,
                                     linewidth=linewidth,
                                     drug_curve=dc,
+                                    drug_curve_linestyle='--',
                                     drug_curve_label=False)
 
 drug_ax.set_ylim([10**-5,10**7])
@@ -54,6 +55,7 @@ ax[1,1],drug_ax = plotter.plot_timecourse_to_axes(exp_info.p_landscape,
                                     ax[1,1],
                                     labelsize=labelsize,
                                     linewidth=linewidth,
+                                    drug_curve_linestyle='--',
                                     drug_curve=dc)
 
 drug_ax.set_ylim([10**-5,10**7])
