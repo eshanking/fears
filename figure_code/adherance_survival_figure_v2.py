@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from fears.utils import results_manager, plotter
 
-data_folder = 'results_07142021_0003'
-exp_info_file = 'experiment_info_07142021_0003.p'
+data_folder = 'results_07192021_0000'
+exp_info_file = 'experiment_info_07192021_0000.p'
 
 fig,ax = plt.subplots(figsize=(3,7.75))
 labelsize=12
@@ -30,6 +30,8 @@ pop_axes = []
 exp_folders.reverse()
 p_drop = np.flip(p_drop)
 
+thresh = 1
+
 # data_extinct = np.zeros((999,1))
 for exp in exp_folders:
     p_drop_t = exp[exp.find('=')+1:]
@@ -43,7 +45,7 @@ for exp in exp_folders:
     width = 100
     height = rects.patches[num].get_height()
     ypos = rects.patches[num].get_y()
-    xpos = 120
+    xpos = 125
     tcax = ax.inset_axes([xpos,ypos,width,height],transform=ax.transData)
     
     xpos = xpos + width + 30
@@ -57,7 +59,7 @@ for exp in exp_folders:
     
     k=0
     while k < len(sim_files):
-    # for sim in sim_files:
+    # while k < 10:
         sim = sim_files[k]
         sim = exp + os.sep + sim
         data = results_manager.get_data(sim)
@@ -67,30 +69,19 @@ for exp in exp_folders:
         data_t = data[-1,:]
         
         # check to see if any genotypes are at least 10% of the max cell count
-        if any(data_t >= 0.1*max_cells):
+        if any(data_t >= thresh):
             survive_count += 1
             if counts_total is None:
                 counts_total = data
             else:
                 counts_total += data
-        #     d = np.sum(data,axis=1)
-        #     d = d/max_cells
-        #     popax.plot(d,color='black',label='resistant')
-        
-        # else:
-        #     d = np.sum(data,axis=1)
-        #     d = d/max_cells
-        #     popax.plot(d,color='gray',label='extinct')
-        # popax.set_yscale('log')
-        # popax.yaxis.tick_right()
-        
-        # data = data/np.max(data)
         
         # exp_info.populations[num].counts_log_scale = True
         d = np.sum(data,axis=1)
         popax = plotter.plot_population_count(exp_info.populations[num],
                                               d,
                                               popax,
+                                              thresh=thresh,
                                               normalize=False,
                                               logscale=True)
         popax.yaxis.tick_right()
@@ -113,7 +104,7 @@ for exp in exp_folders:
                                                         grayscale=True,
                                                         color='gray', 
                                                         linewidth=1,
-                                                        labelsize=12,
+                                                        labelsize=10,
                                                         alpha=0.7
                                                         )
             drug_ax.set_ylabel('')
@@ -126,7 +117,7 @@ for exp in exp_folders:
                                                         color='gray',
                                                         legend_labels=False,
                                                         linewidth=2,
-                                                        labelsize=12,
+                                                        labelsize=10,
                                                         alpha=0.2
                                                         )            
         # drug_ax.set_ylim(0,10**4)
@@ -140,7 +131,7 @@ for exp in exp_folders:
         tcax,temp = plotter.plot_timecourse_to_axes(exp_info.populations[num],
                                                counts_avg,
                                                tcax,
-                                               labelsize=12)
+                                               labelsize=10)
     
     # t = np.arange(len(dc))
     # t = t*exp_info.populations[0].timestep_scale/24
@@ -163,6 +154,7 @@ for exp in exp_folders:
 # drug_axes[1].set_ylabel('Drug Concentration (uM)', color='gray',fontsize=labelsize)
 # tc_axes[3].set_ylabel('Proportion of \nmax cell count',fontsize=labelsize)
 tc_axes[0].set_xlabel('Days',fontsize=labelsize)
+pop_axes[0].set_xlabel('Days',fontsize=labelsize)
 
 rects = ax.barh(x,barchart_data,color='slategrey')
 ax.set_yticks(x)
@@ -193,19 +185,22 @@ tc_axes[0].legend(frameon=False,fontsize=11,loc='lower left',
                     # bbox_to_anchor=(-0.8,-1.4),ncol=1)
 
 ax.annotate('Proportion of carrying capacity',rotation=90,
-            fontsize=labelsize,xy=(93,0.65),
+            fontsize=labelsize,xy=(97,0.65),
             ha='center') # xy in data points
 
 ax.annotate('Drug Concentration ($\u03BC$M)',rotation=90,
-            fontsize=labelsize,xy=(237,0.75),
+            fontsize=labelsize,xy=(242,0.75),
             ha='center',annotation_clip=False) # xy in data points
 
 ax.annotate('Cell count',rotation=90,
-            fontsize=labelsize,xy=(376,1.15),
+            fontsize=labelsize,xy=(380,1.15),
             ha='center',annotation_clip=False)
 
 for da in drug_axes:
+    da.set_yticks([0,1e3,2e3])
     da.ticklabel_format(style='sci',axis='y',scilimits=(0,3))
+    
+
 
 xl = tc_axes[0].get_xlim()
 xt = tc_axes[0].get_xticks()
@@ -213,5 +208,11 @@ for pa in pop_axes:
     pa.set_xlim(xl)
     pa.set_xticks(xt)
     pa.set_ylim([10**0,10**12])
+
+handles, labels = pop_axes[-1].get_legend_handles_labels()
+r_index = labels.index('resistant')
+e_index = labels.index('extinct')
+pop_axes[-1].legend([handles[r_index],handles[e_index]],
+                    ['resistant','extinct'],frameon=False)
 
 results_manager.save_fig(fig,'adherance_v_survival.pdf',bbox_inches='tight')

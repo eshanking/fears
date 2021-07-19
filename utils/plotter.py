@@ -688,15 +688,18 @@ def plot_population_count(pop,
         fig,ax = plt.subplots(figsize=(6,4))
     if thresh is None:
         thresh = pop.max_cells/10
-    
+    c1 = [245,100,100]
+    c1 = [c/255 for c in c1]
+    c2 = [100,100,245]
+    c2 = [c/255 for c in c2]
     if c[-1] < thresh:
         if normalize:
             c = c/pop.max_cells
-        ax.plot(c,color='gray',label='extinct',**kwargs)
+        ax.plot(c,color=c2,label='extinct',**kwargs)
     else:
         if normalize:
             c = c/pop.max_cells
-        ax.plot(c,color='black',label='resistant',**kwargs)
+        ax.plot(c,color=c1,label='resistant',**kwargs)
     
     xticks = ax.get_xticks()
     xlabels = xticks
