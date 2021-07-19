@@ -192,10 +192,17 @@ tc_axes[0].legend(frameon=False,fontsize=11,loc='lower left',
 # drug_axes[0].legend(frameon=False,fontsize=11,loc='lower left',
                     # bbox_to_anchor=(-0.8,-1.4),ncol=1)
 
-ax.annotate('Proportion of \ncarrying capacity',rotation=90,
-            fontsize=labelsize,xy=(92,1),
+ax.annotate('Proportion of carrying capacity',rotation=90,
+            fontsize=labelsize,xy=(93,0.65),
             ha='center') # xy in data points
 
+ax.annotate('Drug Concentration ($\u03BC$M)',rotation=90,
+            fontsize=labelsize,xy=(237,0.75),
+            ha='center',annotation_clip=False) # xy in data points
+
+ax.annotate('Cell count',rotation=90,
+            fontsize=labelsize,xy=(376,1.15),
+            ha='center',annotation_clip=False)
 
 for da in drug_axes:
     da.ticklabel_format(style='sci',axis='y',scilimits=(0,3))
