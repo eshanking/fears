@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from fears.utils import results_manager, plotter
 
-data_folder = 'results_07192021_0000'
-exp_info_file = 'experiment_info_07192021_0000.p'
+data_folder = 'results_07202021_0000'
+exp_info_file = 'experiment_info_07202021_0000.p'
 
 fig,ax = plt.subplots(figsize=(3,7.75))
 labelsize=12
@@ -46,10 +46,10 @@ for exp in exp_folders:
     height = rects.patches[num].get_height()
     ypos = rects.patches[num].get_y()
     xpos = 125
-    tcax = ax.inset_axes([xpos,ypos,width,height],transform=ax.transData)
-    
-    xpos = xpos + width + 30
     popax = ax.inset_axes([xpos,ypos,width,height],transform=ax.transData)
+
+    xpos = xpos + width + 30
+    tcax = ax.inset_axes([xpos,ypos,width,height],transform=ax.transData)
     # da = tcax.twinx()
     
     sim_files = os.listdir(path=exp)
@@ -84,20 +84,21 @@ for exp in exp_folders:
                                               thresh=thresh,
                                               normalize=False,
                                               logscale=True)
-        popax.yaxis.tick_right()
+        # popax.yaxis.tick_right()
         
         data = data/max_cells
         if k==0:
             drug_kwargs = {'alpha':1,
-                           'color':'black',
-                           'linewidth':1,
-                           'label':'Drug Concentration ($\u03BC$M)'
-                           }
+                            'color':'black',
+                            'linewidth':1,
+                            'label':'Drug Concentration ($\u03BC$M)'
+                            }
             tcax,drug_ax = plotter.plot_timecourse_to_axes(exp_info.populations[num],
                                                         data,
                                                         tcax,
                                                         drug_curve=dc,
                                                         drug_curve_linestyle='-',
+                                                        legend_size=3,
                                                         drug_ax_sci_notation=True,
                                                         drug_kwargs=drug_kwargs,
                                                         legend_labels=False,
@@ -115,6 +116,7 @@ for exp in exp_folders:
                                                         tcax,
                                                         grayscale=True,
                                                         color='gray',
+                                                        legend_size=3,
                                                         legend_labels=False,
                                                         linewidth=2,
                                                         labelsize=10,
@@ -129,9 +131,10 @@ for exp in exp_folders:
         # counts_avg = counts_total
         counts_avg = counts_avg/np.max(counts_avg)
         tcax,temp = plotter.plot_timecourse_to_axes(exp_info.populations[num],
-                                               counts_avg,
-                                               tcax,
-                                               labelsize=10)
+                                                counts_avg,
+                                                tcax,
+                                                legend_size=3,
+                                                labelsize=10)
     
     # t = np.arange(len(dc))
     # t = t*exp_info.populations[0].timestep_scale/24
@@ -153,7 +156,7 @@ for exp in exp_folders:
 
 # drug_axes[1].set_ylabel('Drug Concentration (uM)', color='gray',fontsize=labelsize)
 # tc_axes[3].set_ylabel('Proportion of \nmax cell count',fontsize=labelsize)
-tc_axes[0].set_xlabel('Days',fontsize=labelsize)
+# tc_axes[0].set_xlabel('Days',fontsize=labelsize)
 pop_axes[0].set_xlabel('Days',fontsize=labelsize)
 
 rects = ax.barh(x,barchart_data,color='slategrey')
@@ -180,34 +183,43 @@ sd = 100*(p*q/n)**0.5 # standard deviation of the estimator of the parameter of 
 ax.errorbar(x=barchart_data, y=x, xerr=sd,linewidth=0,elinewidth=2,capsize=5,color='black')
 
 tc_axes[0].legend(frameon=False,fontsize=11,loc='lower left',
-                  bbox_to_anchor=(-0.8,-1.2),ncol=4)
-# drug_axes[0].legend(frameon=False,fontsize=11,loc='lower left',
-                    # bbox_to_anchor=(-0.8,-1.4),ncol=1)
+                   bbox_to_anchor=(-0.25,-0.9),ncol=4)
+drug_axes[0].legend(frameon=False,fontsize=11,loc='lower left',
+                    bbox_to_anchor=(-0.8,-1.4),ncol=1)
 
-ax.annotate('Proportion of carrying capacity',rotation=90,
-            fontsize=labelsize,xy=(97,0.65),
-            ha='center') # xy in data points
+# ax.annotate('Proportion of carrying capacity',rotation=90,
+#             fontsize=labelsize,xy=(97,0.65),
+#             ha='center') # xy in data points
 
-ax.annotate('Drug Concentration ($\u03BC$M)',rotation=90,
-            fontsize=labelsize,xy=(242,0.75),
-            ha='center',annotation_clip=False) # xy in data points
+# ax.annotate('Drug Concentration ($\u03BC$M)',rotation=90,
+#             fontsize=labelsize,xy=(242,0.75),
+#             ha='center',annotation_clip=False) # xy in data points
 
-ax.annotate('Cell count',rotation=90,
-            fontsize=labelsize,xy=(380,1.15),
-            ha='center',annotation_clip=False)
+# ax.annotate('Cell count',rotation=90,
+#             fontsize=labelsize,xy=(380,1.15),
+#             ha='center',annotation_clip=False)
 
-for da in drug_axes:
-    da.set_yticks([0,1e3,2e3])
-    da.ticklabel_format(style='sci',axis='y',scilimits=(0,3))
+# ax.annotate('Cell count',rotation=90,
+#             fontsize=labelsize,xy=(97,1.15),
+#             ha='center',annotation_clip=False)
+
+# for da in drug_axes:
+#     da.set_yticks([0,1e3,2e3])
+#     da.ticklabel_format(style='sci',axis='y',scilimits=(0,3))
+
+for pa in pop_axes:
+    xl = pa.get_xlim()
+    xl = [0,xl[1]]
+    pa.set_xlim(xl)
     
 
 
-xl = tc_axes[0].get_xlim()
-xt = tc_axes[0].get_xticks()
-for pa in pop_axes:
-    pa.set_xlim(xl)
-    pa.set_xticks(xt)
-    pa.set_ylim([10**0,10**12])
+# # xl = tc_axes[0].get_xlim()
+# # xt = tc_axes[0].get_xticks()
+# for pa in pop_axes:
+#     pa.set_xlim(xl)
+#     pa.set_xticks(xt)
+#     pa.set_ylim([10**0,10**12])
 
 handles, labels = pop_axes[-1].get_legend_handles_labels()
 r_index = labels.index('resistant')

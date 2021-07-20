@@ -316,6 +316,7 @@ def plot_timecourse_to_axes(pop,
                         linewidth=3,
                         legend_labels = True,
                         grayscale=False,
+                        legend_size=8,
                         drug_kwargs = {},
                         **kwargs):
     """
@@ -356,7 +357,7 @@ def plot_timecourse_to_axes(pop,
     
     counts_total = np.sum(counts,axis=0)
     sorted_index = counts_total.argsort()
-    sorted_index_big = sorted_index[-8:]
+    sorted_index_big = sorted_index[-legend_size:]
     
     if grayscale is False:     
         cc = gen_color_cycler()
@@ -711,5 +712,68 @@ def plot_population_count(pop,
     
     if logscale:
         ax.set_yscale('log')
+    
+    return ax
+
+def plot_kaplan_meier(pop,
+                      event_times,
+                      label=None,
+                      t_max=None,
+                      n_sims=None,
+                      ax=None,
+                      mode='resistant',
+                      **kwargs):
+    
+    if t_max is None:
+        t_max = int(max(event_times)) # hours
+    if n_sims is None:
+        n_sims = pop.n_sims
+        
+    survival_curve = np.ones(t_max)*100
+    
+    for t in range(len(survival_curve)-1):
+        if t>0:
+            survival_curve[t] = survival_curve[t-1]
+        if any(event_times==t):
+            num = np.argwhere(event_times==t)
+            num = num.shape[0]
+            perc = 100*num/n_sims
+            survival_curve[t] = survival_curve[t]-perc
+   
+    survival_curve[-1] = survival_curve[-2]
+    if ax is None:
+        fig,ax = plt.subplot(figsize=(5,7))
+    
+    if mode == 'extinct':
+        survival_curve = 100-survival_curve
+        ylabel='% extinct'
+    else:
+        ylabel='% resistant'
+    
+    ax.plot(survival_curve,label=label,**kwargs)
+    
+    xticks = ax.get_xticks()
+    xlabels = xticks
+    xlabels = xlabels/24
+    xlabels = np.array(xlabels).astype('int')
+    ax.set_xticks(xticks)
+    ax.set_xticklabels(xlabels)
+    
+    xl = [0,len(survival_curve)]
+    ax.set_xlim(xl)
+    ax.set_ylim([0,100])
+    ax.set_ylabel(ylabel)
+    ax.set_xlabel('Days')
+    return ax
+
+def x_ticks_to_days(pop,ax):
+    
+    xticks = ax.get_xticks()
+    xlabels = xticks
+    xlabels = xlabels*pop.timestep_scale
+    xlabels = xlabels/24
+    xlabels = np.array(xlabels).astype('int')
+    ax.set_xticks(xticks)
+    ax.set_xticklabels(xlabels)
     
     return ax

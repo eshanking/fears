@@ -514,9 +514,22 @@ class Experiment():
 
         return neighbors
     
-    def extinction_time(self,pop):
+    def extinction_time(self,pop,counts,thresh=1):
         
+        if len(counts.shape) > 1:
+            c = np.sum(counts,axis=1)
+        else:
+            c = counts
+        e = np.argwhere(c<thresh)
+        if len(e) == 0:
+            event_obs = 0
+            event_time = len(c)
+        else:
+            event_obs = 1
+            event_time = e[0]
         
+        timestep_scale = pop.timestep_scale
+        event_time = event_time*timestep_scale
         
-        return
+        return event_obs, event_time
     
