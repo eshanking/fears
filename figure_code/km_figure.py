@@ -2,6 +2,7 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 from fears.utils import results_manager, plotter
+import lifelines
 
 data_folder = 'results_07142021_0003'
 exp_info_file = 'experiment_info_07142021_0003.p'
@@ -95,6 +96,14 @@ for exp in exp_folders:
 for a in ax:
     a.spines["right"].set_visible(False)
     a.spines["top"].set_visible(False)
+    xl = a.get_xlim()[1]
+    x = np.arange(0,xl,step=500)
+    x = np.concatenate((x,np.array([xl])))
+    a.set_xticks(x)
+    x = x*pop.timestep_scale/24
+    x = [int(x_t) for x_t in x]
+    a.set_xticklabels(x)
+    
     
 ax[0].legend(frameon=False,loc='lower left',title='$p_{forget}$',fontsize=8)
 
@@ -114,4 +123,10 @@ ax[2].set_position(pos2)
 ax[0].set_title('Survival of infectious agent',fontsize=8)
 ax[1].set_title('Resistant genotype = 0010',fontsize=8)
 ax[2].set_title('Resistant genotype = 0110',fontsize=8)
-results_manager.save_fig(fig,'km_curve.pdf',bbox_inches='tight')
+# results_manager.save_fig(fig,'km_curve.pdf',bbox_inches='tight')
+
+kmf = lifelines.KaplanMeierFitter()
+kmf.fit(death_event_times,death_event_obs)
+
+median = kmf.median_survival_time_
+median_ci = lifelines.utils.median_survival_times(kmf.confidence_interval_)
