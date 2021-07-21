@@ -722,7 +722,7 @@ def plot_kaplan_meier(pop,
             err[t] = 100*(p*q/n)**0.5 #
     t = np.arange(t_max)
     
-    ax.fill_betwee(t,survival_curve-err,survival_curve+err,**kwargs)
+    ax.fill_betwee(t,survival_curve-err,survival_curve+err)
     
     xticks = ax.get_xticks()
     xlabels = xticks
