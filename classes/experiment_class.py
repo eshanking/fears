@@ -6,6 +6,7 @@ import pandas as pd
 import os
 import time
 import pickle
+import lifelines
 
 class Experiment():
 
@@ -555,4 +556,13 @@ class Experiment():
         event_time = event_time*timestep_scale
         
         return event_obs, event_time
+    
+    def log_rank_test(durations_A, durations_B, 
+                      event_observed_A=None, event_observed_B=None):
+        
+        results = lifelines.statistics.logrank_test(durations_A, durations_B, 
+                                          event_observed_A=event_observed_A,
+                                          event_observed_B=event_observed_B)
+        
+        return results
     

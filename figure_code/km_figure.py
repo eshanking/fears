@@ -2,6 +2,7 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 from fears.utils import results_manager, plotter
+# import lifelines
 
 data_folder = 'results_07202021_0000'
 exp_info_file = 'experiment_info_07202021_0000.p'
@@ -28,6 +29,12 @@ p_drop = exp_info.prob_drops
 
 exp_folders.reverse()
 p_drop = np.flip(p_drop)
+
+km_data = {'survival':[],
+           'resistance 0010':[],
+           'resistance 0110':[]}
+
+p = np.zeros((6,6))
 
 thresh = 1
 pop = exp_info.populations[0]
@@ -60,6 +67,7 @@ for exp in exp_folders:
         data = results_manager.get_data(sim)
         dc = data[:,-2]
         data = data[:,0:-2]
+        
         death_event_obs[k],death_event_times[k] = \
             exp_info.extinction_time(pop,data,thresh=1)
             
@@ -91,6 +99,11 @@ for exp in exp_folders:
                                       n_sims=n_sims,
                                       label=str(p_drop_t),
                                       mode='resistant')
+    
+    km_data['survival'].append(death_event_times)
+    km_data['resistance 0010'].append(gen2_resistance_times)
+    km_data['resistance 0110'].append(gen6_resistance_times)
+        
 
 for a in ax:
     a.spines["right"].set_visible(False)
@@ -114,4 +127,15 @@ ax[2].set_position(pos2)
 ax[0].set_title('Survival of infectious agent',fontsize=8)
 ax[1].set_title('Resistant genotype = 0010',fontsize=8)
 ax[2].set_title('Resistant genotype = 0110',fontsize=8)
-results_manager.save_fig(fig,'km_curve.pdf',bbox_inches='tight')
+# results_manager.save_fig(fig,'km_curve.pdf',bbox_inches='tight')
+
+p_values = {}
+for key in km_data.keys():
+    times = km_data[key]
+    num = len(times)
+    
+    p = np.zeros((num,num))
+    for i in range(num):
+        for j in range(num):
+            p[i,j] = exp_info.log_rank_test(times[i],times[j]).p_values
+    p_values[key] = p
