@@ -533,3 +533,26 @@ class Experiment():
         
         return event_obs, event_time
     
+    def resistance_time(self,pop,counts,genotype,thresh=0.01):
+        
+        if len(counts.shape) > 1:
+            c = counts[:,genotype]
+        else:
+            c = counts
+        
+        if thresh < 1:
+            thresh = thresh*pop.max_cells
+            
+        e = np.argwhere(c>thresh)
+        if len(e) == 0:
+            event_obs = 0
+            event_time = len(c)
+        else:
+            event_obs = 1
+            event_time = e[0]
+        
+        timestep_scale = pop.timestep_scale
+        event_time = event_time*timestep_scale
+        
+        return event_obs, event_time
+    

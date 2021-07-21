@@ -49,16 +49,6 @@ def plot_timecourse(pop,counts_t=None,title_t=None):
     sorted_index = counts_total.argsort()
     sorted_index_big = sorted_index[-8:]
     
-    # colors = sns.color_palette('bright')
-    # colors = np.concatenate((colors[0:9],colors[0:7]),axis=0)
-    
-    # # shuffle colors
-    # colors[[14,15]] = colors[[15,14]]
-    
-    # cc = (cycler(color=colors) + 
-    #       cycler(linestyle=['-', '-','-','-','-','-','-','-','-',
-    #                         '--','--','--','--','--','--','--']))
-    
     cc = gen_color_cycler()
     
     ax1.set_prop_cycle(cc)
@@ -70,19 +60,7 @@ def plot_timecourse(pop,counts_t=None,title_t=None):
         ax2.set_position([left, 0.5, width, 0.6])
         ax2.set_ylabel('Drug Concentration (uM)', color=color,fontsize=20) # we already handled the x-label with ax1
         
-        # if pop.drug_log_scale:
-        #     if all(pop.drug_curve>0):
-        #         drug_curve = np.log10(pop.drug_curve)
-        #     yticks = np.log10([10**-4,10**-3,10**-2,10**-1,10**0,10**1,10**2,10**3])    
-        #     ax2.set_yticks(yticks)
-        #     ax2.set_yticklabels(['0','$10^{-3}$','$10^{-2}$','$10^{-1}$','$10^{0}$',
-        #                      '$10^1$','$10^2$','$10^3$'])
-        #     ax2.set_ylim(-4,3)
-        # else:
         drug_curve = pop.drug_curve
-        # drug_curve = np.log(drug_curve)
-        
-        # drug_curve = -np.log(1-drug_curve/pop.max_dose)
         
         ax2.plot(drug_curve, color='black', linewidth=2.0)
         ax2.tick_params(axis='y', labelcolor=color)
@@ -103,10 +81,6 @@ def plot_timecourse(pop,counts_t=None,title_t=None):
             
         ax2.tick_params(labelsize=15)
         ax2.set_title(title,fontsize=20)
-        
-    
-    # if pop.normalize:
-    #     counts = counts/np.max(counts)
         
     for allele in range(counts.shape[1]):
         if allele in sorted_index_big:
@@ -166,27 +140,10 @@ def plot_fitness_curves(pop,
                         show_legend=True,
                         show_axes_labels=True):
     
-    # drugless_rates = pop.drugless_rates
-    # ic50 = pop.ic50
-    
     if ax is None:
         fig, ax = plt.subplots(figsize = (10,6))
-    #     show_legend=True
-    # else:
-    #     show_legend = False
-    
-    # powers = np.linspace(-3,5,20)
-    # conc = np.power(10*np.ones(powers.shape[0]),powers)
     
     conc = np.logspace(-3,5,50)
-    
-    # colors = sns.color_palette('bright')
-    # colors = np.concatenate((colors[0:9],colors[0:7]),axis=0)
-    # colors[[14,15]] = colors[[15,14]]
-    
-    # cc = (cycler(color=colors) + 
-    #        cycler(linestyle=['-', '-','-','-','-','-','-','-','-',
-    #                         '--','--','--','--','--','--','--']))
     
     cc = gen_color_cycler()
     
@@ -722,6 +679,7 @@ def plot_kaplan_meier(pop,
                       n_sims=None,
                       ax=None,
                       mode='resistant',
+                      errorband=True,
                       **kwargs):
     
     if t_max is None:
@@ -744,13 +702,27 @@ def plot_kaplan_meier(pop,
     if ax is None:
         fig,ax = plt.subplot(figsize=(5,7))
     
-    if mode == 'extinct':
+    if mode == 'resistant':
         survival_curve = 100-survival_curve
-        ylabel='% extinct'
-    else:
         ylabel='% resistant'
+    else:
+        ylabel='% survival'
     
     ax.plot(survival_curve,label=label,**kwargs)
+    
+    if errorband:
+        # compute error bars
+        # rule of succession explanation: https://en.wikipedia.org/wiki/Rule_of_succession
+        err = np.zeros(t_max)
+        for t in range(t_max):
+            p = (np.array(survival_curve[t]) + 1)/(n_sims + 2) # uniform prior (rule of succession) 
+            n = n_sims
+            q = 1-p
+            # standard deviation of the estimator of the parameter of a binomial distribution
+            err[t] = 100*(p*q/n)**0.5 #
+    t = np.arange(t_max)
+    
+    ax.fill_betwee(t,survival_curve-err,survival_curve+err,**kwargs)
     
     xticks = ax.get_xticks()
     xlabels = xticks
