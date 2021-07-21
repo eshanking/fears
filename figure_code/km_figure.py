@@ -3,8 +3,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from fears.utils import results_manager, plotter
 
-data_folder = 'results_07202021_0000'
-exp_info_file = 'experiment_info_07202021_0000.p'
+data_folder = 'results_07142021_0003'
+exp_info_file = 'experiment_info_07142021_0003.p'
 
 fig,ax = plt.subplots(nrows=1,ncols=3,figsize=(8,2.5))
 labelsize=12
