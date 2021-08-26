@@ -321,13 +321,14 @@ def plot_timecourse_to_axes(pop,
         counts_ax.set_prop_cycle(cc)
     
     if drug_curve is not None:
+        if 'color' in drug_kwargs:
+            color = drug_kwargs['color']
+        else:
+            color='black'
         if drug_ax is None:
             drug_ax = counts_ax.twinx() # ax2 is the drug timecourse
             if drug_curve_label:
-                if 'color' in drug_kwargs:
-                    color = drug_kwargs['color']
-                else:
-                    color='black'
+
                 drug_ax.set_ylabel('Drug Concentration (uM)', color=color,fontsize=labelsize)
         drug_ax.plot(drug_curve,linestyle=drug_curve_linestyle,**drug_kwargs)
         
@@ -586,10 +587,20 @@ def add_landscape_to_fitness_curve(c,ax,pop,
                                    colorbar=False,
                                    square=True,
                                    vert_lines=True,
+                                   position = 'top',
+                                   pad = 0,
                                    **kwargs):
     
+    if position == 'top':
+        ypos = 1+pad
+    elif position == 'bottom':
+        ypos = -1-pad
+    else:
+        raise Exception('Position argument not recognized')
+    
     x = get_pos_in_log_space(c, 3)
-    l = ax.inset_axes([x[0],1,x[1]-x[0],0.5],transform=ax.transData)
+    # l = ax.inset_axes([x[0],1,x[1]-x[0],0.5],transform=ax.transData)
+    l = ax.inset_axes([x[0],ypos,x[1]-x[0],0.5],transform=ax.transData)
     l = plot_landscape(pop,c,ax=l,node_size=200,
                         colorbar=colorbar,
                         textcolor=textcolor,

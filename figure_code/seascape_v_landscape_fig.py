@@ -2,8 +2,8 @@ from fears.utils import plotter, results_manager
 import matplotlib.pyplot as plt
 import numpy as np
 
-data_folder = 'results_07122021_0000'
-exp_info_file = 'experiment_info_07122021_0000.p'
+data_folder = 'results_08262021_0000'
+exp_info_file = 'experiment_info_08262021_0000.p'
 exp_folder,exp_info = results_manager.get_experiment_results(data_folder,
                                                              exp_info_file)
 # fitness axes
@@ -20,6 +20,7 @@ f,ax[0,0] = plotter.plot_fitness_curves(exp_info.p_landscape,
                                     linewidth=linewidth)
 
 ax[0,0].set_xticks([10**-3,10**-1,10**1,10**3,10**5])
+ax[0,0].xaxis.tick_top()
 
 f,ax[0,1] = plotter.plot_fitness_curves(exp_info.p_seascape,
                                     ax=ax[0,1], 
@@ -28,12 +29,15 @@ f,ax[0,1] = plotter.plot_fitness_curves(exp_info.p_seascape,
                                     labelsize=labelsize,
                                     linewidth=linewidth)
 ax[0,1].set_xticks([10**-3,10**-1,10**1,10**3,10**5])
+ax[0,1].xaxis.tick_top()
 
 # timecourse axes
 landscape_exp = exp_folder[0]
 data = results_manager.get_data(landscape_exp)
 counts = data[:,0:4]
 dc = exp_info.p_landscape.drug_curve
+drug_kwargs = {'color':'black',
+               'alpha':0.5}
 
 ax[1,0],drug_ax = plotter.plot_timecourse_to_axes(exp_info.p_landscape,
                                     counts,
@@ -42,7 +46,8 @@ ax[1,0],drug_ax = plotter.plot_timecourse_to_axes(exp_info.p_landscape,
                                     linewidth=linewidth,
                                     drug_curve=dc,
                                     drug_curve_linestyle='--',
-                                    drug_curve_label=False)
+                                    drug_curve_label=False,
+                                    drug_kwargs=drug_kwargs)
 
 drug_ax.set_ylim([10**-5,10**7])
 drug_ax.set_yticks([10**-3,10**1,10**5])
@@ -56,7 +61,8 @@ ax[1,1],drug_ax = plotter.plot_timecourse_to_axes(exp_info.p_landscape,
                                     labelsize=labelsize,
                                     linewidth=linewidth,
                                     drug_curve_linestyle='--',
-                                    drug_curve=dc)
+                                    drug_curve=dc,
+                                    drug_kwargs=drug_kwargs)
 
 drug_ax.set_ylim([10**-5,10**7])
 drug_ax.set_yticks([10**-3,10**1,10**5])
@@ -74,7 +80,9 @@ for c in conc:
                                            cmap=cmap,
                                            edgecolor=edgecolor,
                                            linewidths=0.5,
-                                           textsize=9)
+                                           textsize=9,
+                                           position='bottom',
+                                           pad=0.1)
     
 sea_ax = ax[0,1]
 
