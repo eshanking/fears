@@ -39,11 +39,16 @@ p = np.zeros((6,6))
 thresh = 1
 pop = exp_info.populations[0]
 
+p_drop_data = []
+
 # data_extinct = np.zeros((999,1))
 for exp in exp_folders:
     p_drop_t = exp[exp.find('=')+1:]
     p_drop_t = p_drop_t.replace(',','.')
     p_drop_t = float(p_drop_t)
+    
+    p_drop_data.append(p_drop_t)
+    
     num = np.argwhere(p_drop == p_drop_t)
     num = num[0,0]
     
@@ -137,5 +142,6 @@ for key in km_data.keys():
     p = np.zeros((num,num))
     for i in range(num):
         for j in range(num):
-            p[i,j] = exp_info.log_rank_test(times[i],times[j]).p_values
+            sr = exp_info.log_rank_test(times[i],times[j])
+            p[i,j] = sr.p_value
     p_values[key] = p

@@ -28,6 +28,7 @@ f,ax[0,1] = plotter.plot_fitness_curves(exp_info.p_seascape,
                                     show_axes_labels=False,
                                     labelsize=labelsize,
                                     linewidth=linewidth)
+
 ax[0,1].set_xticks([10**-3,10**-1,10**1,10**3,10**5])
 ax[0,1].xaxis.tick_top()
 
@@ -66,6 +67,7 @@ ax[1,1],drug_ax = plotter.plot_timecourse_to_axes(exp_info.p_landscape,
 
 drug_ax.set_ylim([10**-5,10**7])
 drug_ax.set_yticks([10**-3,10**1,10**5])
+
 # landscape axes
 
 null_ax = ax[0,0]
@@ -73,6 +75,10 @@ conc = [exp_info.first_dose,exp_info.second_dose,exp_info.third_dose]
 cmap = 'Blues'
 edgecolor='black'
 textcolor='goldenrod'
+pad = -0.35
+
+yl = null_ax.get_ylim()
+ydata = np.arange(yl[0],yl[1],0.1)
 
 for c in conc:
     plotter.add_landscape_to_fitness_curve(c,null_ax,exp_info.p_landscape,
@@ -82,7 +88,8 @@ for c in conc:
                                            linewidths=0.5,
                                            textsize=9,
                                            position='bottom',
-                                           pad=0.1)
+                                           vert_lines_ydata=ydata,
+                                           pad=pad)
     
 sea_ax = ax[0,1]
 
@@ -93,7 +100,10 @@ for i in range(len(conc)-1):
                                            cmap=cmap,
                                            edgecolor=edgecolor,
                                            linewidths=0.5,
-                                           textsize=9)
+                                           textsize=9,
+                                           position='bottom',
+                                           vert_lines_ydata=ydata,
+                                           pad=pad)
 
 c = conc[-1]
 # cbax = fig.add_subplot()
@@ -103,13 +113,19 @@ l1 = plotter.add_landscape_to_fitness_curve(c,sea_ax,exp_info.p_seascape,
                                             edgecolor=edgecolor,
                                             linewidths=0.5,
                                             textsize=9,
+                                            position='bottom',
+                                            vert_lines_ydata=ydata,
+                                            pad=pad,
                                             colorbar=True)
 
 # reposition axes
-w = 0.3
-h = 0.25
+# w = 0.3
+# h = 0.27
+w = 0.26
+h = 0.22
 
-wspace = (1-2*w)/3
+# wspace = (1-2*w)/3
+wspace = (1-2*w)/2.7
 hspace = (1-2*h)/2.7
 
 bottom = np.array([[1-hspace-h,1-hspace-h],[hspace,hspace]])
@@ -118,6 +134,7 @@ left = np.array([[wspace,1-wspace-w],[wspace,1-wspace-w]])
 for a in ax[0,:]:
     # a.set_ylabel('Growth rate',fontsize=labelsize)
     a.set_xlabel('Drug concentration ($\u03BC$M)',fontsize=labelsize)
+    a.xaxis.set_label_position('top') 
     
 for a in ax[1,:]:
     # a.set_ylabel('Cell count',labelpad=0,fontsize=labelsize)
@@ -127,7 +144,7 @@ ax[1,0].set_ylabel('Cell count',labelpad=0,fontsize=labelsize)
 ax[0,0].set_ylabel('Growth rate',fontsize=labelsize)
     
 ax[1,1].legend(frameon=False,fontsize=7,
-               bbox_to_anchor=(-0.7, -0.40, 1., .102), loc='lower left',
+               bbox_to_anchor=(-0.75, -0.45, 1., .102), loc='lower left',
                ncol=4, mode="expand", borderaxespad=0.)
     
 for row in range(2):

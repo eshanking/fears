@@ -58,7 +58,7 @@ def plot_timecourse(pop,counts_t=None,title_t=None):
     if pop.plot_drug_curve:
         ax2 = ax1.twinx() # ax2 is the drug timecourse
         ax2.set_position([left, 0.5, width, 0.6])
-        ax2.set_ylabel('Drug Concentration (uM)', color=color,fontsize=20) # we already handled the x-label with ax1
+        ax2.set_ylabel('Drug Concentration \n($\u03BC$M)', color=color,fontsize=20) # we already handled the x-label with ax1
         
         drug_curve = pop.drug_curve
         
@@ -329,7 +329,7 @@ def plot_timecourse_to_axes(pop,
             drug_ax = counts_ax.twinx() # ax2 is the drug timecourse
             if drug_curve_label:
 
-                drug_ax.set_ylabel('Drug Concentration (uM)', color=color,fontsize=labelsize)
+                drug_ax.set_ylabel('Drug Concentration \n($\u03BC$M)', color=color,fontsize=labelsize)
         drug_ax.plot(drug_curve,linestyle=drug_curve_linestyle,**drug_kwargs)
         
         if pop.drug_log_scale:
@@ -538,7 +538,8 @@ def plot_landscape(p,conc=10**0,
         sm._A = []
 
         
-        cbax = ax.inset_axes([0.4,-0.35,0.3,0.5])
+        # cbax = ax.inset_axes([0.4,-0.35,0.3,0.5])
+        cbax = ax.inset_axes([0.1,0.8,0.3,0.5])
         cbax.set_frame_on(False)
         cbax.set_xticks([])
         cbax.set_yticks([])
@@ -589,6 +590,7 @@ def add_landscape_to_fitness_curve(c,ax,pop,
                                    vert_lines=True,
                                    position = 'top',
                                    pad = 0,
+                                   vert_lines_ydata = None,
                                    **kwargs):
     
     if position == 'top':
@@ -608,8 +610,11 @@ def add_landscape_to_fitness_curve(c,ax,pop,
                         **kwargs)
     
     if vert_lines:
-        yl = ax.get_ylim()
-        ydata = np.arange(yl[0],yl[1],0.1)
+        if vert_lines_ydata is None:
+            yl = ax.get_ylim()
+            ydata = np.arange(yl[0],yl[1],0.1)
+        else:
+            ydata = vert_lines_ydata
         xdata = np.ones(len(ydata))*c
         ax.plot(xdata,ydata,'--',color='black',alpha=0.5)        
     

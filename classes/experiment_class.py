@@ -557,7 +557,7 @@ class Experiment():
         
         return event_obs, event_time
     
-    def log_rank_test(durations_A, durations_B, 
+    def log_rank_test(self,durations_A, durations_B, 
                       event_observed_A=None, event_observed_B=None):
         
         results = lifelines.statistics.logrank_test(durations_A, durations_B, 
