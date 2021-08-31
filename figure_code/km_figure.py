@@ -30,19 +30,23 @@ p_drop = exp_info.prob_drops
 exp_folders.reverse()
 p_drop = np.flip(p_drop)
 
-km_data = {'survival':[],
-           'resistance 0010':[],
-           'resistance 0110':[]}
-
 p = np.zeros((6,6))
 
 thresh = 1
 pop = exp_info.populations[0]
 
 p_drop_data = []
+km_data = {'survival':{},
+           'resistance 0010':{},
+           'resistance 0110':{}}
 
 # data_extinct = np.zeros((999,1))
 for exp in exp_folders:
+    
+    km_data_t = {'survival':[],
+                 'resistance 0010':[],
+                 'resistance 0110':[]}
+    
     p_drop_t = exp[exp.find('=')+1:]
     p_drop_t = p_drop_t.replace(',','.')
     p_drop_t = float(p_drop_t)
@@ -105,9 +109,9 @@ for exp in exp_folders:
                                       label=str(p_drop_t),
                                       mode='resistant')
     
-    km_data['survival'].append(death_event_times)
-    km_data['resistance 0010'].append(gen2_resistance_times)
-    km_data['resistance 0110'].append(gen6_resistance_times)
+    km_data['survival'][str(p_drop_t)] = death_event_times
+    km_data['resistance 0010'][str(p_drop_t)] = gen2_resistance_times
+    km_data['resistance 0110'][str(p_drop_t)] = gen2_resistance_times
         
 
 for a in ax:
@@ -134,14 +138,36 @@ ax[1].set_title('Resistant genotype = 0010',fontsize=8)
 ax[2].set_title('Resistant genotype = 0110',fontsize=8)
 # results_manager.save_fig(fig,'km_curve.pdf',bbox_inches='tight')
 
-p_values = {}
-for key in km_data.keys():
-    times = km_data[key]
-    num = len(times)
+analysis_keys = list(km_data.keys())
+experiment_keys = [str(p) for p in p_drop]
+
+comparisons = []
+
+for i in range(len(experiment_keys)):
+    j = i+1
+    while j < len(experiment_keys):
+        pair = (p_drop[i],p_drop[j])
+        j+=1
+        comparisons.append(pair)
+
+p_values = {'survival':{},
+            'resistance 0010':{},
+            'resistance 0110':{}}
+# for key in km_data.keys():
+#     times = km_data[key]
+#     num = len(times)
     
-    p = np.zeros((num,num))
-    for i in range(num):
-        for j in range(num):
-            sr = exp_info.log_rank_test(times[i],times[j])
-            p[i,j] = sr.p_value
-    p_values[key] = p
+#     p = np.zeros((num,num))
+#     for i in range(num):
+#         for j in range(num):
+#             sr = exp_info.log_rank_test(times[i],times[j])
+#             p[i,j] = sr.p_value
+#     p_values[key] = p
+
+for ak in  analysis_keys:
+    for pair in comparisons:
+        key0 = str(pair[0])
+        key1 = str(pair[1])
+        sr = exp_info.log_rank_test(km_data[ak][key0],km_data[ak][key1])
+        p_values[ak][str(pair)] = sr.p_value
+    
