@@ -8,7 +8,6 @@ data_folder = 'results_07202021_0000'
 exp_info_file = 'experiment_info_07202021_0000.p'
 
 fig,ax = plt.subplots(nrows=1,ncols=3,figsize=(8,2.5))
-labelsize=12
 
 exp_folders,exp_info = results_manager.get_experiment_results(data_folder,
                                                              exp_info_file)
@@ -19,12 +18,8 @@ p_drop = exp_info.prob_drops
 exp_folders.reverse()
 p_drop = np.flip(p_drop)
 
-p = np.zeros((6,6))
-
-thresh = 1
 pop = exp_info.populations[0]
 
-p_drop_data = []
 km_data = {'survival':{},
            'resistance 0010':{},
            'resistance 0110':{}}
@@ -34,8 +29,6 @@ for exp in exp_folders:
     p_drop_t = exp[exp.find('=')+1:]
     p_drop_t = p_drop_t.replace(',','.')
     p_drop_t = float(p_drop_t)
-    
-    p_drop_data.append(p_drop_t)
     
     num = np.argwhere(p_drop == p_drop_t)
     num = num[0,0]
@@ -123,7 +116,7 @@ ax[2].set_position(pos2)
 ax[0].set_title('Survival of infectious agent',fontsize=8)
 ax[1].set_title('Resistant genotype = 0010',fontsize=8)
 ax[2].set_title('Resistant genotype = 0110',fontsize=8)
-results_manager.save_fig(fig,'km_curve.pdf',bbox_inches='tight')
+results_manager.save_fig(fig,'nonadherance_km_curve.pdf',bbox_inches='tight')
 
 # perform pairwise log-rank tests and compute p values
 analysis_keys = list(km_data.keys()) # endpoints being analyzed
