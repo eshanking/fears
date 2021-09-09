@@ -98,7 +98,7 @@ for a in ax:
     a.spines["right"].set_visible(False)
     a.spines["top"].set_visible(False)
     
-ax[2].legend(frameon=False,loc='upper left',title='$k_{abs}$',fontsize=8)
+ax[2].legend(frameon=False,loc='upper right',title='$k_{abs}$',fontsize=8)
 
 pad = 0.05
 
@@ -116,6 +116,16 @@ ax[2].set_position(pos2)
 ax[0].set_title('Survival of infectious agent',fontsize=8)
 ax[1].set_title('Resistant genotype = 1110',fontsize=8)
 ax[2].set_title('Resistant genotype = 1111',fontsize=8)
+
+# max sure all x lims are the same
+xmax = ax[0].get_xlim()[1]
+for a in ax:
+    if a.get_xlim()[1] > xmax:
+        xmax = a.get_xlim()[1]
+
+for a in ax:
+    a.set_xlim([0,xmax])
+
 results_manager.save_fig(fig,'roc_km_curve.pdf',bbox_inches='tight')
 
 # perform pairwise log-rank tests and compute p values

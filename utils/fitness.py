@@ -82,6 +82,14 @@ def gen_static_landscape(pop,conc):
     landscape[zero_indx_land] = 0
     return landscape
 
+def gen_digital_seascape(pop,conc,gen):
+    mic = est_mic(pop,gen,growth_rate=pop.death_rate)
+    if conc >= mic:
+        fitness = 0
+    else:
+        fitness = pop.drugless_rates[gen]
+    return fitness
+
 def gen_fit_land(pop,conc,mode=None):
     
     fit_land = np.zeros(pop.n_genotype)
@@ -93,6 +101,10 @@ def gen_fit_land(pop,conc,mode=None):
         
         if pop.static_topology:
             fit_land = gen_static_landscape(pop,conc)
+            
+        if pop.digital_seascape:
+            for kk in range(pop.n_genotype):
+                fit_land[kk] = gen_digital_seascape(pop, conc, kk)
             
         else:
             for kk in range(pop.n_genotype):
@@ -259,22 +271,39 @@ def scale_and_ignore_zeros(data,target):
     
     return scaled_data
 
-# def calc_cum_fitness_flux(pop,counts=None):
-    
-#     return cum_flux
+def est_mic(pop,gen,Kmic=None,growth_rate=None):
+    """
+    est_mic: estimates the mic based on a given Kmic (ratio of growth rate to 
+    max growth rate at MIC) or based on a given growth rate.
 
-# def calc_fitness_flux(pop,t,conc,counts=None):
-#     if t == len(counts[:,0]):
-#         flux = 0
-#     else:
-#         c_t0 = counts[:,t]
-#         c_t1 = counts[:,t+1]
+    Parameters
+    ----------
+    pop : population class object
         
-#         c_t0 = c_t0/sum(c_t0)
-#         c_t1 = c_t1/sum(c_t1)
-#         delta_c = c_t1-c_t0
-        
-#         f_l = pop.gen_fit_land(pop,conc)
-#         flux = np.multiply(delta_c,f_l)
+    gen : int
+        Genotype under consideration.
+    Kmic : float, optional
+        Ratio of growth rate to max growth rate at MIC. The default is None.
+    growth_rate : float, optional
+        Growth rate at MIC. The default is None.
+
+    Raises
+    ------
+    Exception
+        Function requires Kmic OR growth_rate to calculate MIC.
+
+    Returns
+    -------
+    mic : float
+        MIC at a given growth rate or Kmic.
+
+    """
     
-#     return flux
+    if Kmic is None:
+        if growth_rate is None:
+            raise Exception('Need a growth rate or Kmic threshold to estimate mic.')
+        else:
+            Kmic = growth_rate/pop.drugless_rates[gen]
+    c=-0.6824968
+    mic = 10**(pop.ic50[gen]+6 - c*np.log((1/Kmic)-1))
+    return mic

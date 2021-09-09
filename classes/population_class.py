@@ -97,6 +97,7 @@ class Population:
                  drug_curve = None, # input a custom drug concentration curve
                  debug=False, # print the current time step
                  dilution = 40,
+                 digital_seascape=False,
                  duty_cycle = None,
                  entropy_lim = None, # entropy plotting limits
                  fig_title = '',
@@ -163,6 +164,8 @@ class Population:
         self.counts = np.zeros([self.n_timestep,16])
         self.counts_extinct = np.zeros([self.n_timestep,16])
         self.counts_survive = np.zeros([self.n_timestep,16])
+        
+        self.digital_seascape = digital_seascape
         
         # Generate fitness data from IC50 and drugless growth rate data
         if fitness_data == 'generate':
@@ -560,8 +563,4 @@ class Population:
                                           plot_r0 = plot_r0,save=save,
                                           savename=savename,**kwargs)
         return fig,ax
-    
-
-# p = Population(plot=False)
-# p.simulate()
     

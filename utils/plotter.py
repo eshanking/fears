@@ -6,6 +6,8 @@ import os
 import math
 import scipy.stats
 from fears.utils import dir_manager
+from matplotlib.collections import LineCollection
+import networkx as nx
 
 def gen_color_cycler():
     colors = sns.color_palette('bright')
@@ -143,7 +145,7 @@ def plot_fitness_curves(pop,
     if ax is None:
         fig, ax = plt.subplots(figsize = (10,6))
     
-    conc = np.logspace(-3,5,50)
+    conc = np.logspace(-3,5,200)
     
     cc = gen_color_cycler()
     
@@ -392,7 +394,7 @@ def plot_landscape(p,conc=10**0,
                    relative=True,
                    rank=True,
                    ax=None,
-                   ignore_zero=True,
+                   ignore_zero=False,
                    colorbar_lim=None,
                    colorbar=True,
                    node_size = 800,
@@ -402,14 +404,13 @@ def plot_landscape(p,conc=10**0,
                    textcolor='black',
                    cbax=None,
                    cblabel='',
+                   cbloc = [0.1,0.8,0.3,0.5],
                    **kwargs):
     """
     Plots a graph representation of this landscape on the current matplotlib figure.
     If p is set to a vector of occupation probabilities, the edges in the graph will
     have thickness proportional to the transition probability between nodes.
     """
-    from matplotlib.collections import LineCollection
-    import networkx as nx
     
     if fitness is None:
         fitness = p.gen_fit_land(conc)
@@ -425,11 +426,14 @@ def plot_landscape(p,conc=10**0,
         fitness = scipy.stats.rankdata(fitness)
         cblabel = 'Rank'
     
+    if ignore_zero:
+        fitness_t = [f==0 for f in fitness]
+        fitness[fitness==0] = 'NaN'
+    
     # Figure out the length of the bit sequences we're working with
     N = int(np.log2(len(fitness)))
 
     # Generate all possible N-bit sequences
-    # n_genotype = len(fitness)
     genotypes = np.arange(2**N)
     genotypes = [p.int_to_binary(g) for g in genotypes]
 
@@ -446,7 +450,6 @@ def plot_landscape(p,conc=10**0,
     G.add_nodes_from(genotypes)
 
     # Add edges with appropriate weights depending on the TM
-    # sf = 5 # edge thickness scale factor
     TM = p.random_mutations(len(genotypes))
     for i in range(len(TM)):
         for j in range(len(TM[i])):
@@ -510,6 +513,17 @@ def plot_landscape(p,conc=10**0,
                clip_on=False,
                **kwargs)
     
+    # if you don't want to include nodes with fitness = 0
+    if ignore_zero:
+        fitness_t = np.array(fitness_t)
+        indx = np.argwhere(fitness_t==True)
+        for i in indx:
+            ax.scatter(xy[i,0],xy[i,1],
+               s=node_size,
+               c='gray',
+               clip_on=False,
+               **kwargs)
+    
     for n, label in labels.items():
         (x, y) = pos[n]
         if not isinstance(label, str):
@@ -537,9 +551,7 @@ def plot_landscape(p,conc=10**0,
                 vmin = vmin, vmax=vmax))
         sm._A = []
 
-        
-        # cbax = ax.inset_axes([0.4,-0.35,0.3,0.5])
-        cbax = ax.inset_axes([0.1,0.8,0.3,0.5])
+        cbax = ax.inset_axes(cbloc)
         cbax.set_frame_on(False)
         cbax.set_xticks([])
         cbax.set_yticks([])
@@ -549,7 +561,6 @@ def plot_landscape(p,conc=10**0,
                           ax=cbax,
                           location='right',
                           aspect=10)
-        # cb = plt.colorbar()
         cb.outline.set_visible(False)
         cb.set_label(cblabel,fontsize=8)
         
@@ -559,8 +570,6 @@ def plot_landscape(p,conc=10**0,
             ticks = [max(fitness),min(fitness)]
             ticks = np.array(ticks).astype('int')
             ticks = [str(t) for t in ticks]
-            # print(str(ticks))
-            # ticks = ['4','1']
             cb.set_ticklabels(ticks)
     
     if square:
