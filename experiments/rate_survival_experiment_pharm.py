@@ -9,7 +9,7 @@ np.random.seed(2021)
 max_doses = [5*10**4]
 curve_types = ['pharm']
 experiment_type = 'rate-survival'
-n_sims = 100
+n_sims = 500
 # slopes = [.0005,0.005,0.05]
 # slopes = np.linspace(0.0005,0.0105,5)
 # slopes = np.linspace(0.0005,0.0045,5)
