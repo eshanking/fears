@@ -1,19 +1,13 @@
 import os
 import matplotlib.pyplot as plt
 import numpy as np
-<<<<<<< HEAD
-from fears.utils import results_manager, plotter
-import lifelines
-=======
 from fears.utils import results_manager, plotter, dir_manager
 import pandas as pd
->>>>>>> ac6fc3a1ba581ccdafb1f1716a6618f1070b7dc7
 
-data_folder = 'results_07202021_0000'
-exp_info_file = 'experiment_info_07202021_0000.p'
+data_folder = 'results_09102021_0000'
+exp_info_file = 'experiment_info_09102021_0000.p'
 
 fig,ax = plt.subplots(nrows=1,ncols=3,figsize=(8,2.5))
-labelsize=12
 
 exp_folders,exp_info = results_manager.get_experiment_results(data_folder,
                                                              exp_info_file)
@@ -24,12 +18,8 @@ p_drop = exp_info.prob_drops
 exp_folders.reverse()
 p_drop = np.flip(p_drop)
 
-p = np.zeros((6,6))
-
-thresh = 1
 pop = exp_info.populations[0]
 
-p_drop_data = []
 km_data = {'survival':{},
            'resistance 0010':{},
            'resistance 0110':{}}
@@ -39,8 +29,6 @@ for exp in exp_folders:
     p_drop_t = exp[exp.find('=')+1:]
     p_drop_t = p_drop_t.replace(',','.')
     p_drop_t = float(p_drop_t)
-    
-    p_drop_data.append(p_drop_t)
     
     num = np.argwhere(p_drop == p_drop_t)
     num = num[0,0]
@@ -109,14 +97,6 @@ for exp in exp_folders:
 for a in ax:
     a.spines["right"].set_visible(False)
     a.spines["top"].set_visible(False)
-    xl = a.get_xlim()[1]
-    x = np.arange(0,xl,step=500)
-    x = np.concatenate((x,np.array([xl])))
-    a.set_xticks(x)
-    x = x*pop.timestep_scale/24
-    x = [int(x_t) for x_t in x]
-    a.set_xticklabels(x)
-    
     
 ax[0].legend(frameon=False,loc='lower left',title='$p_{forget}$',fontsize=8)
 
@@ -136,16 +116,7 @@ ax[2].set_position(pos2)
 ax[0].set_title('Survival of infectious agent',fontsize=8)
 ax[1].set_title('Resistant genotype = 0010',fontsize=8)
 ax[2].set_title('Resistant genotype = 0110',fontsize=8)
-<<<<<<< HEAD
-# results_manager.save_fig(fig,'km_curve.pdf',bbox_inches='tight')
-
-kmf = lifelines.KaplanMeierFitter()
-kmf.fit(death_event_times,death_event_obs)
-
-median = kmf.median_survival_time_
-median_ci = lifelines.utils.median_survival_times(kmf.confidence_interval_)
-=======
-results_manager.save_fig(fig,'km_curve.pdf',bbox_inches='tight')
+results_manager.save_fig(fig,'nonadherance_km_curve.pdf',bbox_inches='tight')
 
 # perform pairwise log-rank tests and compute p values
 analysis_keys = list(km_data.keys()) # endpoints being analyzed
@@ -178,4 +149,3 @@ result_path = dir_manager.make_resultspath_absolute(
     'nonadherance_km_curves_p_values.csv')
 
 p_values.to_csv(result_path)
->>>>>>> ac6fc3a1ba581ccdafb1f1716a6618f1070b7dc7
