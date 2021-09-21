@@ -112,6 +112,7 @@ class Population:
                  mut_rate = 0.01, # mutation rate
                  max_cells = 10**6, # carrying capacity
                  max_dose = 1, 
+                 mic_estimate=None,
                  n_timestep=1000, # number of generations
                  n_sims = 1, # number of simulations to average together
                  null_seascape=False,
@@ -166,6 +167,7 @@ class Population:
         self.counts_survive = np.zeros([self.n_timestep,16])
         
         self.digital_seascape = digital_seascape
+        self.mic_estimate = mic_estimate
         
         # Generate fitness data from IC50 and drugless growth rate data
         if fitness_data == 'generate':
@@ -396,7 +398,8 @@ class Population:
         counts_t = counts
 
         # Kill cells
-        
+        # print(str(mm))
+
         counts_t = counts_t - np.random.poisson(counts*death_rate)
         
         # Make sure there aren't negative numbers
@@ -419,13 +422,10 @@ class Population:
             mutations = np.random.choice(n_genotype, size=n_mut, p=P[:,genotype]).astype(np.uint8)
 
             # Add mutating cell to their final types
-            counts_t +=np.bincount( mutations , minlength=n_genotype)
-            
-            # Substract mutating cells from that allele
-            daughter_counts[genotype] -=n_mut
+            counts_t += np.bincount( mutations , minlength=n_genotype)
 
         counts_t += daughter_counts
-        
+
         # Normalize to constant population            
         if self.constant_pop:
             scale = self.max_cells/np.sum(counts_t)

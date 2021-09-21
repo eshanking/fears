@@ -83,7 +83,11 @@ def gen_static_landscape(pop,conc):
     return landscape
 
 def gen_digital_seascape(pop,conc,gen):
-    mic = est_mic(pop,gen,growth_rate=pop.death_rate)
+    if pop.mic_estimate is not None:
+        mic = est_mic(pop,gen,Kmic=pop.mic_estimate)
+    else:
+        mic = est_mic(pop,gen,growth_rate=pop.death_rate)
+    
     if conc >= mic:
         fitness = 0
     else:
