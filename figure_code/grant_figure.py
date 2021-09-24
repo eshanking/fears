@@ -1,8 +1,8 @@
 from fears.classes.population_class import Population
 import matplotlib.pyplot as plt
-from fears.utils import plotter
+from fears.utils import plotter, results_manager
 import numpy as np
-
+#%%
 np.random.seed(10)
 
 n_sims=10
@@ -29,39 +29,58 @@ p_discrete = Population(digital_seascape=True,mic_estimate = 0.2,**options)
 p_continuous.simulate()
 p_discrete.simulate()
 
+#%%
 fontsize=11
 drug_kwargs = {'color':'black',
                'linewidth':2}
 fig_digital, ax_digital = plt.subplots(2,1,figsize=(4,5))
-ax_digital[0] = plotter.plot_fitness_curves(p_discrete,ax=ax_digital[0],
+t, ax_digital[0] = plotter.plot_fitness_curves(p_discrete,ax=ax_digital[0],
                                             show_legend=False,
                                             linewidth=2,
                                             labelsize=fontsize)
 
 c = p_discrete.counts/np.max(p_discrete.counts)
-p_discrete.drug_log_scale=True
-ax_digital[1] = plotter.plot_timecourse_to_axes(p_discrete,
+p_discrete.drug_log_scale=False
+ax_digital[1],t = plotter.plot_timecourse_to_axes(p_discrete,
                                                 c,
                                                 ax_digital[1],
                                                 drug_curve=p_discrete.drug_curve,
                                                 linewidth=2,
                                                 drug_kwargs=drug_kwargs,
                                                 labelsize=fontsize,
-                                                drug_ax_sci_notation=False)
+                                                drug_ax_sci_notation=True)
 
 fig_sea, ax_sea = plt.subplots(2,1,figsize=(4,5))
-ax_sea[0] = plotter.plot_fitness_curves(p_continuous,ax=ax_sea[0],
+t,ax_sea[0] = plotter.plot_fitness_curves(p_continuous,ax=ax_sea[0],
                                             show_legend=False,
                                             linewidth=2,
                                             labelsize=fontsize)
 
 c = p_continuous.counts/np.max(p_continuous.counts)
-p_continuous.drug_log_scale=True
-ax_sea[1] = plotter.plot_timecourse_to_axes(p_continuous,
+p_continuous.drug_log_scale=False
+ax_sea[1],drug_ax = plotter.plot_timecourse_to_axes(p_continuous,
                                                 c,
                                                 ax_sea[1],
                                                 drug_curve=p_discrete.drug_curve,
                                                 linewidth=2,
                                                 drug_kwargs=drug_kwargs,
                                                 labelsize=fontsize,
-                                                drug_ax_sci_notation=False)
+                                                drug_ax_sci_notation=True)
+
+pos = ax_sea[1].get_position()
+left = pos.x0
+bottom = pos.y0 - 0.07
+height = pos.height
+width = pos.width
+ax_sea[1].set_position([left, bottom, width, height])
+ax_digital[1].set_position([left, bottom, width, height])
+ax_sea[1].set_ylabel('Proportion of max cell count')
+ax_digital[1].set_ylabel('Proportion of max cell count')
+ax_sea[1].set_xlabel('Days')
+ax_digital[1].set_xlabel('Days')
+ax_sea[1].legend(loc=[1,1.45],frameon=False)
+drug_ax.legend(loc=[1,1.3],frameon=False)
+#%%
+
+results_manager.save_fig(fig_digital,'discrete_seascape.png')
+results_manager.save_fig(fig_sea,'continuous_seascape.png')

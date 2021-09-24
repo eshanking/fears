@@ -332,7 +332,8 @@ def plot_timecourse_to_axes(pop,
             if drug_curve_label:
 
                 drug_ax.set_ylabel('Drug Concentration \n($\u03BC$M)', color=color,fontsize=labelsize)
-        drug_ax.plot(drug_curve,linestyle=drug_curve_linestyle,**drug_kwargs)
+        drug_ax.plot(drug_curve,linestyle=drug_curve_linestyle,**drug_kwargs,
+                     label='Drug concentration')
         
         if pop.drug_log_scale:
             drug_ax.set_yscale('log')
@@ -348,7 +349,19 @@ def plot_timecourse_to_axes(pop,
         drug_ax.tick_params(labelsize=labelsize,color=color)
         plt.setp(drug_ax.get_yticklabels(), color=color)
         if drug_ax_sci_notation:
-            drug_ax.ticklabel_format(style='scientific',axis='y')
+            # yl = drug_ax.get_yticks()
+            # yl_max_exponent = np.log10(max(yl))
+            # yl_min_exponent = np.log10(min(yl))
+            # num = yl_max_exponent-yl_min_exponent
+            # yl_labels = np.linspace(
+            #     int(np.floor(yl_min_exponent)),
+            #     int(np.ceil(yl_max_exponent)),num)
+            # labels = ['10^{'+str(x)+'}' for x in yl_labels]
+            # pos = drug_ax.get_yticks()
+            # drug_ax.set_yticks(pos)
+            # drug_ax.set_yticklabels(labels)
+            drug_ax.ticklabel_format(style='scientific',axis='y',
+                                     scilimits=(0,3))
     
     for genotype in range(counts.shape[1]):
         if genotype in sorted_index_big:
