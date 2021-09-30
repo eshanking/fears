@@ -9,16 +9,21 @@ from fears.utils import dir_manager
 from matplotlib.collections import LineCollection
 import networkx as nx
 
-def gen_color_cycler():
-    colors = sns.color_palette('bright')
-    colors = np.concatenate((colors[0:9],colors[0:7]),axis=0)
-    # colors[[14,15]] = colors[[15,14]]
+def gen_color_cycler(style=None,palette='bright',n_colors=16):
     
-    colors[[7,8]] = colors[[8,7]]
-    
-    cc = (cycler(color=colors) + 
-           cycler(linestyle=['-', '-','-','-','-','-','-','-','-',
-                            '--','--','--','--','--','--','--']))
+    if style is None:
+        colors = sns.color_palette(palette)
+        colors = np.concatenate((colors[0:9],colors[0:7]),axis=0)
+        # colors[[14,15]] = colors[[15,14]]
+        
+        colors[[7,8]] = colors[[8,7]]
+        
+        cc = (cycler(color=colors) + 
+               cycler(linestyle=['-', '-','-','-','-','-','-','-','-',
+                                '--','--','--','--','--','--','--']))
+    elif style == 'solid':
+        colors = sns.color_palette(palette,n_colors)
+        cc = cycler(color=colors)
     return cc
 
 def plot_timecourse(pop,counts_t=None,title_t=None):
@@ -140,14 +145,15 @@ def plot_fitness_curves(pop,
                         labelsize=15,
                         linewidth=3,
                         show_legend=True,
-                        show_axes_labels=True):
+                        show_axes_labels=True,
+                        color_kwargs={}):
     
     if ax is None:
         fig, ax = plt.subplots(figsize = (10,6))
     
     conc = np.logspace(-3,5,200)
     
-    cc = gen_color_cycler()
+    cc = gen_color_cycler(**color_kwargs)
     
     ax.set_prop_cycle(cc) 
     
@@ -277,6 +283,7 @@ def plot_timecourse_to_axes(pop,
                         legend_labels = True,
                         grayscale=False,
                         legend_size=8,
+                        color_kwargs = {},
                         drug_kwargs = {},
                         **kwargs):
     """
@@ -320,7 +327,7 @@ def plot_timecourse_to_axes(pop,
     sorted_index_big = sorted_index[-legend_size:]
     
     if grayscale is False:     
-        cc = gen_color_cycler()
+        cc = gen_color_cycler(**color_kwargs)
         counts_ax.set_prop_cycle(cc)
     
     if drug_curve is not None:

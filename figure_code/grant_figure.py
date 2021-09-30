@@ -39,11 +39,16 @@ fontsize=11
 drug_kwargs = {'color':'black',
                'linewidth':2}
 
+color_kwargs = {'palette':'tab20',
+                'style':'solid'}
+# color_kwargs={}
+
 fig_digital, ax_digital = plt.subplots(2,1,figsize=(3.5,5))
 t, ax_digital[0] = plotter.plot_fitness_curves(p_discrete,ax=ax_digital[0],
                                             show_legend=False,
                                             linewidth=2,
-                                            labelsize=fontsize)
+                                            labelsize=fontsize,
+                                            color_kwargs=color_kwargs)
 
 c = p_discrete.counts/np.max(p_discrete.counts)
 p_discrete.drug_log_scale=False
@@ -58,13 +63,15 @@ ax_digital[1],t = plotter.plot_timecourse_to_axes(p_discrete,
                                                 drug_kwargs=drug_kwargs,
                                                 labelsize=fontsize,
                                                 drug_ax_sci_notation=False,
-                                                drug_curve_label=label)
+                                                drug_curve_label=label,
+                                                color_kwargs=color_kwargs)
 
 fig_sea, ax_sea = plt.subplots(2,1,figsize=(3.5,5))
 t,ax_sea[0] = plotter.plot_fitness_curves(p_continuous,ax=ax_sea[0],
                                             show_legend=False,
                                             linewidth=2,
-                                            labelsize=fontsize)
+                                            labelsize=fontsize,
+                                            color_kwargs=color_kwargs)
 
 c = p_continuous.counts/np.max(p_continuous.counts)
 p_continuous.drug_log_scale=False
@@ -79,7 +86,8 @@ ax_sea[1],drug_ax = plotter.plot_timecourse_to_axes(p_continuous,
                                                 drug_kwargs=drug_kwargs,
                                                 labelsize=fontsize,
                                                 drug_ax_sci_notation=False,
-                                                drug_curve_label=label)
+                                                drug_curve_label=label,
+                                                color_kwargs=color_kwargs)
 
 pos = ax_sea[1].get_position()
 left = pos.x0
@@ -92,7 +100,7 @@ ax_sea[1].set_ylabel('Proportion of max cell count')
 ax_digital[1].set_ylabel('Proportion of max cell count')
 ax_sea[1].set_xlabel('Days')
 ax_digital[1].set_xlabel('Days')
-ax_sea[1].legend(loc=[1,1.45],frameon=False)
+ax_sea[0].legend(loc=[1,0.05],ncol=2,frameon=False)
 drug_ax.legend(loc=[1,1.3],frameon=False)
 #%%
 
