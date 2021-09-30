@@ -113,6 +113,7 @@ class Population:
                  max_cells = 10**6, # carrying capacity
                  max_dose = 1, 
                  mic_estimate=None,
+                 min_fitness = 0,
                  n_timestep=1000, # number of generations
                  n_sims = 1, # number of simulations to average together
                  null_seascape=False,

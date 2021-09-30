@@ -82,14 +82,14 @@ def gen_static_landscape(pop,conc):
     landscape[zero_indx_land] = 0
     return landscape
 
-def gen_digital_seascape(pop,conc,gen):
+def gen_digital_seascape(pop,conc,gen,min_fitness=0):
     if pop.mic_estimate is not None:
         mic = est_mic(pop,gen,Kmic=pop.mic_estimate)
     else:
         mic = est_mic(pop,gen,growth_rate=pop.death_rate)
     
     if conc >= mic:
-        fitness = 0
+        fitness = min_fitness
     else:
         fitness = pop.drugless_rates[gen]
     return fitness

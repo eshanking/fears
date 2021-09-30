@@ -267,7 +267,8 @@ def plot_timecourse_to_axes(pop,
                         counts,
                         counts_ax,
                         drug_curve=None,
-                        drug_curve_label=True,
+                        drug_curve_label='Drug Concentration \n($\u03BC$M)',
+                        drug_curve_legend_label = None,
                         drug_curve_linestyle='--',
                         drug_ax_sci_notation=False,
                         drug_ax=None,
@@ -329,11 +330,20 @@ def plot_timecourse_to_axes(pop,
             color='black'
         if drug_ax is None:
             drug_ax = counts_ax.twinx() # ax2 is the drug timecourse
-            if drug_curve_label:
+            if drug_curve_label is None:
+                yax_label = ''
+            else:
+                yax_label = drug_curve_label
 
-                drug_ax.set_ylabel('Drug Concentration \n($\u03BC$M)', color=color,fontsize=labelsize)
+            drug_ax.set_ylabel(yax_label, 
+                               color=color,fontsize=labelsize)
+        if drug_curve_legend_label is None:
+            label = 'Drug concentration'
+        else:
+            label = drug_curve_legend_label
+            
         drug_ax.plot(drug_curve,linestyle=drug_curve_linestyle,**drug_kwargs,
-                     label='Drug concentration')
+                     label=label)
         
         if pop.drug_log_scale:
             drug_ax.set_yscale('log')
