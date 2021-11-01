@@ -4,7 +4,7 @@ import numpy as np
 from fears.utils import results_manager, plotter, dir_manager
 import pandas as pd
 
-suffix = '07212021_0001'
+suffix = '10272021_0001'
 data_folder = 'results_' + suffix
 exp_info_file = 'experiment_info_' + suffix + '.p'
 

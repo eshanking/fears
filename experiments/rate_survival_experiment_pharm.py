@@ -1,5 +1,5 @@
-import sys
-sys.path.append('/Users/kinge2/repos/')
+# import sys
+# sys.path.append('/Users/kinge2/repos/')
 from fears.classes.experiment_class import Experiment
 import numpy as np
 import time
@@ -9,6 +9,7 @@ np.random.seed(2021)
 max_doses = [5*10**4]
 curve_types = ['pharm']
 experiment_type = 'rate-survival'
+# n_sims = 500
 n_sims = 500
 # slopes = [.0005,0.005,0.05]
 # slopes = np.linspace(0.0005,0.0105,5)
