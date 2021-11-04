@@ -481,8 +481,8 @@ class Population:
         # n_survive = 0
         for i in range(self.n_sims):
             
-            if self.prob_drop > 0:
-                self.drug_curve,u = self.gen_curves()
+            # if self.prob_drop > 0:
+            #     self.drug_curve,u = self.gen_curves()
             
             counts, mm = self.run_abm()
             avg_counts += counts

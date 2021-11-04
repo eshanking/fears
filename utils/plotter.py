@@ -344,13 +344,12 @@ def plot_timecourse_to_axes(pop,
 
             drug_ax.set_ylabel(yax_label, 
                                color=color,fontsize=labelsize)
-        if drug_curve_legend_label is None:
-            label = 'Drug concentration'
-        else:
-            label = drug_curve_legend_label
+        # if drug_curve_legend_label is None:
+        #     label = 'Drug concentration'
+        # else:
+        #     label = drug_curve_legend_label
             
-        drug_ax.plot(drug_curve,linestyle=drug_curve_linestyle,**drug_kwargs,
-                     label=label)
+        drug_ax.plot(drug_curve,zorder=0,**drug_kwargs)
         
         if pop.drug_log_scale:
             drug_ax.set_yscale('log')
@@ -384,11 +383,17 @@ def plot_timecourse_to_axes(pop,
         if genotype in sorted_index_big:
             if legend_labels:
                 counts_ax.plot(counts[:,genotype],linewidth=linewidth,
-                               label=str(pop.int_to_binary(genotype)),**kwargs)
+                               zorder=10,
+                               label=str(pop.int_to_binary(genotype)),
+                               **kwargs)
             else:
-                counts_ax.plot(counts[:,genotype],linewidth=linewidth,**kwargs)
+                counts_ax.plot(counts[:,genotype],linewidth=linewidth,
+                               zorder=10,
+                               **kwargs)
         else:
-            counts_ax.plot(counts[:,genotype],linewidth=linewidth,label=None)
+            counts_ax.plot(counts[:,genotype],linewidth=linewidth,
+                           zorder=10,
+                           label=None)
     
     if pop.counts_log_scale:
         counts_ax.set_yscale('log')
@@ -415,6 +420,10 @@ def plot_timecourse_to_axes(pop,
     counts_ax.set_xlim(xl)
     counts_ax.spines["top"].set_visible(False)
     counts_ax.spines["right"].set_visible(False)
+    
+    counts_ax.patch.set_alpha(0)
+    drug_ax.zorder = 0
+    counts_ax.zorder = 10
     
     return counts_ax, drug_ax
 
@@ -803,4 +812,26 @@ def x_ticks_to_days(pop,ax):
     ax.set_xticks(xticks)
     ax.set_xticklabels(xlabels)
     
+    x_max = pop.n_timestep
+    ax.set_xlim(0,x_max)
+    
     return ax
+
+def shiftx(ax,pad):
+    
+    pos = ax.get_position()
+    pos.x0 = pos.x0+pad
+    pos.x1 = pos.x1+pad
+    ax.set_position(pos)
+    
+    return ax
+
+def shifty(ax,pad):
+
+    pos = ax.get_position()
+    pos.y0 = pos.y0+pad
+    pos.y1 = pos.y1+pad
+    ax.set_position(pos)
+    
+    return ax
+

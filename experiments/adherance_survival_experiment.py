@@ -23,6 +23,7 @@ options = {'doubling_time':1.5,
            'ic50_data':'pyrimethamine_ic50.csv'}
 
 p = np.array([0.2,0.4,0.6,0.8])
+# p = np.array([0.8])
 n_sims = 500
 
 experiment_type = 'drug-regimen'

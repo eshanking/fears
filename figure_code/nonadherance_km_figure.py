@@ -4,8 +4,10 @@ import numpy as np
 from fears.utils import results_manager, plotter, dir_manager
 import pandas as pd
 
-data_folder = 'results_09102021_0000'
-exp_info_file = 'experiment_info_09102021_0000.p'
+# suffix = '091102021_0000'
+suffix = '11042021_0000'
+data_folder = 'results_' + suffix
+exp_info_file = 'experiment_info_' + suffix + '.p'
 
 fig,ax = plt.subplots(nrows=1,ncols=3,figsize=(8,2.5))
 

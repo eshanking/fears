@@ -337,18 +337,21 @@ class Experiment():
                 for i in range(self.n_sims):
                     # initialize new drug curve
                     p.drug_curve,u = p.gen_curves()
+                    
                     counts,n_survive = p.simulate()
                     drug = p.drug_curve
                     drug = np.array([drug])
                     drug = np.transpose(drug)
                     
-                    regimen = self.compute_regimen(p, u)
-                    regimen = np.array([regimen])
-                    regimen = np.transpose(regimen)
-                    regimen_t = np.zeros(drug.shape)
-                    regimen_t[0:len(regimen)] = regimen
+                    # regimen = self.compute_regimen(p, u)
+                    # regimen = np.array([regimen])
+                    # regimen = np.transpose(regimen)
+                    # regimen_t = np.zeros(drug.shape)
+                    # regimen_t[0:len(regimen)] = regimen
                     
-                    counts = np.concatenate((counts,drug,regimen_t),axis=1)
+                    u = np.array([u,])
+                    u = u.transpose()
+                    counts = np.concatenate((counts,drug,u),axis=1)
   
                     save_folder = 'p_drop=' + str(p.prob_drop)
                     save_folder = save_folder.replace('.',',')

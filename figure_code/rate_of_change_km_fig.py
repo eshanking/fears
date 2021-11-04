@@ -4,7 +4,7 @@ import numpy as np
 from fears.utils import results_manager, plotter, dir_manager
 import pandas as pd
 
-suffix = '10272021_0001'
+suffix = '11012021_0000'
 data_folder = 'results_' + suffix
 exp_info_file = 'experiment_info_' + suffix + '.p'
 
@@ -14,8 +14,8 @@ max_cells = exp_info.populations[0].max_cells
 n_sims = exp_info.n_sims
 k_abs = exp_info.slopes
 
-exp_folders.reverse()
-k_abs = np.flip(k_abs)
+# exp_folders.reverse()
+# k_abs = np.flip(k_abs)
 
 fig,ax = plt.subplots(nrows=1,ncols=3,figsize=(8,2.5))
 
@@ -125,9 +125,15 @@ for a in ax:
 
 for a in ax:
     a.set_xlim([0,xmax])
-
+#%%
+# fix ax[0] xlabels ¯\_(ツ)_/¯
+xt = ax[1].get_xticks()
+xl = ax[1].get_xticklabels()
+ax[0].set_xticks(xt)
+ax[0].set_xticklabels(xl)
+ax[0].set_xlim([0,xmax])
 results_manager.save_fig(fig,'roc_km_curve.pdf',bbox_inches='tight')
-
+#%%
 # perform pairwise log-rank tests and compute p values
 analysis_keys = list(km_data.keys()) # endpoints being analyzed
 experiment_keys = [str(p) for p in k_abs] # experiments performed
