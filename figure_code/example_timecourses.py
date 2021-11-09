@@ -6,8 +6,8 @@ from fears.utils import results_manager, plotter, dir_manager
 fig,ax = plt.subplots(nrows=5,ncols=2,figsize=(4,5))
 labelsize = 10
 #%% ROC data
-# suffix = '11012021_0000' # lab machine
-suffix = '10272021_0001' # macbook
+suffix = '11012021_0000' # lab machine
+# suffix = '10272021_0001' # macbook
 data_folder = 'results_' + suffix
 exp_info_file = 'experiment_info_' + suffix + '.p'
 
@@ -125,10 +125,10 @@ drug_ax = ax[1,1]
 drug_ax.plot(dc,color='black')
 #%% nonadherance data
 
-# suffix = '11042021_0000' # lab machine
-# exp_num = 2 # lab machine
-exp_num = 0 # macbook
-suffix = '11082021_0000' # macbook
+suffix = '11042021_0000' # lab machine
+exp_num = 2 # lab machine
+# exp_num = 0 # macbook
+# suffix = '11082021_0000' # macbook
 data_folder = 'results_' + suffix
 exp_info_file = 'experiment_info_' + suffix + '.p'
 
@@ -374,8 +374,8 @@ ax[3,0].set_ylabel('Drug \n concentration',fontsize=fontsize)
 
 # ax[2,0].legend(ncol=4,frameon=False,loc=(0,-4.3),fontsize=8)
 
-ax[0,0].set_title('Resistant')
-ax[0,1].set_title('Extinct')
+ax[0,0].set_title('Resistant',fontsize=fontsize)
+ax[0,1].set_title('Extinct',fontsize=fontsize)
 
 #%% Add caption annotations
 
