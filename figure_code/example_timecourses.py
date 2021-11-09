@@ -251,26 +251,13 @@ tcax,drug_ax = plotter.plot_timecourse_to_axes(exp_info.populations[exp_num],
                                             )
 drug_ax = ax[3,1]
 drug_ax.plot(dc,color='black')
-#%%
-
-# plot dose times
+#%%  plot dose times
 
 x = np.arange(n_timestep-1)
 
 timescale = pop.dose_schedule/pop.timestep_scale
 
-# indx = np.argwhere(survived_schedule==1)
-# indx = indx*timescale
-# indx = indx[:,0].astype('int')
-# survived_schedule = np.zeros(len(survived_schedule))
-# survived_schedule[indx] = 1
 #%%
-# es_t = extinct_schedule
-# indx = np.argwhere(extinct_schedule==1)
-# indx = indx*timescale
-# indx = indx[:,0].astype('int')
-# extinct_schedule = np.zeros(len(extinct_schedule))
-# extinct_schedule[indx] = 1
 
 ax[4,0].plot(x,survived_schedule,linewidth=0.5,color='black')
 ax[4,1].plot(x,extinct_schedule,linewidth=0.5,color='black')
@@ -390,7 +377,7 @@ ax[3,0].set_ylabel('Drug \n concentration',fontsize=fontsize)
 ax[0,0].set_title('Resistant')
 ax[0,1].set_title('Extinct')
 
-#%%
+#%% Add caption annotations
 
 cords = (0.95,1)
 cords2 = (0.95,1.1)
