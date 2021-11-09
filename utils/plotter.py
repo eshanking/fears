@@ -8,6 +8,7 @@ import scipy.stats
 from fears.utils import dir_manager
 from matplotlib.collections import LineCollection
 import networkx as nx
+from labellines import labelLines,labelLine
 
 def gen_color_cycler(style=None,palette='bright',n_colors=16):
     
@@ -281,10 +282,14 @@ def plot_timecourse_to_axes(pop,
                         labelsize=15,
                         linewidth=3,
                         legend_labels = True,
+                        label_lines = False,
+                        select_labels=None,
+                        label_xpos = None,
                         grayscale=False,
                         legend_size=8,
                         color_kwargs = {},
                         drug_kwargs = {},
+                        label_kwargs={},
                         **kwargs):
     """
     Plots simulation timecourse to user defined axes (counts_ax).
@@ -422,8 +427,21 @@ def plot_timecourse_to_axes(pop,
     counts_ax.spines["right"].set_visible(False)
     
     counts_ax.patch.set_alpha(0)
-    drug_ax.zorder = 0
-    counts_ax.zorder = 10
+    if drug_ax is not None:
+        drug_ax.zorder = 0
+    # counts_ax.zorder = 10
+    
+    if label_lines:
+        lines = counts_ax.get_lines()
+        
+        for i in range(len(label_xpos)):
+            sl = select_labels[i]
+            labelLine(lines[sl],label_xpos[i],
+                      fontsize=5,
+                      zorder=100,
+                      outline_color='white',
+                      outline_width=6,
+                      **label_kwargs)
     
     return counts_ax, drug_ax
 
@@ -835,3 +853,11 @@ def shifty(ax,pad):
     
     return ax
 
+def shrinky(ax,pad):
+    
+    pos = ax.get_position()
+    # pos.y0 = pos.y0+pad
+    pos.y1 = pos.y1-pad
+    ax.set_position(pos)    
+    
+    return ax
