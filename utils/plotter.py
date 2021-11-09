@@ -8,7 +8,7 @@ import scipy.stats
 from fears.utils import dir_manager
 from matplotlib.collections import LineCollection
 import networkx as nx
-from labellines import labelLines,labelLine
+from labellines import labelLine
 
 def gen_color_cycler(style=None,palette='bright',n_colors=16):
     
@@ -349,10 +349,6 @@ def plot_timecourse_to_axes(pop,
 
             drug_ax.set_ylabel(yax_label, 
                                color=color,fontsize=labelsize)
-        # if drug_curve_legend_label is None:
-        #     label = 'Drug concentration'
-        # else:
-        #     label = drug_curve_legend_label
             
         drug_ax.plot(drug_curve,zorder=0,**drug_kwargs)
         
@@ -370,17 +366,6 @@ def plot_timecourse_to_axes(pop,
         drug_ax.tick_params(labelsize=labelsize,color=color)
         plt.setp(drug_ax.get_yticklabels(), color=color)
         if drug_ax_sci_notation:
-            # yl = drug_ax.get_yticks()
-            # yl_max_exponent = np.log10(max(yl))
-            # yl_min_exponent = np.log10(min(yl))
-            # num = yl_max_exponent-yl_min_exponent
-            # yl_labels = np.linspace(
-            #     int(np.floor(yl_min_exponent)),
-            #     int(np.ceil(yl_max_exponent)),num)
-            # labels = ['10^{'+str(x)+'}' for x in yl_labels]
-            # pos = drug_ax.get_yticks()
-            # drug_ax.set_yticks(pos)
-            # drug_ax.set_yticklabels(labels)
             drug_ax.ticklabel_format(style='scientific',axis='y',
                                      scilimits=(0,3))
     
@@ -667,7 +652,6 @@ def add_landscape_to_fitness_curve(c,ax,pop,
         raise Exception('Position argument not recognized')
     
     x = get_pos_in_log_space(c, 3)
-    # l = ax.inset_axes([x[0],1,x[1]-x[0],0.5],transform=ax.transData)
     l = ax.inset_axes([x[0],ypos,x[1]-x[0],0.5],transform=ax.transData)
     l = plot_landscape(pop,c,ax=l,node_size=200,
                         colorbar=colorbar,
@@ -685,36 +669,6 @@ def add_landscape_to_fitness_curve(c,ax,pop,
         ax.plot(xdata,ydata,'--',color='black',alpha=0.5)        
     
     return l
-
-# Helper methods
-
-def get_pos_in_log_space(center,width):
-    """
-    Returns x or y coordinates to pass to inset_axes when the axis is a log 
-    scale in order to make the inset axes uniform sizes.
-
-    Parameters
-    ----------
-    center : float
-        Center point of the axes in data points (not log-ed).
-    width : float
-        Visual width of the axes (in log units).
-
-    Returns
-    -------
-    x : list of floats
-        x[0] = left point, x[1] = right point.
-        log10(x[1]-x[0]) = width
-
-    """
-    
-    center = np.log10(center)
-    x0 = center - width/2
-    x1 = center + width/2
-    
-    x = [10**x0,10**x1]
-    
-    return x
 
 def plot_population_count(pop,
                           c,
@@ -820,6 +774,36 @@ def plot_kaplan_meier(pop,
     ax.set_xlabel('Days')
     return ax
 
+# Helper methods
+
+def get_pos_in_log_space(center,width):
+    """
+    Returns x or y coordinates to pass to inset_axes when the axis is a log 
+    scale in order to make the inset axes uniform sizes.
+
+    Parameters
+    ----------
+    center : float
+        Center point of the axes in data points (not log-ed).
+    width : float
+        Visual width of the axes (in log units).
+
+    Returns
+    -------
+    x : list of floats
+        x[0] = left point, x[1] = right point.
+        log10(x[1]-x[0]) = width
+
+    """
+    
+    center = np.log10(center)
+    x0 = center - width/2
+    x1 = center + width/2
+    
+    x = [10**x0,10**x1]
+    
+    return x
+
 def x_ticks_to_days(pop,ax):
     
     xticks = ax.get_xticks()
@@ -836,7 +820,22 @@ def x_ticks_to_days(pop,ax):
     return ax
 
 def shiftx(ax,pad):
-    
+    """
+    shiftx: shifts ax in the x direction by pad units
+
+    Parameters
+    ----------
+    ax : matplotlib axes
+        axes whose position is shifted
+    pad : float
+        shift amount
+
+    Returns
+    -------
+    ax : matplotlib axes
+        shifted axes
+
+    """
     pos = ax.get_position()
     pos.x0 = pos.x0+pad
     pos.x1 = pos.x1+pad
@@ -845,7 +844,22 @@ def shiftx(ax,pad):
     return ax
 
 def shifty(ax,pad):
+    """
+    shifty: shifts ax in the y direction by pad units
 
+    Parameters
+    ----------
+    ax : matplotlib axes
+        axes whose position is shifted
+    pad : float
+        shift amount
+
+    Returns
+    -------
+    ax : matplotlib axes
+        shifted axes
+
+    """
     pos = ax.get_position()
     pos.y0 = pos.y0+pad
     pos.y1 = pos.y1+pad
@@ -854,9 +868,24 @@ def shifty(ax,pad):
     return ax
 
 def shrinky(ax,pad):
+    """
+    shrinky: shrinks axes by pad by moving the top border down
+
+    Parameters
+    ----------
+    ax : matplotlib axes
+        axes whose position is shifted
+    pad : float
+        shrink amount
+
+    Returns
+    -------
+    ax : matplotlib axes
+        shrunk axes
+
+    """
     
     pos = ax.get_position()
-    # pos.y0 = pos.y0+pad
     pos.y1 = pos.y1-pad
     ax.set_position(pos)    
     
