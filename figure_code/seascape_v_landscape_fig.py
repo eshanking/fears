@@ -2,10 +2,10 @@ from fears.utils import plotter, results_manager
 import matplotlib.pyplot as plt
 import numpy as np
 
-# data_folder = 'results_08262021_0000'
-# exp_info_file = 'experiment_info_08262021_0000.p'
-data_folder = 'results_10272021_0000'
-exp_info_file = 'experiment_info_10272021_0000.p'
+# data_folder = 'results_10272021_0000'
+# exp_info_file = 'experiment_info_10272021_0000.p'
+data_folder = 'results_11112021_0000'
+exp_info_file = 'experiment_info_11112021_0000.p'
 exp_folder,exp_info = results_manager.get_experiment_results(data_folder,
                                                              exp_info_file)
 # fitness axes
@@ -40,7 +40,8 @@ data = results_manager.get_data(landscape_exp)
 counts = data[:,0:4]
 dc = exp_info.p_landscape.drug_curve
 drug_kwargs = {'color':'black',
-               'alpha':0.5}
+               'alpha':0.5,
+               'linestyle':'--'}
 
 ax[1,0],drug_ax = plotter.plot_timecourse_to_axes(exp_info.p_landscape,
                                     counts,
@@ -48,7 +49,7 @@ ax[1,0],drug_ax = plotter.plot_timecourse_to_axes(exp_info.p_landscape,
                                     labelsize=labelsize,
                                     linewidth=linewidth,
                                     drug_curve=dc,
-                                    drug_curve_linestyle='--',
+                                    # drug_curve_linestyle='--',
                                     drug_curve_label=False,
                                     drug_kwargs=drug_kwargs)
 
@@ -63,7 +64,7 @@ ax[1,1],drug_ax = plotter.plot_timecourse_to_axes(exp_info.p_landscape,
                                     ax[1,1],
                                     labelsize=labelsize,
                                     linewidth=linewidth,
-                                    drug_curve_linestyle='--',
+                                    # drug_curve_linestyle='--',
                                     drug_curve=dc,
                                     drug_kwargs=drug_kwargs)
 

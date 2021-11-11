@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from fears.utils import results_manager, plotter, dir_manager
 
-fig,ax = plt.subplots(nrows=5,ncols=2,figsize=(4,5))
+fig,ax = plt.subplots(nrows=3,ncols=4,figsize=(6,4))
 labelsize = 10
 #%% ROC data
 suffix = '11012021_0000' # lab machine
@@ -17,16 +17,10 @@ max_cells = exp_info.populations[0].max_cells
 n_sims = exp_info.n_sims
 k_abs = exp_info.slopes
 
-# exp_folders.reverse()
-# k_abs = np.flip(k_abs)
-
 exp_num = 1
 pop_roc = exp_info.populations[0]
 
 exp = exp_folders[exp_num]
-
-# num_survived += 1
-# num_extinct = 1
 
 sim_files = os.listdir(path=exp)
 sim_files = sorted(sim_files)
@@ -51,7 +45,7 @@ while found_extinct == False or found_survived == False:
         found_extinct = True
     k+=1
 #%%
-# plot survived timecourse
+# plot ROC survived timecourse
 
 sim = sim_files[num_survived]
 sim = exp + os.sep + sim
@@ -89,11 +83,11 @@ tcax,t = plotter.plot_timecourse_to_axes(exp_info.populations[exp_num],
                                             label_kwargs=label_kwargs
                                             )
 drug_ax = ax[1,0]
-drug_ax.plot(dc,color='black')
+drug_ax.plot(dc,color='black',linewidth=1)
 # drug_ax.set_yticklabels('')
 # drug_ax.set_yticks([])
 
-#%% plot extinct timecourse
+#%% plot ROC extinct timecourse
 
 sim = sim_files[num_extinct]
 sim = exp + os.sep + sim
@@ -122,7 +116,7 @@ tcax,t = plotter.plot_timecourse_to_axes(exp_info.populations[exp_num],
                                             labelsize = labelsize
                                             )
 drug_ax = ax[1,1]
-drug_ax.plot(dc,color='black')
+drug_ax.plot(dc,color='black',linewidth=1)
 #%% nonadherance data
 
 suffix = '11042021_0000' # lab machine
@@ -136,18 +130,10 @@ exp_folders,exp_info = results_manager.get_experiment_results(data_folder,
                                                              exp_info_file)
 max_cells = exp_info.populations[0].max_cells
 n_sims = exp_info.n_sims
-# p_forget = exp_info.p_forget
-
-# exp_folders.reverse()
-# k_abs = np.flip(k_abs)
-
 
 pop = exp_info.populations[0]
 n_timestep = pop.n_timestep
 exp = exp_folders[exp_num]
-
-# num_survived += 1
-# num_extinct = 1
 
 sim_files = os.listdir(path=exp)
 sim_files = sorted(sim_files)
@@ -172,7 +158,7 @@ while found_extinct == False or found_survived == False:
         found_extinct = True
     k+=1
 
-#%% plot survived timecourse
+#%% plot nonadherance survived timecourse
 
 sim = sim_files[num_survived]
 sim = exp + os.sep + sim
@@ -180,7 +166,7 @@ data = results_manager.get_data(sim)
 dc = data[:,-2]
 survived_schedule = data[:,-1]
 
-tcax = ax[2,0]
+tcax = ax[0,2]
 drug_kwargs = {'alpha':1,
                'color':'black',
                'linewidth':1
@@ -209,12 +195,10 @@ tcax,drug_ax = plotter.plot_timecourse_to_axes(exp_info.populations[exp_num],
                                             label_xpos=label_xpos,
                                             label_kwargs=label_kwargs
                                             )
-drug_ax = ax[3,0]
-drug_ax.plot(dc,color='black')
-# drug_ax.set_yticklabels('')
-# drug_ax.set_yticks([])
+drug_ax = ax[1,2]
+drug_ax.plot(dc,color='black',linewidth=1)
 
-#%% plot extinct timecourse
+#%% plot nonadherance extinct timecourse
 
 sim = sim_files[num_extinct]
 sim = exp + os.sep + sim
@@ -222,7 +206,7 @@ data = results_manager.get_data(sim)
 dc = data[:,-2]
 extinct_schedule = data[:,-1]
 
-tcax = ax[2,1]
+tcax = ax[0,3]
 drug_kwargs = {'alpha':1,
                'color':'black',
                'linewidth':1
@@ -249,149 +233,101 @@ tcax,drug_ax = plotter.plot_timecourse_to_axes(exp_info.populations[exp_num],
                                             label_xpos=label_xpos,
                                             label_lines=True
                                             )
-drug_ax = ax[3,1]
-drug_ax.plot(dc,color='black')
+drug_ax = ax[1,3]
+drug_ax.plot(dc,color='black',linewidth=1)
 #%%  plot dose times
 
 x = np.arange(n_timestep-1)
 
 timescale = pop.dose_schedule/pop.timestep_scale
 
-#%%
-
-ax[4,0].plot(x,survived_schedule,linewidth=0.5,color='black')
-ax[4,1].plot(x,extinct_schedule,linewidth=0.5,color='black')
+ax[2,2].plot(x,survived_schedule,linewidth=0.2,color='black')
+ax[2,3].plot(x,extinct_schedule,linewidth=0.2,color='black')
 
 #%% Adjust positions
 
-ax[1,0] = plotter.shrinky(ax[1,0],0.05)
-ax[1,1] = plotter.shrinky(ax[1,1],0.05)
+for col in range(0,4):
+    ax[0,col] = plotter.shrinky(ax[0,col],0.04)
+    ax[1,col] = plotter.shrinky(ax[1,col],0.11)
+    ax[1,col] = plotter.shifty(ax[1,col],0.04)
+    ax[1,col].ticklabel_format(style='scientific',axis='y',
+                                          scilimits=(0,3))
+    
+    ax[2,col] = plotter.shrinky(ax[2,col],0.2)
+    ax[2,col] = plotter.shifty(ax[2,col],0.2)
 
-ax[1,0] = plotter.shifty(ax[1,0],-0.01)
-ax[1,1] = plotter.shifty(ax[1,1],-0.01)
+# shift right column to the right to make room for axis labels
+for col in range(2,4):
+    for row in range(0,3):
+        ax[row,col] = plotter.shiftx(ax[row,col],0.05)
+        
+ax[2,2].spines['top'].set_visible(False)
+ax[2,3].spines['top'].set_visible(False)
+ax[2,2].spines['left'].set_visible(False)
+ax[2,3].spines['left'].set_visible(False)
+ax[2,2].spines['right'].set_visible(False)
+ax[2,3].spines['right'].set_visible(False)
 
-ax[2,0] = plotter.shifty(ax[2,0],-0.08)
-ax[2,1] = plotter.shifty(ax[2,1],-0.08)
+for row in range(0,3):
+    ax[row,1].set_yticks([])
+    ax[row,3].set_yticks([])
 
-ax[3,0] = plotter.shrinky(ax[3,0],0.04)
-ax[3,1] = plotter.shrinky(ax[3,1],0.04)
+ax[2,2].set_yticks([])
 
-ax[3,0] = plotter.shifty(ax[3,0],-0.11)
-ax[3,1] = plotter.shifty(ax[3,1],-0.11)
+ax[2,0].remove()
+ax[2,1].remove()
 
-ax[4,0] = plotter.shrinky(ax[4,0],0.1)
-ax[4,1] = plotter.shrinky(ax[4,1],0.1)
+#%% Adjust x axis tick labels
 
-ax[4,0] = plotter.shifty(ax[4,0],-0.08)
-ax[4,1] = plotter.shifty(ax[4,1],-0.08)
+xt = ax[0,0].get_xticks()
+xl = ax[0,0].get_xticklabels()
+xlim = ax[0,0].get_xlim()
 
-#%% Adjust ticks and tick labels
+for col in range(0,2):
+    ax[1,col] = plotter.x_ticks_to_days(pop_roc,ax[1,col])
+    ax[1,col].set_xticks(xt)
+    ax[1,col].set_xticklabels(xl)
+    ax[1,col].set_xlim(xlim)
+    ax[1,col].set_xlabel('Days')
+    
+xt = ax[0,2].get_xticks()
+xl = ax[0,2].get_xticklabels()
+xlim = ax[0,2].get_xlim()
 
-# dose regimen plots
+for col in range(2,4):
+    for row in range(1,3):
+        ax[row,col] = plotter.x_ticks_to_days(pop_roc,ax[row,col])
+        ax[row,col].set_xticks(xt)
+        ax[row,col].set_xticklabels(xl)
+        ax[row,col].set_xlim(xlim)
+    ax[2,col].set_xlabel('Days')
 
-ax[0,0] = plotter.x_ticks_to_days(pop_roc,ax[0,0])
-ax[0,1] = plotter.x_ticks_to_days(pop_roc,ax[0,1])
+#%% Add axis labels
 
-ax[1,0] = plotter.x_ticks_to_days(pop_roc,ax[1,0])
-ax[1,1] = plotter.x_ticks_to_days(pop_roc,ax[1,1])
+ax[0,0].set_ylabel('Proportion',fontsize=8)
+ax[1,0].set_ylabel('Concentration ($\u03BC$M)',fontsize=8)
 
-ax[1,0].ticklabel_format(style='scientific',axis='y',
-                                     scilimits=(0,3))
-ax[1,1].ticklabel_format(style='scientific',axis='y',
-                                     scilimits=(0,3))
+ax[0,2].set_ylabel('Proportion',fontsize=8)
+ax[1,2].set_ylabel('Concentration ($\u03BC$M)',fontsize=8)
 
-ax[2,0] = plotter.x_ticks_to_days(pop,ax[2,0])
-ax[2,1] = plotter.x_ticks_to_days(pop,ax[2,1])
+#%% add panel labels
 
-ax[3,0] = plotter.x_ticks_to_days(pop,ax[3,0])
-ax[3,1] = plotter.x_ticks_to_days(pop,ax[3,1])
+alphabet = ['a','b','c','d','e','f','g','h','i','j']
 
-ax[3,0].ticklabel_format(style='scientific',axis='y',
-                                     scilimits=(0,3))
-ax[3,1].ticklabel_format(style='scientific',axis='y',
-                                     scilimits=(0,3))
+k = 0
 
-ax[4,0] = plotter.x_ticks_to_days(pop,ax[4,0])
-ax[4,1] = plotter.x_ticks_to_days(pop,ax[4,1])
+for row in range(2):
+    for col in range(2):
+        ax[row,col].annotate(alphabet[k],(0.92,1.07),xycoords='axes fraction')
+        k+=1
+        
+for row in range(0,2):
+    for col in range(2,4):
+        ax[row,col].annotate(alphabet[k],(0.92,1.1),xycoords='axes fraction')
+        k+=1
 
-ax[4,1].spines['top'].set_visible(False)
-ax[4,0].spines['top'].set_visible(False)
-
-ax[1,1].set_yticklabels('')
-ax[0,1].set_yticklabels('')
-ax[1,1].set_yticks([])
-ax[0,1].set_yticks([])
-ax[2,1].set_yticklabels('')
-ax[2,1].set_yticks([])
-ax[3,1].set_yticklabels('')
-ax[3,1].set_yticks([])
-ax[4,1].set_yticklabels('')
-ax[4,1].set_yticks([])
-ax[4,0].set_yticklabels('')
-ax[4,0].set_yticks([])
-
-ax[1,0].set_xlabel('Days')
-ax[1,1].set_xlabel('Days')
-
-ax[4,0].set_xlabel('Days')
-ax[4,1].set_xlabel('Days')
-
-xt = ax[1,0].get_xticks()
-xtl = ax[1,0].get_xticklabels()
-xl = ax[1,0].get_xlim()
-
-ax[0,0].set_xticks(xt)
-ax[0,1].set_xticks(xt)
-ax[0,0].set_xticklabels(xtl)
-ax[0,1].set_xticklabels(xtl)
-ax[0,0].set_xlim(xl)
-ax[0,1].set_xlim(xl)
-
-xt = ax[2,0].get_xticks()
-xtl = ax[2,0].get_xticklabels()
-xl = ax[2,0].get_xlim()
-
-ax[3,0].set_xticks(xt)
-ax[3,1].set_xticks(xt)
-ax[3,0].set_xticklabels(xtl)
-ax[3,1].set_xticklabels(xtl)
-ax[3,0].set_xlim(xl)
-ax[3,1].set_xlim(xl)
-
-ax[4,0].set_xticks(xt)
-ax[4,1].set_xticks(xt)
-ax[4,0].set_xticklabels(xtl)
-ax[4,1].set_xticklabels(xtl)
-ax[4,0].set_xlim(xl)
-ax[4,1].set_xlim(xl)
-
-fontsize = 8
-ax[0,0].set_ylabel('Proportion',fontsize=fontsize)
-ax[2,0].set_ylabel('Proportion',fontsize=fontsize)
-
-ax[1,0].set_ylabel('Drug \n concentration',fontsize=fontsize)
-ax[3,0].set_ylabel('Drug \n concentration',fontsize=fontsize)
-
-# ax[2,0].legend(ncol=4,frameon=False,loc=(0,-4.3),fontsize=8)
-
-ax[0,0].set_title('Resistant',fontsize=fontsize)
-ax[0,1].set_title('Extinct',fontsize=fontsize)
-
-#%% Add caption annotations
-
-cords = (0.95,1)
-cords2 = (0.95,1.1)
-cords3 = (0.95,1.35)
-
-ax[0,0].annotate('a',xy = cords,xycoords='axes fraction')
-ax[0,1].annotate('b',xy = cords,xycoords='axes fraction')
-ax[1,0].annotate('c',xy = cords2,xycoords='axes fraction')
-ax[1,1].annotate('d',xy = cords2,xycoords='axes fraction')
-ax[2,0].annotate('e',xy = cords,xycoords='axes fraction')
-ax[2,1].annotate('f',xy = cords,xycoords='axes fraction')
-ax[3,0].annotate('g',xy = cords2,xycoords='axes fraction')
-ax[3,1].annotate('h',xy = cords2,xycoords='axes fraction')
-ax[4,0].annotate('i',xy = cords3,xycoords='axes fraction')
-ax[4,1].annotate('j',xy = cords3,xycoords='axes fraction')
+ax[2,2].annotate(alphabet[k],(0.92,1.4),xycoords='axes fraction')
+k+=1
+ax[2,3].annotate(alphabet[k],(0.92,1.4),xycoords='axes fraction')
 
 results_manager.save_fig(fig,'example_timecourses.pdf',bbox_inches='tight')
