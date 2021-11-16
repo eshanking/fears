@@ -4,7 +4,8 @@ import numpy as np
 from fears.utils import results_manager, plotter, dir_manager
 import pandas as pd
 
-suffix = '11012021_0000' # lab machine
+# suffix = '11012021_0000' # lab machine
+suffix = '10272021_0001' # macbook
 data_folder = 'results_' + suffix
 exp_info_file = 'experiment_info_' + suffix + '.p'
 
@@ -132,6 +133,11 @@ xl = ax[1].get_xticklabels()
 ax[0].set_xticks(xt)
 ax[0].set_xticklabels(xl)
 ax[0].set_xlim([0,xmax])
+
+# fix ax[2] xlabels ¯\_(ツ)_/¯
+ax[2].set_xticks(xt)
+ax[2].set_xticklabels(xl)
+ax[2].set_xlim([0,xmax])
 results_manager.save_fig(fig,'roc_km_curve.pdf',bbox_inches='tight')
 #%%
 # perform pairwise log-rank tests and compute p values

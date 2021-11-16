@@ -5,7 +5,8 @@ from fears.utils import results_manager, plotter, dir_manager
 import pandas as pd
 
 # suffix = '091102021_0000'
-suffix = '11042021_0000' # lab machine
+# suffix = '11042021_0000' # lab machine
+suffix = '11112021_0000' # macbook
 data_folder = 'results_' + suffix
 exp_info_file = 'experiment_info_' + suffix + '.p'
 
