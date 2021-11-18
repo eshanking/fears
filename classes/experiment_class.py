@@ -273,7 +273,7 @@ class Experiment():
             # save the experiment information
             
             pickle.dump(self, open(self.experiment_info_path,"wb"))
-        self.savename = None
+        # self.savename = None
         
         # self.n_survive = np.zeros([len(self.curve_types),len(self.max_doses)])
         # self.perc_survive = np.zeros([len(self.curve_types),len(self.max_doses)])
@@ -440,7 +440,7 @@ class Experiment():
             
         savename = self.results_path + os.sep + save_folder + os.sep + prefix + num + '.csv'
         np.savetxt(savename, counts, delimiter=",")
-        self.savename = savename
+        # self.savename = savename
         return
     
     def compute_regimen(self,p,u):

@@ -38,7 +38,7 @@ def make_data():
     
     e.run_experiment()
     
-    return e.savename
+    return e
 
 if __name__ == '__main__':
     make_data()

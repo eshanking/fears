@@ -12,10 +12,16 @@ def make_datapath_absolute(filename):
     return p
 
 def make_resultspath_absolute(filename):
-    r = str(get_project_root())    
-    res_dir = r + os.sep + 'results'
-    make_directory(res_dir)
-    p = r + os.sep + 'results' + os.sep + filename
+    r = str(get_project_root())
+    
+    # check if filename is already absolute
+    if r not in filename:
+        
+        res_dir = r + os.sep + 'results'
+        make_directory(res_dir)
+        p = r + os.sep + 'results' + os.sep + filename
+    else:
+        p = filename
     
     return p
 

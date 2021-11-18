@@ -7,8 +7,8 @@ def make_data():
     max_doses = [5*10**4]
     curve_types = ['pharm']
     experiment_type = 'rate-survival'
-    # n_sims = 500
     n_sims = 500
+    # n_sims = 10
     
     slopes = np.array([0.4,0.5,0.6,0.7])*10**-3
     
@@ -46,6 +46,8 @@ def make_data():
     
     
     e.run_experiment()
+    
+    return e
 
 if __name__ == '__main__':
     make_data()
