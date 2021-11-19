@@ -5,8 +5,8 @@ from fears.utils import results_manager, plotter, dir_manager
 import pandas as pd
 
 
-def make_fig(adh_exp):
-    # suffix = '11042021_0000' # lab machine
+def make_fig(adh_exp=None):
+    # suffix = '11182021_0001' # lab machine
     # # suffix = '11112021_0000' # macbook
     # data_folder = 'results_' + suffix
     # exp_info_file = 'experiment_info_' + suffix + '.p'
@@ -124,8 +124,9 @@ def make_fig(adh_exp):
     ax[1].set_title('Resistant genotype = 0010',fontsize=8)
     ax[2].set_title('Resistant genotype = 0110',fontsize=8)
     results_manager.save_fig(fig,'nonadherance_km_curve.pdf',bbox_inches='tight')
-    
-    # perform pairwise log-rank tests and compute p values
+
+#%%  perform pairwise log-rank tests and compute p values
+
     analysis_keys = list(km_data.keys()) # endpoints being analyzed
     experiment_keys = [str(p) for p in p_drop] # experiments performed
     
@@ -142,14 +143,12 @@ def make_fig(adh_exp):
                 'resistance 0010':{},
                 'resistance 0110':{}}
     
-    n_tests = len(p_drop)-1
-    
     for ak in  analysis_keys:
         for pair in comparisons:
             key0 = str(pair[0])
             key1 = str(pair[1])
             sr = exp_info.log_rank_test(km_data[ak][key0],km_data[ak][key1])
-            p_values[ak][str(pair)] = float(sr.p_value)*n_tests # Mutliple hypothesis testing correction
+            p_values[ak][str(pair)] = float(sr.p_value)#*n_tests # Mutliple hypothesis testing correction
     
     p_values = pd.DataFrame(p_values)
     result_path = dir_manager.make_resultspath_absolute(
@@ -158,4 +157,4 @@ def make_fig(adh_exp):
     p_values.to_csv(result_path)
     
 if __name__ == '__main__':
-    make_figure() 
+    make_fig() 
