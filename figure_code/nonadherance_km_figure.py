@@ -6,13 +6,13 @@ import pandas as pd
 
 
 def make_fig(adh_exp=None):
-    # suffix = '11182021_0001' # lab machine
-    # # suffix = '11112021_0000' # macbook
-    # data_folder = 'results_' + suffix
-    # exp_info_file = 'experiment_info_' + suffix + '.p'
+    suffix = '11182021_0001' # lab machine
+    # suffix = '11112021_0000' # macbook
+    data_folder = 'results_' + suffix
+    exp_info_file = 'experiment_info_' + suffix + '.p'
     
-    data_folder = adh_exp.results_path
-    exp_info_file = adh_exp.experiment_info_path
+    # data_folder = adh_exp.results_path
+    # exp_info_file = adh_exp.experiment_info_path
     
     fig,ax = plt.subplots(nrows=1,ncols=3,figsize=(8,2.5))
     
