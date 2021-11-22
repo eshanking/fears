@@ -3,21 +3,27 @@ import matplotlib.pyplot as plt
 import numpy as np
 from fears.utils import results_manager, plotter, dir_manager
 import pandas as pd
+import pickle
 
 
-def make_fig(adh_exp=None):
-    suffix = '11182021_0001' # lab machine
+def make_fig(adh_exp=None,suffix=None):
+    # suffix = '11182021_0001' # lab machine
     # suffix = '11112021_0000' # macbook
-    data_folder = 'results_' + suffix
-    exp_info_file = 'experiment_info_' + suffix + '.p'
     
-    # data_folder = adh_exp.results_path
-    # exp_info_file = adh_exp.experiment_info_path
+    # if suffix is None: 
+    #     data_folder = adh_exp.results_path
+    #     exp_info_file = adh_exp.experiment_info_path
+    # else:
+    #     data_folder = 'results_' + suffix
+    #     exp_info_file = 'experiment_info_' + suffix + '.p'
     
     fig,ax = plt.subplots(nrows=1,ncols=3,figsize=(8,2.5))
     
-    exp_folders,exp_info = results_manager.get_experiment_results(data_folder,
-                                                                 exp_info_file)
+    if suffix is None:
+        exp_folders,exp_info = results_manager.get_experiment_results(exp=adh_exp)
+    else:
+        exp_folders,exp_info = results_manager.get_experiment_results(suffix=suffix)
+
     max_cells = exp_info.populations[0].max_cells
     n_sims = exp_info.n_sims
     p_drop = exp_info.prob_drops
@@ -158,3 +164,12 @@ def make_fig(adh_exp=None):
     
 if __name__ == '__main__':
     make_fig() 
+
+def unpack(exp_info_path):
+
+    exp_info = pickle.load(open(exp_info_path,'rb'))
+    counts = exp_info['counts']
+    drug_conc = exp_info['drug_conc']
+    regimen = exp_info['u']
+
+    return counts, drug_conc, regimen

@@ -2,10 +2,10 @@ import os
 import pickle
 import pandas as pd
 from fears.utils import dir_manager
+from fears.classes.experiment_class import Experiment
 # from fears.classes.experiment_class import Experiment
 
-def get_experiment_results(suffix):
-    from fears.classes.experiment_class import Experiment
+def get_experiment_results(suffix=None,exp=None):
     """
     
 
@@ -27,10 +27,14 @@ def get_experiment_results(suffix):
     """
     # exp_info_path = dir_manager.make_resultspath_absolute(exp_info_file)
     # results_dir = dir_manager.make_resultspath_absolute(data_folder)
-    exp_info_file = 'results_11222021_0000/experiment_info_11222021_0000.p'
-    exp_info_path = dir_manager.make_resultspath_absolute(exp_info_file)
 
-    exp_info = pickle.load(open(exp_info_path,'rb')) # load experiment info
+    if exp is None:
+        exp_info_file = 'results_' + suffix + os.sep + 'experiment_info_11222021_0000.p'
+        exp_info_path = dir_manager.make_resultspath_absolute(exp_info_file)
+
+        exp_info = pickle.load(open(exp_info_path,'rb')) # load experiment info
+    else:
+        exp_info = exp
     
     # experiment_folders = sorted(os.listdir(path=results_dir)) 
     # experiment_folders = [x for x in experiment_folders if x != '.DS_Store']
