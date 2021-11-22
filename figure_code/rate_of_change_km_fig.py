@@ -177,4 +177,12 @@ def make_fig(roc_exp):
     p_values.to_csv(result_path)
 #%%
 if __name__ == '__main__':
-    make_figure()          
+    make_figure()
+#%%
+
+def mutation_burden(pop,counts):
+    
+    return
+
+
+          

@@ -265,14 +265,11 @@ class Experiment():
                 save_folder = self.root_path + os.sep + 'results' + os.sep + 'results_' + date_str + '_' + num_str
             os.mkdir(save_folder) 
             
-            self.experiment_info_path = self.root_path + os.sep + 'results' + os.sep + 'experiment_info_' + date_str + '_' + num_str + '.p'
-            
-            # self.experiment_info_path = experiment_info_path
             self.results_path = save_folder
-        
-            # save the experiment information
+            # self.experiment_info_path = self.root_path + os.sep + 'results' + os.sep + 'experiment_info_' + date_str + '_' + num_str + '.p'
+            self.experiment_info_path = self.results_path + os.sep + 'experiment_info_' + date_str + '_' + num_str + '.p'
+            self.exp_folders = []
             
-            pickle.dump(self, open(self.experiment_info_path,"wb"))
         # self.savename = None
         
         # self.n_survive = np.zeros([len(self.curve_types),len(self.max_doses)])
@@ -335,6 +332,9 @@ class Experiment():
             # pbar = tqdm(total=len(self.populations))
             # kk=0
             for p in self.populations:
+                save_folder = 'p_drop=' + str(p.prob_drop)
+                save_folder = save_folder.replace('.',',')
+                # self.exp_folder.append(save_folder)
                 for i in range(self.n_sims):
                     # initialize new drug curve
                     p.drug_curve,u = p.gen_curves()
@@ -354,10 +354,12 @@ class Experiment():
                     u = u.transpose()
                     counts = np.concatenate((counts,drug,u),axis=1)
   
-                    save_folder = 'p_drop=' + str(p.prob_drop)
-                    save_folder = save_folder.replace('.',',')
                     if not self.debug:
-                        self.save_counts(counts,i,save_folder)
+                        # self.save_counts(counts,i,save_folder)
+                        data_dict = {'counts':counts,
+                                     'drug_curve':drug,
+                                     'regimen':u}
+                        self.save_dict(data_dict,i,save_folder)
                 # kk+=1
                 # pbar.update()
                 self.perc_survive = 100*self.n_survive/self.n_sims
@@ -413,7 +415,7 @@ class Experiment():
                             save_folder = 'slope=' + str(p.slope)
                             save_folder.replace('.','pnt')
                         self.save_counts(counts,n,save_folder)
-        
+        pickle.dump(self, open(self.experiment_info_path,"wb"))
         
                     
                 # fig_savename = 'slope = ' + str(p.slope)
@@ -441,6 +443,26 @@ class Experiment():
         savename = self.results_path + os.sep + save_folder + os.sep + prefix + num + '.csv'
         np.savetxt(savename, counts, delimiter=",")
         # self.savename = savename
+        return
+    
+    def save_dict(self,data_dict,num,save_folder,prefix='sim_'):
+        # check if the desired save folder exists. If not, create it
+        if save_folder is None:
+            save_folder = ''
+        folder_path = self.results_path + os.sep + save_folder
+        if os.path.exists(folder_path) != True:
+            os.mkdir(folder_path)
+        
+        if num is None:
+            num = ''
+        else:
+            num = str(num).zfill(4)
+        
+        if folder_path not in self.exp_folders:
+            self.exp_folders.append(folder_path)
+        savename = self.results_path + os.sep + save_folder + os.sep + prefix + num + '.p'
+        pickle.dump(data_dict, open(savename,"wb"))
+        # np.savetxt(savename, counts, delimiter=",")
         return
     
     def compute_regimen(self,p,u):
@@ -570,4 +592,4 @@ class Experiment():
                                           event_observed_B=event_observed_B)
         
         return results
-    
+        

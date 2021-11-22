@@ -26,8 +26,8 @@ def make_data():
     p = np.array([0.0,0.2,0.4,0.6,0.8])
     # p = np.array([0.6])
     # p = np.array([0.8])
-    n_sims = 500
-    # n_sims = 10
+    # n_sims = 500
+    n_sims = 10
     
     experiment_type = 'drug-regimen'
     
