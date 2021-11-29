@@ -404,18 +404,21 @@ class Experiment():
                     drug = p.drug_curve
                     drug = np.array([drug])
                     drug = np.transpose(drug)
-                    counts = np.concatenate((counts,drug),axis=1)
+                    # counts = np.concatenate((counts,drug),axis=1)
                     
                     if self.debug is False:
                         if (self.curve_types[0] == 'pharm' or 
                             self.curve_types[0] == 'pulsed'):
                             save_folder = 'k_abs=' + str(p.k_abs)
-                            save_folder.replace('.','pnt')
+                            save_folder.replace('.',',')
                         else:
                             save_folder = 'slope=' + str(p.slope)
-                            save_folder.replace('.','pnt')
+                            save_folder.replace('.',',')
                         self.save_counts(counts,n,save_folder)
-        pickle.dump(self, open(self.experiment_info_path,"wb"))
+                        data_dict = {'counts':counts,
+                                     'drug_curve':drug}
+                        self.save_dict(data_dict,n,save_folder)
+        # pickle.dump(self, open(self.experiment_info_path,"wb"))
         
                     
                 # fig_savename = 'slope = ' + str(p.slope)
@@ -460,6 +463,7 @@ class Experiment():
         
         if folder_path not in self.exp_folders:
             self.exp_folders.append(folder_path)
+            
         savename = self.results_path + os.sep + save_folder + os.sep + prefix + num + '.p'
         pickle.dump(data_dict, open(savename,"wb"))
         # np.savetxt(savename, counts, delimiter=",")

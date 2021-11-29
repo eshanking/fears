@@ -29,7 +29,7 @@ def get_experiment_results(suffix=None,exp=None):
     # results_dir = dir_manager.make_resultspath_absolute(data_folder)
 
     if exp is None:
-        exp_info_file = 'results_' + suffix + os.sep + 'experiment_info_11222021_0000.p'
+        exp_info_file = 'results_' + suffix + os.sep + 'experiment_info_' + suffix + '.p'
         exp_info_path = dir_manager.make_resultspath_absolute(exp_info_file)
 
         exp_info = pickle.load(open(exp_info_path,'rb')) # load experiment info

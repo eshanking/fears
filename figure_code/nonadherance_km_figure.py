@@ -66,9 +66,11 @@ def make_fig(adh_exp=None,suffix=None):
         # while k < 10:
             sim = sim_files[k]
             sim = exp + os.sep + sim
-            data = results_manager.get_data(sim)
-            dc = data[:,-2]
-            data = data[:,0:-2]
+            counts, drug_conc, regimen = unpack(sim)
+            # data = results_manager.get_data(sim)
+            dc = drug_conc
+            # data = data[:,0:-2]
+            data = counts
             
             death_event_obs[k],death_event_times[k] = \
                 exp_info.extinction_time(pop,data,thresh=1)
@@ -165,11 +167,11 @@ def make_fig(adh_exp=None,suffix=None):
 if __name__ == '__main__':
     make_fig() 
 
-def unpack(exp_info_path):
+def unpack(sim_path):
 
-    exp_info = pickle.load(open(exp_info_path,'rb'))
-    counts = exp_info['counts']
-    drug_conc = exp_info['drug_conc']
-    regimen = exp_info['u']
+    data_dict = pickle.load(open(sim_path,'rb'))
+    counts = data_dict['counts']
+    drug_conc = data_dict['drug_curve']
+    regimen = data_dict['regimen']
 
     return counts, drug_conc, regimen
