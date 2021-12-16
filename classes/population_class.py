@@ -277,6 +277,9 @@ class Population:
                 raise Exception('To reduce ambiguity, please ensure that' 
                                 + ' timestep_scale divides evenly into'
                                 + ' passage_time.')
+        self.state = {'counts':[],
+                      'n_mut':0,
+                      't':0}
 
 ###############################################################################
     # ABM helper methods
@@ -318,8 +321,8 @@ class Population:
     
     # converts an integer to a genotype and padding to the left by 0s
     def convertIntToGenotype(self,anInt,pad):
-    	offset = 2**pad
-    	return [int(x) for x in bin(offset+anInt)[3:]]
+        offset = 2**pad
+        return [int(x) for x in bin(offset+anInt)[3:]]
     
     def random_mutations(self,N):
         trans_mat = np.zeros([N,N])
@@ -433,6 +436,9 @@ class Population:
             counts_t = counts_t*scale
             counts_t = np.ceil(counts_t).astype('int')
         
+        self.state['counts'] = counts_t
+        self.state['n_mut'] = n_mut
+        self.state['t'] = mm
         return counts_t
     
     def run_abm(self):

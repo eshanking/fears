@@ -1,3 +1,5 @@
+import sys
+sys.path.append('/Users/eshanking/repos')
 import matplotlib.pyplot as plt
 from cycler import cycler
 import seaborn as sns
@@ -566,21 +568,22 @@ def plot_landscape(p,conc=10**0,
                clip_on=False,
                **kwargs)
     
-    for n, label in labels.items():
-        (x, y) = pos[n]
-        if not isinstance(label, str):
-            label = str(label)  # this makes "1" and 1 labeled the same
-        ax.text(
-            x,
-            y,
-            label,
-            size=textsize,
-            color=textcolor,
-            horizontalalignment='center',
-            verticalalignment='center',
-            transform=ax.transData,
-            clip_on=True,
-        )
+    if textcolor is not None:
+        for n, label in labels.items():
+            (x, y) = pos[n]
+            if not isinstance(label, str):
+                label = str(label)  # this makes "1" and 1 labeled the same
+            ax.text(
+                x,
+                y,
+                label,
+                size=textsize,
+                color=textcolor,
+                horizontalalignment='center',
+                verticalalignment='center',
+                transform=ax.transData,
+                clip_on=True,
+            )
         
     # display colorbar    
     if colorbar:
