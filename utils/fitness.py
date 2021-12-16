@@ -1,17 +1,39 @@
 import numpy as np
 
-# compute fitness given a drug concentration
-def gen_fitness(pop,allele,conc,drugless_rate,ic50):        
+def gen_fitness_curves(pop,conc=None):
+    
+    if conc is None:
+        conc = np.logspace(-3,5,num=1000)
+    
+    n_genotype = pop.n_genotype
 
+    fc = {}
+    for g in range(n_genotype):
+        f = np.zeros(len(conc))
+        i = 0
+        for c in conc:
+            f[i] = gen_fitness(pop,g,c) - pop.death_rate
+            i+=1
+        fc[g] = f
+
+    return fc
+
+# compute fitness given a drug concentration
+def gen_fitness(pop,genotype,conc,drugless_rate=None,ic50=None):        
+
+    if drugless_rate is None:
+        drugless_rate = pop.drugless_rates
+    if ic50 is None:
+        ic50 = pop.ic50
 
     # logistic equation from Ogbunugafor 2016
     conc = conc/10**6 # concentration in uM, convert to M
     c = -.6824968 # empirical curve fit
     log_eqn = lambda d,i: d/(1+np.exp((i-np.log10(conc))/c))
     if conc <= 0:
-        fitness = drugless_rate[allele]
+        fitness = drugless_rate[genotype]
     else:
-        fitness = log_eqn(drugless_rate[allele],ic50[allele])
+        fitness = log_eqn(drugless_rate[genotype],ic50[genotype])
 
     return fitness
 

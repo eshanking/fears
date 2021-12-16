@@ -7,7 +7,8 @@ import numpy as np
 import os
 import math
 import scipy.stats
-from fears.utils import dir_manager
+from fears.utils import dir_manager, fitness
+# from fears.utils.experiment_class import Experiment
 from matplotlib.collections import LineCollection
 import networkx as nx
 from labellines import labelLine
@@ -199,7 +200,7 @@ def plot_fitness_curves(pop,
     
     return fig,ax
 
-def plot_msw(pop,fitness_curves,conc,genotypes,save=False):
+def plot_msw(pop,wt,conc=None,fc=None):
     """
     plot_msw: method for plotting mutant selection window figures.
 
@@ -222,7 +223,41 @@ def plot_msw(pop,fitness_curves,conc,genotypes,save=False):
         MSW figures
 
     """
-    n_genotype = fitness_curves.shape[1]
+    if conc is None:
+        conc = np.logspace(-3,5,1000)
+    if fc is None:
+        fc = fitness.gen_fitness_curves(pop,conc)
+
+    rows = int((pop.n_allele)/2)
+    fig, ax = plt.subplots(rows,2)
+    
+    neighbors = pop.gen_neighbors(wt)
+    wt_fitness_curve = fc[wt]
+
+    i = 0
+    for r in range(rows):
+        for col in range(2):
+            n = neighbors[i]
+            wtlabel = pop.int_to_binary(wt) + ' (wt)'
+            ax[r,col].plot(conc,wt_fitness_curve,label=wtlabel,linewidth=3)
+            
+            bitstring = pop.int_to_binary(n)    
+            ax[r,col].plot(conc,fc[n],label=bitstring,linewidth=3)
+
+            msw_left,msw_right = get_msw(wt_fitness_curve,fc[n],conc)
+            ax[r,col].axvspan(msw_left, msw_right, 
+                    facecolor='#2ca02c',alpha=0.5,
+                    label='MSW')
+            ax[r,col].set_xscale('log')
+            ax[r,col].legend(fontsize=10,frameon=False)
+            i+=1
+    for r in range(rows):
+        ax[r,0].set_ylabel('$R_{0}$',fontsize=10)
+    for c in range(2):
+        ax[rows-1,c].set_xlabel('Drug concentration ($\mathrm{\mu}$M)',
+                              fontsize=10)
+    """
+    n_genotype = pop.n_genotype
     rows = int((n_genotype-1)/2)
     fig, ax = plt.subplots(rows,2)
     g = 1
@@ -269,7 +304,7 @@ def plot_msw(pop,fitness_curves,conc,genotypes,save=False):
         r = dir_manager.get_project_root()
         savename = str(r) + os.sep + 'figures' + os.sep + 'msw.pdf'
         plt.savefig(savename,bbox_inches="tight")
-    
+    """
     return fig
 
 def plot_timecourse_to_axes(pop,
@@ -776,6 +811,94 @@ def plot_kaplan_meier(pop,
     ax.set_ylabel(ylabel)
     ax.set_xlabel('Days')
     return ax
+
+def get_msw(wt_fitness_curve,cur_fitness_curve,conc):
+
+    msw_left = np.argwhere(wt_fitness_curve<cur_fitness_curve)
+    msw_right = \
+        np.intersect1d(np.argwhere(wt_fitness_curve<0),np.argwhere(cur_fitness_curve<0))
+    
+    if msw_right.shape[0] == 0:
+        msw_right = max(conc)
+    else:
+        msw_right = conc[min(msw_right)]
+
+    if msw_left.shape[0] == 0:
+        msw_left = msw_right
+    else:
+        msw_left = conc[min(msw_left[0])]
+
+    
+
+    return msw_left, msw_right
+
+def msw_grid(pop,
+            genotypes):
+    
+    conc = np.logspace(-3,5,1000)
+    fc = fitness.gen_fitness_curves(pop,conc)
+
+    # get the row height
+    n_rows = len(genotypes)*pop.n_allele + len(genotypes)
+    h = 1/n_rows
+    ylevel = 1 # top-down illustration
+
+    # initialize a figure with appropriate aspect ratio
+    width = 6 # inches
+    row_height = 0.2 # inches
+
+    fig,ax = plt.subplots(figsize=(width,row_height*n_rows))
+
+    for g in genotypes:
+        # g is the reference genotype
+        # get neighbors
+        neighbors = pop.gen_neighbors(g)
+        # add a line for the reference label
+        label = 'Reference = ' + pop.int_to_binary(g)
+
+        pos = (10**-3,ylevel-(0.8*h))
+        ax.annotate(label,pos,xycoords='data',annotation_clip=True,fontsize=8)
+
+        ylevel += -h
+
+        for n in neighbors:
+
+            msw_left, msw_right = get_msw(fc[g],
+                                          fc[n],
+                                          conc)
+    
+            # wt selection window
+            x = [min(conc),min(conc),msw_left,msw_left]
+            y = [ylevel-h,ylevel,ylevel,ylevel-h]
+            wt = ax.fill(x,y,'#ff7f00',alpha=0.7,label='wt selection')
+
+            # mutant selection window
+            # print(msw_right)
+            x = [msw_left,msw_left,msw_right,msw_right]
+            mt = ax.fill(x,y,'#2ca02c',alpha=0.7,label='mutant selection')
+
+            # no selection
+            x = [msw_right,msw_right,max(conc),max(conc)]
+            ns = ax.fill(x,y,'#e41a1c',alpha=0.7,label='net loss')
+
+            y = np.ones(len(conc))*ylevel
+            ax.plot(conc,y,color='black',linewidth=0.5)
+
+            label = pop.int_to_binary(n)
+            pos = (10**-3.6,ylevel-(0.8*h))
+            ax.annotate(label,pos,xycoords='data',annotation_clip=False,fontsize=8)
+
+            ylevel += -h
+    
+    ax.set_frame_on(False)
+    ax.set_xscale('log')
+    ax.set_yticks([])
+    ax.legend()
+    h, l = ax.get_legend_handles_labels()
+    ax.legend(h[0:3],l[0:3],loc = (0.65,0.95),frameon=False)
+
+    return fig, ax
+
 
 # Helper methods
 

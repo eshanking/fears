@@ -283,7 +283,12 @@ class Population:
 
 ###############################################################################
     # ABM helper methods
-    
+    def gen_neighbors(self,genotype):
+        mut = range(self.n_allele)
+        neighbors = [genotype ^ (1 << m) for m in mut]
+
+        return neighbors
+
     def fast_choice(self,options, probs):
         x = random.random()
         cum = 0

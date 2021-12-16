@@ -1,5 +1,5 @@
 from fears.classes.population_class import Population
-from fears.utils import plotter, dir_manager
+from fears.utils import plotter, dir_manager, fitness
 import numpy as np
 import pandas as pd
 # import warnings
@@ -510,32 +510,20 @@ class Experiment():
         
         return drug_curve
     
-    def calculate_msw(self,genotype,pop=None,save=False):
+    def calculate_msw(self,wt,pop=None):
         if pop is None:
             pop=self.populations[0]
         
         # calculate neighbors in bit-string network model
-        neighbors = self.gen_neighbors(pop,genotype)
-        genotypes = [genotype] + neighbors
+        # neighbors = self.gen_neighbors(pop,genotype)
+        # genotypes = [genotype] + neighbors
         
-        powers = np.linspace(-3,5,40)
-        conc = np.power(10*np.ones(powers.shape[0]),powers)
+        # powers = np.linspace(-3,5,40)
+        # conc = np.power(10*np.ones(powers.shape[0]),powers)
         
-        fitness_curves = np.zeros((len(powers),len(genotypes)))
+        # fitness_curves = np.zeros((len(powers),len(genotypes)))
         
-        drugless_rates = pop.drugless_rates
-        ic50 = pop.ic50
-        
-        for j in range(len(genotypes)):
-            for i in range(len(conc)):
-                
-                f = pop.gen_fitness(genotypes[j],
-                                    conc[i],
-                                    drugless_rates,
-                                    ic50)
-                r_0 = f-pop.death_rate
-                fitness_curves[i,j] = r_0
-        fig = plotter.plot_msw(pop,fitness_curves,conc,genotypes,save=save)
+        fig = plotter.plot_msw(pop,wt)
         return fig
         
 ###############################################################################
