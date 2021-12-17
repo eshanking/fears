@@ -1,2 +1,0 @@
-Resolve file name redundancy in experiment class
-Resolve conflicts/redundancy between experiment class and population class
