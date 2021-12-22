@@ -1,36 +1,46 @@
 import numpy as np
 import math
 import random
-from fears.utils import plotter, pharm, fitness, dir_manager
+from fears.src.fears.utils import dir_manager, fitness
 
-class Population:
+class PopParams:
 
-    class PopParams:
-        death_rate, mut_rate = 0.1, 10**-9
-        ic50_data_path, drugless_data_path = 'data/pyrimethamine_ic50.csv','ogbunugafor_drugless.csv'
-        constant_pop, use_carrying_cap = False, True
-        carrying_cap = 10**10
-        n_allele, n_genotype = None, None
-
-
-        def __init__(self,**kwargs):
-            
-            # update params with kwargs
-            allowed_keys = {'death_rate', 'mut_rate', 'n_genotypes','n_allele','ic50_data_path',
-                            'drugless_data_path','constant_pop','use_carrying_cap','carrying_cap'}
-            self.__dict__.update((k, v) for k, v in kwargs.items() if k in allowed_keys)
-            
-            # load data
-            self.drugless_data_path = dir_manager.make_datapath_absolute(self.drugless_data_path)
-            self.ic50_data_path = dir_manager.make_datapath_absolute(self.ic50_data_path)
-            self.drugless_rates = dir_manager.load_fitness(self.drugless_data)
-            self.ic50 = dir_manager.load_fitness(self.ic50_data)
-
-    params = PopParams()
     def __init__(self,**kwargs):
-        self.params = self.params(**kwargs)
-        
-    
+        self.death_rate, self.mut_rate = 0.1, 10**-9
+        self.ic50_data_path, self.drugless_data_path = 'pyrimethamine_ic50.csv','ogbunugafor_drugless.csv'
+        self.constant_pop, self.use_carrying_cap = False, True
+        self.carrying_cap = 10**10
+        self.n_allele, self.n_genotype = None, None
+        self.doubling_time = 1
+
+        for paramkey in self.__dict__.keys():
+            for optkey in kwargs.keys():
+                if paramkey == optkey:
+                    td = {paramkey:kwargs.get(paramkey)}
+                    self.__dict__.update(td)
+
+        # load data
+        self.drugless_data_path = dir_manager.make_datapath_absolute(self.drugless_data_path)
+        self.ic50_data_path = dir_manager.make_datapath_absolute(self.ic50_data_path)
+        self.drugless_rates = dir_manager.load_fitness(self.drugless_data_path)
+        self.ic50 = dir_manager.load_fitness(self.ic50_data_path)
+
+        if self.n_genotype is None:
+            self.n_genotype = int(len(self.ic50))
+        if self.n_allele is None:
+            self.n_allele = int(np.log2(self.n_genotype))
+        if int(self.n_allele) != int(np.log2(self.n_genotype)):
+            raise Warning('Genotype/allele number mismatch')
+
+class Population(PopParams,fitness.Fitness):
+
+    def __init__(self,**kwargs):
+        super().__init__(**kwargs)
+        self.fitness_data = 'generate'
+        self.landscape_type = 'natural'
+
+p = Population()
+p.gen_fit_land(10)
 
 # class Population:
     
