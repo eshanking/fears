@@ -1,7 +1,7 @@
 import numpy as np
 import math
 import random
-from fears.src.fears.utils import dir_manager, fitness
+from fears.src.fears.utils import dir_manager, pharm
 
 class PopParams:
 
@@ -12,19 +12,32 @@ class PopParams:
         self.carrying_cap = 10**10
         self.n_allele, self.n_genotype = None, None
         self.doubling_time = 1
+        self.fitness_data = 'two-point' 
+        self.seascape_type = 'natural'
+        self.drug_units = '$\u03BC$M'
+
+        # load data
+        self.drugless_data_path = dir_manager.make_datapath_absolute(self.drugless_data_path)
+        self.ic50_data_path = dir_manager.make_datapath_absolute(self.ic50_data_path)
+        
+        self.init_counts = np.zeros(self.n_genotype)
+        self.init_counts[0] = 10**6
+
+        self.curve_type = 'pharm'
+        self.k_elim = 0.001
+        self.k_abs = 0.01
+        self.pad_right = True
+        self.max_dose = 10
+        self.dose_schedule = 24
+        self.p_forget = 0
 
         for paramkey in self.__dict__.keys():
             for optkey in kwargs.keys():
                 if paramkey == optkey:
                     td = {paramkey:kwargs.get(paramkey)}
                     self.__dict__.update(td)
-
-        # load data
-        self.drugless_data_path = dir_manager.make_datapath_absolute(self.drugless_data_path)
-        self.ic50_data_path = dir_manager.make_datapath_absolute(self.ic50_data_path)
-        self.drugless_rates = dir_manager.load_fitness(self.drugless_data_path)
-        self.ic50 = dir_manager.load_fitness(self.ic50_data_path)
-
+        
+        
         if self.n_genotype is None:
             self.n_genotype = int(len(self.ic50))
         if self.n_allele is None:
@@ -32,15 +45,41 @@ class PopParams:
         if int(self.n_allele) != int(np.log2(self.n_genotype)):
             raise Warning('Genotype/allele number mismatch')
 
-class Population(PopParams,fitness.Fitness):
+
+class Population(PopParams):
 
     def __init__(self,**kwargs):
         super().__init__(**kwargs)
-        self.fitness_data = 'generate'
-        self.landscape_type = 'natural'
+
+        # initialize fitness data
+        self.drugless_rates = None
+        self.ic50 = None
+        self.initialize_fitness()
+
+        # initialize constant population condition
+        if self.constant_pop:
+            self.init_counts = self.init_counts*self.max_cells/sum(self.init_counts)
+            self.init_counts = np.floor(self.init_counts)
+            self.carrying_cap = False
+
+        # initialize drug curve
+        self.drug_curve = None
+        self.impulses = None
+        self.initialize_drug_curve()
+        
+    def initialize_fitness(self):
+        if self.fitness_data == 'two_point':
+            self.drugless_rates = dir_manager.load_fitness(self.drugless_data_path)
+            self.ic50 = dir_manager.load_fitness(self.ic50_data_path)
+            
+    def initialize_drug_curve(self):
+        curve,u = pharm.gen_curves(self)
+        self.drug_curve = curve
+        self.impulses = u
+    
 
 p = Population()
-p.gen_fit_land(10)
+# p.gen_fit_land(10)
 
 # class Population:
     
