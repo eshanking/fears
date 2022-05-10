@@ -4,8 +4,39 @@ import random
 from fears.src.fears.utils import dir_manager, pharm
 
 class PopParams:
+    """Population parameters class
+
+    """
 
     def __init__(self,**kwargs):
+        """Initializer
+        
+        Optional arguments: (all rates are in units per hour)
+            death_rate (float): death rate. Defaults to 0.1.
+            mut_rate (float): mutation rate. Defaults to 10**-9.
+
+            ic50_data_path (str): path to IC50 data. Defaults to pyrimethamine_ic50.csv.
+            drugless_data_path (str): path to drugless data. Defaults to ogbunugafor_drugless.csv.
+
+            constant_pop (bool): if true, normalizes population at each timestep to a constant population size. Defaults to False.
+            use_carrying_cap (bool): if true, attenuates growth rate as population approaches carrying cap. Defaults to True.
+            carrying_cap (float): Carrying capacity. Defaults to 10**10.
+
+            n_allele (int): number of alleles in the model system.
+            n_genotype (int): number of genotypes in the model system.
+            doubling_time (float): Average rate at which the model population divides.
+
+            fitness_data (str): Sets how to calculate fitness. two-point: program uses IC50 and drugless growth rate to parametrize dose-response curve
+            seascape_type (str): For generating random seascapes. natural: no trade-off constraint. null: enforces no trade-off condition
+            
+            drug_unit (str): units of drug concentration for plotting purposes.
+            
+
+
+
+        Raises:
+            Warning: Genotype/allele number mismatch.
+        """
         self.death_rate, self.mut_rate = 0.1, 10**-9
         self.ic50_data_path, self.drugless_data_path = 'pyrimethamine_ic50.csv','ogbunugafor_drugless.csv'
         self.constant_pop, self.use_carrying_cap = False, True
