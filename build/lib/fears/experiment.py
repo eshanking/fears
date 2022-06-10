@@ -1,4 +1,4 @@
-from fears.classes.population_class import Population
+from fears.population import Population
 from fears.utils import plotter, dir_manager, fitness
 import numpy as np
 import pandas as pd

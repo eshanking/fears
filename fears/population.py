@@ -75,6 +75,9 @@ class PopParams:
             self.n_allele = int(np.log2(self.n_genotype))
         if int(self.n_allele) != int(np.log2(self.n_genotype)):
             raise Warning('Genotype/allele number mismatch')
+        
+        self.init_counts = np.zeros(self.n_genotype)
+        self.init_counts[0] = 10**6
 
 
 class Population(PopParams):
@@ -307,4 +310,4 @@ class Population(PopParams):
         return avg_counts, fixation_time
     
 
-p = Population()    
+# p = Population()    

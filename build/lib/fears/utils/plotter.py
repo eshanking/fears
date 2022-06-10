@@ -1,5 +1,4 @@
 import sys
-sys.path.append('/Users/eshanking/repos')
 import matplotlib.pyplot as plt
 from cycler import cycler
 import seaborn as sns
@@ -7,7 +6,7 @@ import numpy as np
 import os
 import math
 import scipy.stats
-from fears.src.fears.utils import dir_manager, fitness
+from fears.utils import dir_manager, fitness
 # from fears.utils.experiment_class import Experiment
 from matplotlib.collections import LineCollection
 import networkx as nx
