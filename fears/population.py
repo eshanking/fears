@@ -51,8 +51,8 @@ class PopParams:
         self.drugless_data_path = dir_manager.make_datapath_absolute(self.drugless_data_path)
         self.ic50_data_path = dir_manager.make_datapath_absolute(self.ic50_data_path)
         
-        self.init_counts = np.zeros(self.n_genotype)
-        self.init_counts[0] = 10**6
+        # self.init_counts = np.zeros(self.n_genotype)
+        # self.init_counts[0] = 10**6
 
         self.curve_type = 'pharm'
         self.k_elim = 0.001
