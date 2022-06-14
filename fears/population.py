@@ -1,6 +1,7 @@
 import numpy as np
 import math
 import random
+from importlib_resources import files
 from fears.utils import dir_manager, pharm, fitness, plotter
 
 class PopParams:
@@ -38,7 +39,14 @@ class PopParams:
             Warning: Genotype/allele number mismatch.
         """
         self.death_rate, self.mut_rate = 0.1, 10**-9
-        self.ic50_data_path, self.drugless_data_path = 'pyrimethamine_ic50.csv','ogbunugafor_drugless.csv'
+        # self.ic50_data_path, self.drugless_data_path = 'pyrimethamine_ic50.csv','ogbunugafor_drugless.csv'
+  
+        p = files('fears.data').joinpath('pyrimethamine_ic50.csv')
+        self.ic50_data_path = str(p)
+
+        p = files('fears.data').joinpath('ogbunugafor_drugless.csv')
+        self.drugless_data_path = str(p)
+
         self.constant_pop, self.use_carrying_cap = False, True
         self.carrying_cap = 10**10
         self.n_allele, self.n_genotype = None, None
@@ -46,13 +54,11 @@ class PopParams:
         self.fitness_data = 'two-point' 
         self.seascape_type = 'natural'
         self.drug_units = '$\u03BC$M'
-
-        # load data
-        self.drugless_data_path = dir_manager.make_datapath_absolute(self.drugless_data_path)
-        self.ic50_data_path = dir_manager.make_datapath_absolute(self.ic50_data_path)
-        
-        # self.init_counts = np.zeros(self.n_genotype)
-        # self.init_counts[0] = 10**6
+        self.n_timestep = 1000
+        self.timestep_scale = 1
+        self.passage = False
+        self.passage_time = None
+        self.max_cells = 10**9
 
         self.curve_type = 'pharm'
         self.k_elim = 0.001
@@ -62,11 +68,22 @@ class PopParams:
         self.dose_schedule = 24
         self.p_forget = 0
 
+        self.stop_condition = None
+        self.state = {}
+        self.plot = True
+        self.n_sims = 10
+
+        self.landscape_type = 'natural'
+
+
         for paramkey in self.__dict__.keys():
             for optkey in kwargs.keys():
                 if paramkey == optkey:
                     td = {paramkey:kwargs.get(paramkey)}
                     self.__dict__.update(td)
+        
+        self.ic50 = dir_manager.load_fitness(self.ic50_data_path)
+        self.drugless_rates = dir_manager.load_fitness(self.drugless_data_path)
         
         
         if self.n_genotype is None:
@@ -88,6 +105,8 @@ class Population(PopParams):
         # initialize fitness data
         self.drugless_rates = None
         self.ic50 = None
+        # load data
+
         self.initialize_fitness()
 
         # initialize constant population condition
@@ -111,7 +130,7 @@ class Population(PopParams):
         self.drug_curve = curve
         self.impulses = u
 
-###############################################################################
+    ###############################################################################
     # ABM helper methods
     def gen_neighbors(self,genotype):
         mut = range(self.n_allele)
@@ -158,6 +177,22 @@ class Population(PopParams):
         trans_mat = trans_mat/trans_mat.sum(axis=1)
         return trans_mat
 
+    def check_stop_cond(self,counts,mm):
+        final_landscape = self.gen_fit_land(self.max_dose)
+        fittest_genotype = final_landscape.argmax()
+        
+        most_frequent_genotype = counts.argmax()
+        stop_cond = False
+        
+        if fittest_genotype == most_frequent_genotype:
+            stop_cond = True
+        
+        if mm >= self.n_timestep:
+            raise Warning('Stop condition not reached. Increase n_timestep or adjust model parameters.')
+            stop_cond = True
+            
+        return stop_cond
+
     def passage_cells(self,mm,counts):
         """
         If self.passage is true, dilute cells according to self.dilution when
@@ -183,7 +218,7 @@ class Population(PopParams):
             counts = np.divide(counts,self.dilution)
         return counts
 
-##############################################################################
+    ##############################################################################
     # core evolutionary model
     
     def abm(self,mm,n_genotype,P,counts):
@@ -295,9 +330,6 @@ class Population(PopParams):
         # n_survive = 0
         for i in range(self.n_sims):
             
-            # if self.prob_drop > 0:
-            #     self.drug_curve,u = self.gen_curves()
-            
             counts, mm = self.run_abm()
             avg_counts += counts
             fixation_time.append(mm)
@@ -308,6 +340,55 @@ class Population(PopParams):
         avg_counts = avg_counts/self.n_sims
         self.counts = avg_counts
         return avg_counts, fixation_time
-    
 
-# p = Population()    
+    ##############################################################################
+    # wrapper methods for plotting
+    def plot_timecourse(self):
+        fig,ax = plotter.plot_timecourse(self)
+        return fig,ax
+
+    def plot_fitness_curves(self,**kwargs):
+        fig,ax = plotter.plot_fitness_curves(self,kwargs)
+        return fig,ax
+    
+    def plot_landscape(self,**kwargs):
+        fig,ax = plotter.plot_landscape(self,**kwargs)
+        return fig,ax
+
+    ##############################################################################
+    # wrapper methods for fitness
+
+    def __gen_fl_for_abm(self,conc,counts):
+        fit_land = fitness.gen_fl_for_abm(self,conc,counts)
+        return fit_land
+
+    ###############################################################################
+    # Wrapper methods for generating drug concentration curves
+
+    def pharm_eqn(self,t,k_elim=None,k_abs=None,max_dose=None):
+        conc = pharm.pharm_eqn(self,t,k_elim=k_elim,k_abs=k_abs,max_dose=max_dose)
+        return conc
+    
+    def convolve_pharm(self,u):
+        conv = pharm.convolve_pharm(self,u)
+        return conv
+    
+    def gen_impulses(self):
+        u = pharm.gen_impulses(self)
+        return u
+    
+    def gen_on_off(self,duty_cycle=None):
+        u = pharm.gen_on_off(self,duty_cycle=duty_cycle)
+        return u
+    
+    def gen_curves(self):
+        curve, u = pharm.gen_curves(self)
+        return curve, u
+    
+    def gen_passage_drug_protocol(self):
+        drug_curve = pharm.gen_passage_drug_protocol(self)
+        return drug_curve
+
+    def set_drug_curve(self):
+        dc = self.gen_curves()
+        self.drug_curve = dc[0]

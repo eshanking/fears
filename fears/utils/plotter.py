@@ -136,7 +136,7 @@ def plot_timecourse(pop,counts_t=None,title_t=None):
     ax1.set_xlabel('Days',fontsize=20)
 
     plt.show()
-    return fig
+    return fig,ax
 
 def plot_fitness_curves(pop,
                         fig_title='',
@@ -669,7 +669,7 @@ def plot_landscape(p,conc=10**0,
     ax.set_ylim(yl)
     
     ax.set_axis_off()
-    return ax
+    return fig,ax
 
 def add_landscape_to_fitness_curve(c,ax,pop,
                                    textcolor='gray',

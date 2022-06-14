@@ -130,7 +130,7 @@ def gen_curves(pop):
             curve = gen_passage_drug_protocol(pop)
         else:
             for i in range(pop.n_timestep):
-                curve[i] = pop.pharm_eqn(i)
+                curve[i] = pharm_eqn(pop,i)
     
     # Pulsed convolves an impulse train with the 1-compartment model
     elif pop.curve_type == 'pulsed':

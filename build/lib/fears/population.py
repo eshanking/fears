@@ -1,6 +1,7 @@
 import numpy as np
 import math
 import random
+from importlib_resources import files
 from fears.utils import dir_manager, pharm, fitness, plotter
 
 class PopParams:
@@ -38,7 +39,14 @@ class PopParams:
             Warning: Genotype/allele number mismatch.
         """
         self.death_rate, self.mut_rate = 0.1, 10**-9
-        self.ic50_data_path, self.drugless_data_path = 'pyrimethamine_ic50.csv','ogbunugafor_drugless.csv'
+        # self.ic50_data_path, self.drugless_data_path = 'pyrimethamine_ic50.csv','ogbunugafor_drugless.csv'
+  
+        p = files('fears.data').joinpath('pyrimethamine_ic50.csv')
+        self.ic50_data_path = str(p)
+
+        p = files('fears.data').joinpath('ogbunugafor_drugless.csv')
+        self.drugless_data_path = str(p)
+
         self.constant_pop, self.use_carrying_cap = False, True
         self.carrying_cap = 10**10
         self.n_allele, self.n_genotype = None, None
@@ -46,13 +54,6 @@ class PopParams:
         self.fitness_data = 'two-point' 
         self.seascape_type = 'natural'
         self.drug_units = '$\u03BC$M'
-
-        # load data
-        self.drugless_data_path = dir_manager.make_datapath_absolute(self.drugless_data_path)
-        self.ic50_data_path = dir_manager.make_datapath_absolute(self.ic50_data_path)
-        
-        self.init_counts = np.zeros(self.n_genotype)
-        self.init_counts[0] = 10**6
 
         self.curve_type = 'pharm'
         self.k_elim = 0.001
@@ -68,6 +69,9 @@ class PopParams:
                     td = {paramkey:kwargs.get(paramkey)}
                     self.__dict__.update(td)
         
+        self.ic50 = dir_manager.load_fitness(self.ic50_data_path)
+        self.drugless_rates = dir_manager.load_fitness(self.drugless_data_path)
+        
         
         if self.n_genotype is None:
             self.n_genotype = int(len(self.ic50))
@@ -75,6 +79,7 @@ class PopParams:
             self.n_allele = int(np.log2(self.n_genotype))
         if int(self.n_allele) != int(np.log2(self.n_genotype)):
             raise Warning('Genotype/allele number mismatch')
+        
         self.init_counts = np.zeros(self.n_genotype)
         self.init_counts[0] = 10**6
 
@@ -87,6 +92,8 @@ class Population(PopParams):
         # initialize fitness data
         self.drugless_rates = None
         self.ic50 = None
+        # load data
+
         self.initialize_fitness()
 
         # initialize constant population condition
@@ -309,4 +316,4 @@ class Population(PopParams):
         return avg_counts, fixation_time
     
 
-p = Population()    
+# p = Population()    
