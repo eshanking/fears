@@ -29,7 +29,7 @@ def gen_color_cycler(style=None,palette='bright',n_colors=16):
         cc = cycler(color=colors)
     return cc
 
-def plot_timecourse(pop,counts_t=None,title_t=None):
+def plot_timecourse(pop,counts_t=None,title_t=None,**kwargs):
     
     if (pop.counts == 0).all() and counts_t is None:
         print('No data to plot!')
@@ -99,8 +99,13 @@ def plot_timecourse(pop,counts_t=None,title_t=None):
             ax1.plot(counts[:,allele],linewidth=3.0,label=None)
             
     ax1.legend(loc=(1.25,-.12),frameon=False,fontsize=15)
-        
-    ax1.set_xlim(0,pop.x_lim)
+
+    if pop.x_lim is None:
+        xl = ax1.get_xlim()
+    else:
+        xl = pop.x_lim
+
+    ax1.set_xlim(xl)
     ax1.set_facecolor(color='w')
     ax1.grid(False)
 
@@ -136,7 +141,7 @@ def plot_timecourse(pop,counts_t=None,title_t=None):
     ax1.set_xlabel('Days',fontsize=20)
 
     plt.show()
-    return fig,ax
+    return fig,ax1
 
 def plot_fitness_curves(pop,
                         fig_title='',
