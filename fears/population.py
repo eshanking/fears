@@ -2,7 +2,7 @@ import numpy as np
 import math
 import random
 from importlib_resources import files
-from fears.utils import dir_manager, pharm, fitness, plotter
+from fears.utils import dir_manager, pharm, fitness, plotter, AutoRate
 
 class PopParams:
     """Population parameters class
@@ -46,6 +46,15 @@ class PopParams:
 
         p = files('fears.data').joinpath('ogbunugafor_drugless.csv')
         self.drugless_data_path = str(p)
+
+        plate_paths = ['20210929_plate1.csv','20210929_plate2.csv','20210929_plate3.csv']
+        plate_paths = [files('fears.data').joinpath(p) for p in plate_paths]
+        self.plate_paths = [str(p) for p in plate_paths]
+        self.seascape_drug_conc = [0,0.003,0.0179,0.1072,0.643,3.858,23.1481,138.8889,833.3333,5000] #ug/mL
+
+        # self.growth_rate_data = []
+        # for plate_path in self.plate_paths:
+        #     self.growth_rate_data.append(dir_manager.get_growth_rate_data(plate_path))
 
         self.constant_pop, self.use_carrying_cap = False, True
         self.carrying_cap = 10**10
@@ -124,6 +133,27 @@ class Population(PopParams):
         if self.fitness_data == 'two_point':
             self.drugless_rates = dir_manager.load_fitness(self.drugless_data_path)
             self.ic50 = dir_manager.load_fitness(self.ic50_data_path)
+        elif self.fitness_data == 'estimate':
+            
+            # self.growth_rate_library = fitness.gen_growth_rate_library()
+            # self.seascape_library = fitness.gen_seascape_library()
+
+            f = str(files('fears.data').joinpath('plates'))
+            e = AutoRate.Experiment(f,drug_conc=self.seascape_drug_conc,moat=True)
+            e.execute()
+            self.growth_rate_lib = e.growth_rate_lib
+            self.seascape_lib = e.seascape_lib
+
+            self.ic50 = np.zeros(self.n_genotype)
+            self.drugless_rates = np.zeros(self.n_genotype)
+
+            i = 0
+            print(self.seascape_lib.keys())
+
+            for key in self.seascape_lib.keys():
+                self.ic50[i] = self.seascape_lib[key]['ic50']
+                self.drugless_rates[i] = self.seascape_lib[key]['g_drugless']
+                i+=1
             
     def initialize_drug_curve(self):
         curve,u = pharm.gen_curves(self)
