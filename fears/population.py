@@ -63,13 +63,22 @@ class PopParams:
         self.fitness_data = 'two-point' 
         self.seascape_type = 'natural'
         self.drug_units = '$\u03BC$M'
+        self.fig_title = None
+        self.plot_entropy = False
+        self.plot_drug_curve = True
+        self.x_lim = None
+        self.y_lim = None
+        self.counts_log_scale = None
+        self.drug_log_scale = False
+        
         self.n_timestep = 1000
         self.timestep_scale = 1
         self.passage = False
-        self.passage_time = None
+        self.passage_time = 24
         self.max_cells = 10**9
 
         self.curve_type = 'pharm'
+        self.prob_drop = 0
         self.k_elim = 0.001
         self.k_abs = 0.01
         self.pad_right = True
@@ -81,6 +90,7 @@ class PopParams:
         self.state = {}
         self.plot = True
         self.n_sims = 10
+        self.debug = False
 
         self.landscape_type = 'natural'
 
@@ -91,9 +101,12 @@ class PopParams:
                     td = {paramkey:kwargs.get(paramkey)}
                     self.__dict__.update(td)
         
-        self.ic50 = dir_manager.load_fitness(self.ic50_data_path)
-        self.drugless_rates = dir_manager.load_fitness(self.drugless_data_path)
-        
+        # self.ic50 = dir_manager.load_fitness(self.ic50_data_path)
+        # self.drugless_rates = dir_manager.load_fitness(self.drugless_data_path)
+        # print(self.ic50)
+        dr, ic50 = self.initialize_fitness()
+        self.drugless_rates = dr
+        self.ic50 = ic50
         
         if self.n_genotype is None:
             self.n_genotype = int(len(self.ic50))
@@ -104,19 +117,21 @@ class PopParams:
         
         self.init_counts = np.zeros(self.n_genotype)
         self.init_counts[0] = 10**6
+    
+    def initialize_fitness(self):
+        if self.fitness_data == 'two-point':
+            drugless_rates = dir_manager.load_fitness(self.drugless_data_path)
+            ic50 = dir_manager.load_fitness(self.ic50_data_path)
+        else:
+            drugless_rates = None
+            ic50 = None
+        return drugless_rates, ic50
 
 
 class Population(PopParams):
 
     def __init__(self,**kwargs):
         super().__init__(**kwargs)
-
-        # initialize fitness data
-        self.drugless_rates = None
-        self.ic50 = None
-        # load data
-
-        self.initialize_fitness()
 
         # initialize constant population condition
         if self.constant_pop:
@@ -128,6 +143,9 @@ class Population(PopParams):
         self.drug_curve = None
         self.impulses = None
         self.initialize_drug_curve()
+
+        # initialize counts
+        self.counts = np.zeros([self.n_timestep,self.n_genotype])
         
     def initialize_fitness(self):
         if self.fitness_data == 'two_point':
@@ -365,7 +383,8 @@ class Population(PopParams):
             fixation_time.append(mm)
 
             if self.plot is True:
-                self.plot_timecourse(counts_t = counts)
+                # print(type(counts))
+                self.plot_timecourse(counts_t=counts)
         
         avg_counts = avg_counts/self.n_sims
         self.counts = avg_counts
@@ -373,8 +392,8 @@ class Population(PopParams):
 
     ##############################################################################
     # wrapper methods for plotting
-    def plot_timecourse(self):
-        fig,ax = plotter.plot_timecourse(self)
+    def plot_timecourse(self,**kwargs):
+        fig,ax = plotter.plot_timecourse(self,**kwargs)
         return fig,ax
 
     def plot_fitness_curves(self,**kwargs):
