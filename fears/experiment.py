@@ -27,6 +27,7 @@ class Experiment():
                  prob_drops = None,
                  n_impulse=1,
                  population_options = {},
+                 results_folder = None,
                  slopes=None,
                  passage=False,
                  passage_time = 48,
@@ -50,7 +51,10 @@ class Experiment():
                                'bottleneck',
                                'ramp_up_down']
         
-        if curve_types is not None:
+        if not type(curve_types) == list:
+            curve_types = [curve_types]
+
+        if curve_types[0] is not None:
             if not all(elem in allowed_types for elem in curve_types):
                 raise Exception('One or more curve types is not recognized.\nAllowable types are: linear, constant, heaviside, pharm, pulsed.')
                 
@@ -59,7 +63,7 @@ class Experiment():
                 raise Exception('Experiment type not recognized.\nAllowable types are inoculant-survival, dose-survival, drug-regimen, dose-entropy, and bottleneck.')
             
         # Curve type: linear, constant, heaviside, pharm, pulsed
-        if curve_types is None:
+        if curve_types[0] is None:
             self.curve_types = ['constant']
         else:
             self.curve_types = curve_types
@@ -252,20 +256,23 @@ class Experiment():
             
             date_str = time.strftime('%m%d%Y',time.localtime())
             
-            save_folder = self.root_path + os.sep + 'results' + os.sep + 'results_' + date_str + '_' + num_str
-            
-            # save_folder = os.getcwd() + '//results_' + date_str + '_' + num_str
-            if not (os.path.exists(self.root_path + os.sep + 'results')):
-                os.mkdir(self.root_path + os.sep + 'results')
+            if results_folder is None:
+                self.results_folder = os.getcwd() + os.sep + 'results'
+            else:
+                self.results_folder = results_folder
+
+            if not os.path.exists(self.results_folder):
+                os.mkdir(self.results_folder)
+
+            save_folder = self.results_folder + os.sep + 'results_' + date_str + '_' + num_str
                 
             while(os.path.exists(save_folder)):
                 num += 1
                 num_str = str(num).zfill(4)
-                save_folder = self.root_path + os.sep + 'results' + os.sep + 'results_' + date_str + '_' + num_str
+                save_folder = self.results_folder + os.sep + 'results_' + date_str + '_' + num_str
             os.mkdir(save_folder) 
             
             self.results_path = save_folder
-            # self.experiment_info_path = self.root_path + os.sep + 'results' + os.sep + 'experiment_info_' + date_str + '_' + num_str + '.p'
             self.experiment_info_path = self.results_path + os.sep + 'experiment_info_' + date_str + '_' + num_str + '.p'
             self.exp_folders = []
             
@@ -308,11 +315,19 @@ class Experiment():
             counts_seascape, ft = self.p_seascape.simulate()
             
             if not self.debug:
-                savedata = np.concatenate((counts_landscape,drug_curve),axis=1)
-                self.save_counts(savedata, num=None, save_folder=None,prefix = 'landscape_counts')
+                data_dict_landscape = {'counts':counts_landscape,
+                                'drug_curve':drug_curve}
+                self.save_dict(data_dict_landscape,save_folder='null_seascape')
+
+                data_dict_seascape = {'counts':counts_seascape,
+                                'drug_curve':drug_curve}
+                self.save_dict(data_dict_seascape,save_folder='natural_seascape')
+
+                # savedata = np.concatenate((counts_landscape,drug_curve),axis=1)
+                # self.save_counts(savedata, num=None, save_folder=None,prefix = 'landscape_counts')
                 
-                savedata = np.concatenate((counts_seascape,drug_curve),axis=1)
-                self.save_counts(savedata, num=None, save_folder=None,prefix = 'seascape_counts')
+                # savedata = np.concatenate((counts_seascape,drug_curve),axis=1)
+                # self.save_counts(savedata, num=None, save_folder=None,prefix = 'seascape_counts')
         
         elif self.experiment_type == 'inoculant-survival':
             # pbar = tqdm(total = n_curves*n_inoc) # progress bar
@@ -351,14 +366,14 @@ class Experiment():
                     
                     u = np.array([u,])
                     u = u.transpose()
-                    counts = np.concatenate((counts,drug,u),axis=1)
+                    # counts = np.concatenate((counts,drug,u),axis=1)
   
                     if not self.debug:
                         # self.save_counts(counts,i,save_folder)
                         data_dict = {'counts':counts,
                                      'drug_curve':drug,
                                      'regimen':u}
-                        self.save_dict(data_dict,i,save_folder)
+                        self.save_dict(data_dict,save_folder,num=i)
                 # kk+=1
                 # pbar.update()
                 self.perc_survive = 100*self.n_survive/self.n_sims
@@ -413,10 +428,12 @@ class Experiment():
                         else:
                             save_folder = 'slope=' + str(p.slope)
                             save_folder.replace('.',',')
-                        self.save_counts(counts,n,save_folder)
+                        # self.save_counts(counts,n,save_folder)
                         data_dict = {'counts':counts,
                                      'drug_curve':drug}
                         self.save_dict(data_dict,n,save_folder)
+        if not self.debug:
+            pickle.dump(self, open(self.experiment_info_path,"wb"))
         # pickle.dump(self, open(self.experiment_info_path,"wb"))
         
                     

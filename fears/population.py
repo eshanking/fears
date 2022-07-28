@@ -58,6 +58,7 @@ class PopParams:
 
         self.constant_pop, self.use_carrying_cap = False, True
         self.carrying_cap = 10**10
+        self.init_counts = None
         self.n_allele, self.n_genotype = None, None
         self.doubling_time = 1
         self.fitness_data = 'two-point' 
@@ -104,28 +105,28 @@ class PopParams:
         # self.ic50 = dir_manager.load_fitness(self.ic50_data_path)
         # self.drugless_rates = dir_manager.load_fitness(self.drugless_data_path)
         # print(self.ic50)
-        dr, ic50 = self.initialize_fitness()
-        self.drugless_rates = dr
-        self.ic50 = ic50
+    #     dr, ic50 = self.initialize_fitness()
+    #     self.drugless_rates = dr
+    #     self.ic50 = ic50
         
-        if self.n_genotype is None:
-            self.n_genotype = int(len(self.ic50))
-        if self.n_allele is None:
-            self.n_allele = int(np.log2(self.n_genotype))
-        if int(self.n_allele) != int(np.log2(self.n_genotype)):
-            raise Warning('Genotype/allele number mismatch')
+    #     if self.n_genotype is None:
+    #         self.n_genotype = int(len(self.ic50))
+    #     if self.n_allele is None:
+    #         self.n_allele = int(np.log2(self.n_genotype))
+    #     if int(self.n_allele) != int(np.log2(self.n_genotype)):
+    #         raise Warning('Genotype/allele number mismatch')
         
-        self.init_counts = np.zeros(self.n_genotype)
-        self.init_counts[0] = 10**6
+    #     self.init_counts = np.zeros(self.n_genotype)
+    #     self.init_counts[0] = 10**6
     
-    def initialize_fitness(self):
-        if self.fitness_data == 'two-point':
-            drugless_rates = dir_manager.load_fitness(self.drugless_data_path)
-            ic50 = dir_manager.load_fitness(self.ic50_data_path)
-        else:
-            drugless_rates = None
-            ic50 = None
-        return drugless_rates, ic50
+    # def initialize_fitness(self):
+    #     if self.fitness_data == 'two-point':
+    #         drugless_rates = dir_manager.load_fitness(self.drugless_data_path)
+    #         ic50 = dir_manager.load_fitness(self.ic50_data_path)
+    #     else:
+    #         drugless_rates = None
+    #         ic50 = None
+    #     return drugless_rates, ic50
 
 
 class Population(PopParams):
@@ -144,11 +145,25 @@ class Population(PopParams):
         self.impulses = None
         self.initialize_drug_curve()
 
+        # initialize fitness
+        self.initialize_fitness()
+
+        if self.n_genotype is None:
+            self.n_genotype = int(len(self.ic50))
+        if self.n_allele is None:
+            self.n_allele = int(np.log2(self.n_genotype))
+        if int(self.n_allele) != int(np.log2(self.n_genotype)):
+            raise Warning('Genotype/allele number mismatch')
+
         # initialize counts
         self.counts = np.zeros([self.n_timestep,self.n_genotype])
+
+        if self.init_counts is None:
+            self.init_counts = np.zeros(self.n_genotype)
+            self.init_counts[0] = 10**6
         
     def initialize_fitness(self):
-        if self.fitness_data == 'two_point':
+        if self.fitness_data == 'two-point':
             self.drugless_rates = dir_manager.load_fitness(self.drugless_data_path)
             self.ic50 = dir_manager.load_fitness(self.ic50_data_path)
         elif self.fitness_data == 'estimate':
@@ -397,7 +412,7 @@ class Population(PopParams):
         return fig,ax
 
     def plot_fitness_curves(self,**kwargs):
-        fig,ax = plotter.plot_fitness_curves(self,kwargs)
+        fig,ax = plotter.plot_fitness_curves(self,**kwargs)
         return fig,ax
     
     def plot_landscape(self,**kwargs):
@@ -408,7 +423,36 @@ class Population(PopParams):
     # wrapper methods for fitness
 
     def __gen_fl_for_abm(self,conc,counts):
+        """
+        Return the fitness landscape apropriately scaled according to the 
+        population size and carrying capacity
+
+        Parameters
+        ----------
+        conc (float) : drug concentration
+        counts (list) : vector of genotype population counts
+
+        Returns
+        ----------
+        fit_land (list) : scaled fitness landscape
+        """
         fit_land = fitness.gen_fl_for_abm(self,conc,counts)
+        return fit_land
+
+    def gen_fit_land(self,conc,**kwargs):
+        """
+        Returns the fitness landscape at a given drug concentration
+
+        Parameters
+        ----------
+        conc (float) : drug concentration
+
+        Returns
+        ----------
+        fit_land (list) : fitness landscape
+
+        """
+        fit_land = fitness.gen_fit_land(self,conc,**kwargs)
         return fit_land
 
     ###############################################################################

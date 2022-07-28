@@ -331,4 +331,6 @@ def est_mic(pop,gen,Kmic=None,growth_rate=None):
             Kmic = growth_rate/pop.drugless_rates[gen]
     c=-0.6824968
     mic = 10**(pop.ic50[gen]+6 - c*np.log((1/Kmic)-1))
-    return mic              
+    return mic     
+
+         
