@@ -1,4 +1,2 @@
-1. Fix initialize_fitness() in population class 
-2. integrate experiment class into fears
-3. Integrate fears into seascapes_figures
-4. Get joint hill coefficient estimation working
+1. Integrate fears into seascapes_figures
+2. Get joint hill coefficient estimation working

@@ -281,9 +281,9 @@ class Plate():
         # print(df)
 
         if any(df.keys() == 'Cycle Nr.'):
-            data_start_indx = np.argwhere(time_array == 'Cycle Nr.')
+            data_start_indx = np.argwhere(list(time_array) == 'Cycle Nr.')
         elif any(df.keys() == 'Time [s]'):
-            data_start_indx = np.argwhere(time_array == 'Time [s]')
+            data_start_indx = np.argwhere(list(time_array) == 'Time [s]')
         else:
             raise Exception('Unknown file format. Expected either Cycle Nr. or Time [s] as column headings.')
 
