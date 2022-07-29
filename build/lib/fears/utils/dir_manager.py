@@ -2,10 +2,6 @@ from pathlib import Path
 import os
 import pandas as pd
 import numpy as np
-<<<<<<< HEAD
-=======
-import pickle
->>>>>>> 5293da446901ef348c8e17b1212b19f4df7cd71c
 
 def get_project_root() -> Path:
     return Path(__file__).parent.parent
@@ -47,18 +43,4 @@ def load_fitness(data_path):
     cols = list(fitness.columns)
     fit_array = np.array(cols)
     fit_array = fit_array.astype('float')
-<<<<<<< HEAD
     return fit_array
-=======
-    return fit_array
-
-def load_growth_rate_data(data_path):
-    
-    data = pd.read_csv(data_path)
-    
-    return data
-
-def load_experiment(exp_path):
-    e = pickle.load(exp_path)
-    return e
->>>>>>> 5293da446901ef348c8e17b1212b19f4df7cd71c

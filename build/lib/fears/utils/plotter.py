@@ -29,11 +29,7 @@ def gen_color_cycler(style=None,palette='bright',n_colors=16):
         cc = cycler(color=colors)
     return cc
 
-<<<<<<< HEAD
 def plot_timecourse(pop,counts_t=None,title_t=None):
-=======
-def plot_timecourse(pop,counts_t=None,title_t=None,**kwargs):
->>>>>>> 5293da446901ef348c8e17b1212b19f4df7cd71c
     
     if (pop.counts == 0).all() and counts_t is None:
         print('No data to plot!')
@@ -103,18 +99,8 @@ def plot_timecourse(pop,counts_t=None,title_t=None,**kwargs):
             ax1.plot(counts[:,allele],linewidth=3.0,label=None)
             
     ax1.legend(loc=(1.25,-.12),frameon=False,fontsize=15)
-<<<<<<< HEAD
         
     ax1.set_xlim(0,pop.x_lim)
-=======
-
-    if pop.x_lim is None:
-        xl = ax1.get_xlim()
-    else:
-        xl = pop.x_lim
-
-    ax1.set_xlim(xl)
->>>>>>> 5293da446901ef348c8e17b1212b19f4df7cd71c
     ax1.set_facecolor(color='w')
     ax1.grid(False)
 
@@ -150,11 +136,7 @@ def plot_timecourse(pop,counts_t=None,title_t=None,**kwargs):
     ax1.set_xlabel('Days',fontsize=20)
 
     plt.show()
-<<<<<<< HEAD
     return fig
-=======
-    return fig,ax1
->>>>>>> 5293da446901ef348c8e17b1212b19f4df7cd71c
 
 def plot_fitness_curves(pop,
                         fig_title='',
@@ -687,11 +669,7 @@ def plot_landscape(p,conc=10**0,
     ax.set_ylim(yl)
     
     ax.set_axis_off()
-<<<<<<< HEAD
     return ax
-=======
-    return fig,ax
->>>>>>> 5293da446901ef348c8e17b1212b19f4df7cd71c
 
 def add_landscape_to_fitness_curve(c,ax,pop,
                                    textcolor='gray',

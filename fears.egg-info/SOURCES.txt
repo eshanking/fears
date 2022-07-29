@@ -1,6 +1,10 @@
+LICENSE
 README.md
+pyproject.toml
 setup.py
 fears/__init__.py
+fears/experiment.py
+fears/population.py
 fears.egg-info/PKG-INFO
 fears.egg-info/SOURCES.txt
 fears.egg-info/dependency_links.txt
@@ -9,6 +13,10 @@ fears.egg-info/top_level.txt
 fears/classes/__init__.py
 fears/classes/experiment_class.py
 fears/classes/population_class.py
+fears/data/cycloguanil_ic50.csv
+fears/data/ogbunugafor_drugless.csv
+fears/data/pyrimethamine_ic50.csv
+fears/utils/AutoRate.py
 fears/utils/__init__.py
 fears/utils/dir_manager.py
 fears/utils/fitness.py

@@ -1,23 +1,24 @@
-from setuptools import setup
+
+
+from setuptools import setup, find_packages
 
 setup(
     name='fears', 
-    version='0.9.0', 
+    version='0.1.0', 
     author = 'Eshan King', 
-    author_email = 'eshan.king@case.edu',
-    packages=['fears', 'fears.classes', 'fears.utils'], 
+    author_email = '',
+    # packages=['autorate', "autorate.test", "autorate.test.data"], 
+    # pacakges=['fears','fears.data','fears.utils'],
+    packages=find_packages(include=['fears','fears.population','fears.data','fears.utils','fears.utils.*']),
+    # packages=find_packages(where="fears"),
     install_requires = [
-      "pathlib", 
       "pandas",
+      "pytest",
+      "scipy",
+      "matplotlib",
       "numpy",
-      "pickle",
-      "lifelines", 
-      "networkx", 
-      "matplotlib", 
-      "cycler",
-      "seaborn",
-      "scipy", 
-      "labellines" 
+      "importlib_resources"
     ],
-    python_requires='>= 3.6.2, <=3.9.7'
+    include_package_data=True,
+    package_data={'': ['data/*.csv']}
 )

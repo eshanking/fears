@@ -1,11 +1,6 @@
-pathlib
 pandas
-numpy
-pickle
-lifelines
-networkx
-matplotlib
-cycler
-seaborn
+pytest
 scipy
-labellines
+matplotlib
+numpy
+importlib_resources
