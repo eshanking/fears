@@ -295,8 +295,6 @@ class Plate():
         time_array = np.array(time_col)
         
         # raw data starts after cycle nr.
-        # print(df)
-
         if any(df.keys() == 'Cycle Nr.'):
             data_start_indx = np.argwhere(list(time_array) == 'Cycle Nr.')
         elif any(df.keys() == 'Time [s]'):
@@ -442,7 +440,7 @@ class Plate():
 
         return isKey
     
-    def est_growth_rate(self,growth_curve,t=None):
+    def est_growth_rate(self,growth_curve,t=None,carrying_cap=4):
         """Estimates growth rate from OD growth curve
 
         Args:
@@ -455,7 +453,9 @@ class Plate():
         
         if t is None:
             t = np.arange(len(growth_curve))
-        
+
+        growth_curve = growth_curve/carrying_cap
+
         p0 = [10**-6,0.05,1] # starting parameters
 
         popt, pcov = sciopt.curve_fit(self.logistic_growth_curve,
@@ -539,7 +539,9 @@ class Plate():
             replicates = list(set(replicates))
             concentrations = list(set(concentrations))
 
-
+            replicates.sort()
+            concentrations.sort()
+            
             for r in replicates:
                 gr_vect = []
                 i = 0 # concentration index
@@ -557,6 +559,12 @@ class Plate():
             for key in self.data_keys:
                 replicates.append(key[1:])
                 concentrations.append(key[0])
+
+            replicates = list(set(replicates))
+            concentrations = list(set(concentrations))
+
+            replicates.sort()
+            concentrations.sort()
 
             for r in replicates:
                 gr_vect = []
