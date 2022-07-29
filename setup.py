@@ -1,4 +1,5 @@
 
+
 from setuptools import setup, find_packages
 
 setup(
@@ -16,7 +17,9 @@ setup(
       "scipy",
       "matplotlib",
       "numpy",
-      "importlib_resources"
+      "importlib_resources", 
+      "lifelines", 
+      "pickle"
     ],
     include_package_data=True,
     package_data={'': ['data/*.csv']}
