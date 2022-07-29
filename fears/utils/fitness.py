@@ -333,4 +333,45 @@ def est_mic(pop,gen,Kmic=None,growth_rate=None):
     mic = 10**(pop.ic50[gen]+6 - c*np.log((1/Kmic)-1))
     return mic     
 
-         
+def sl_to_fitness(pop,g,conc,hc=None):
+    """Seascape library to fitness value (in units per second)
+
+    Args:
+        pop (population class object): population class object
+        g (int): genotype
+        conc (float): drug concentration
+
+    Returns:
+        float: fitness
+    """
+
+    ic50 = pop.seascape_lib[str(g)]['ic50']
+    
+    g_drugless = pop.seascape_lib[str(g)]['g_drugless']
+
+    if hc is None:
+        hc = pop.seascape_lib[str(g)]['hill_coeff']
+    
+    # hc = -0.28
+
+    f = logistic_pharm_curve(conc,ic50,g_drugless,hc)
+    return f
+
+def logistic_pharm_curve(x,IC50,g_drugless,hill_coeff):
+    """Logistic dose-response curve. use if input is a single drug concentration
+
+    Args:
+        x (float): drug concentration scalar
+        IC50 (float)): IC50
+        g_drugless (float): drugless growth rate
+        hill_coeff (float): Hill coefficient
+
+    Returns:
+        numpy array: array of growth rates
+    """
+    if x == 0:
+        g = g_drugless
+    else:
+        g = g_drugless/(1+np.exp((IC50-np.log10(x))/hill_coeff))
+
+    return g

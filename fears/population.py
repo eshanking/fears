@@ -51,10 +51,8 @@ class PopParams:
         plate_paths = [files('fears.data').joinpath(p) for p in plate_paths]
         self.plate_paths = [str(p) for p in plate_paths]
         self.seascape_drug_conc = [0,0.003,0.0179,0.1072,0.643,3.858,23.1481,138.8889,833.3333,5000] #ug/mL
-
-        # self.growth_rate_data = []
-        # for plate_path in self.plate_paths:
-        #     self.growth_rate_data.append(dir_manager.get_growth_rate_data(plate_path))
+        self.replicate_arrangement = 'rows'
+        self.data_cols = [['B','C','D','E','F'],['B','C','D','E','F'],['B','C','D','E','F','G']]
 
         self.constant_pop, self.use_carrying_cap = False, True
         self.carrying_cap = 10**10
@@ -173,7 +171,9 @@ class Population(PopParams):
             # self.seascape_library = fitness.gen_seascape_library()
 
             f = str(files('fears.data').joinpath('plates'))
-            e = AutoRate.Experiment(f,drug_conc=self.seascape_drug_conc,moat=self.moat)
+            e = AutoRate.Experiment(f,drug_conc=self.seascape_drug_conc,moat=self.moat,
+                                    replicate_arrangement=self.replicate_arrangement,
+                                    data_cols=self.data_cols)
             e.execute()
             self.growth_rate_lib = e.growth_rate_lib
             self.seascape_lib = e.seascape_lib
@@ -189,6 +189,9 @@ class Population(PopParams):
                 self.ic50[i] = self.seascape_lib[key]['ic50']
                 self.drugless_rates[i] = self.seascape_lib[key]['g_drugless']
                 i+=1
+                
+            self.growth_rate_lib['drug_conc'] = self.seascape_drug_conc
+            self.seascape_lib['drug_conc'] = self.seascape_drug_conc
             
     def initialize_drug_curve(self):
         curve,u = pharm.gen_curves(self)
