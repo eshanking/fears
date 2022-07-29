@@ -62,6 +62,7 @@ class PopParams:
         self.n_allele, self.n_genotype = None, None
         self.doubling_time = 1
         self.fitness_data = 'two-point' 
+        self.moat = True
         self.seascape_type = 'natural'
         self.drug_units = '$\u03BC$M'
         self.fig_title = None
@@ -172,16 +173,17 @@ class Population(PopParams):
             # self.seascape_library = fitness.gen_seascape_library()
 
             f = str(files('fears.data').joinpath('plates'))
-            e = AutoRate.Experiment(f,drug_conc=self.seascape_drug_conc,moat=True)
+            e = AutoRate.Experiment(f,drug_conc=self.seascape_drug_conc,moat=self.moat)
             e.execute()
             self.growth_rate_lib = e.growth_rate_lib
             self.seascape_lib = e.seascape_lib
+
+            self.n_genotype = len(self.seascape_lib.keys())
 
             self.ic50 = np.zeros(self.n_genotype)
             self.drugless_rates = np.zeros(self.n_genotype)
 
             i = 0
-            print(self.seascape_lib.keys())
 
             for key in self.seascape_lib.keys():
                 self.ic50[i] = self.seascape_lib[key]['ic50']
