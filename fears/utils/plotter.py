@@ -154,53 +154,111 @@ def plot_fitness_curves(pop,
                         linewidth=3,
                         show_legend=True,
                         show_axes_labels=True,
+                        raw_data = False,
                         color_kwargs={}):
-    
-    if ax is None:
+
+    if pop.fitness_data == 'estimate':
+        
+        gl = pop.growth_rate_lib
+        xdata = gl['drug_conc']
+
         fig, ax = plt.subplots(figsize = (10,6))
-    
-    conc = np.logspace(-3,5,200)
-    
-    cc = gen_color_cycler(**color_kwargs)
-    
-    ax.set_prop_cycle(cc) 
-    
-    fit = np.zeros((pop.n_genotype,conc.shape[0]))
-    
-    for j in range(conc.shape[0]):
-        fit[:,j] = pop.gen_fit_land(conc[j])
-    
-    if plot_r0:
-        fit = fit-pop.death_rate
-        ylabel = '$R_{0}$'
-        thresh = np.ones(conc.shape)
-        ax.plot(conc,thresh,linestyle='dashdot',color='black',linewidth=linewidth)
+
+        cc = gen_color_cycler(**color_kwargs)
+        ax.set_prop_cycle(cc)
+
+        if raw_data:
+
+            for g in range(pop.n_genotype):
+
+                f = gl[str(g)]
+                f = [x*60**2 for x in f]
+                ax.scatter(xdata,f,label = str(pop.int_to_binary(g)),linewidth=linewidth) 
+
+        
+        else:
+            if min(xdata) == 0:
+                xmin = np.log10(xdata[1])
+            else:
+                xmin = np.log10(min(xdata))
+            xmax = np.log10(max(xdata))
+
+            xdata = np.logspace(xmin,xmax)
+            if not xdata[0] == 0:
+                xdata = np.insert(xdata,0,0)
+            sl = pop.seascape_lib
+
+            for g in range(pop.n_genotype):
+                
+                f = []
+                sl_t = sl[str(g)]
+                ic50 = sl_t['ic50']
+
+                for c in xdata:
+                    
+                    # f_t = pop.logistic_pharm_curve(c,ic50,sl_t['g_drugless'],sl_t['hill_coeff'])
+                    f_t = fitness.sl_to_fitness(pop,g,c)
+                    f_t = f_t*(60**2)
+                    f.append(f_t)
+                    
+
+                ax.plot(xdata,f,label = str(pop.int_to_binary(g)),linewidth=linewidth) 
+
+        ax.set_xscale('log')
+        
+        ax.tick_params(labelsize=labelsize)
+        ax.set_ylabel('Growth rate (hr$^-1$)',fontsize=labelsize)
+        ax.set_xlabel('Drug concentration (ug/ml)',fontsize=labelsize)
+
+        if show_legend:
+            ax.legend(fontsize=labelsize,frameon=False,loc=(1.08,-0.08))
+
     else:
-        ylabel = 'Growth Rate'
-    
-    for gen in range(pop.n_genotype):
-        ax.plot(conc,fit[gen,:],linewidth=linewidth,label=str(pop.int_to_binary(gen)))
-    
-    if show_legend:
-        ax.legend(fontsize=labelsize,frameon=False,loc=(1,-.10))
-    
-    ax.set_xscale('log')
-    
-    ax.set_title(fig_title,fontsize=labelsize)
-    
-    ax.tick_params(labelsize=labelsize)
-    
-    if show_axes_labels:
-        ax.set_xlabel('Drug concentration ($\mathrm{\mu}$M)',fontsize=labelsize)
-        ax.set_ylabel(ylabel,fontsize=labelsize)
-    ax.set_frame_on(False)
-    
-    if save:
-        if savename is None:
-            savename = 'fitness_seascape.pdf'
-        r = dir_manager.get_project_root()
-        savename = str(r) + os.sep + 'figures' + os.sep + savename
-        plt.savefig(savename,bbox_inches="tight")
+        if ax is None:
+            fig, ax = plt.subplots(figsize = (10,6))
+        
+        conc = np.logspace(-3,5,200)
+        
+        cc = gen_color_cycler(**color_kwargs)
+        
+        ax.set_prop_cycle(cc) 
+        
+        fit = np.zeros((pop.n_genotype,conc.shape[0]))
+        
+        for j in range(conc.shape[0]):
+            fit[:,j] = pop.gen_fit_land(conc[j])
+        
+        if plot_r0:
+            fit = fit-pop.death_rate
+            ylabel = '$R_{0}$'
+            thresh = np.ones(conc.shape)
+            ax.plot(conc,thresh,linestyle='dashdot',color='black',linewidth=linewidth)
+        else:
+            ylabel = 'Growth Rate'
+        
+        for gen in range(pop.n_genotype):
+            ax.plot(conc,fit[gen,:],linewidth=linewidth,label=str(pop.int_to_binary(gen)))
+        
+        if show_legend:
+            ax.legend(fontsize=labelsize,frameon=False,loc=(1,-.10))
+        
+        ax.set_xscale('log')
+        
+        ax.set_title(fig_title,fontsize=labelsize)
+        
+        ax.tick_params(labelsize=labelsize)
+        
+        if show_axes_labels:
+            ax.set_xlabel('Drug concentration ($\mathrm{\mu}$M)',fontsize=labelsize)
+            ax.set_ylabel(ylabel,fontsize=labelsize)
+        ax.set_frame_on(False)
+        
+        if save:
+            if savename is None:
+                savename = 'fitness_seascape.pdf'
+            r = dir_manager.get_project_root()
+            savename = str(r) + os.sep + 'figures' + os.sep + savename
+            plt.savefig(savename,bbox_inches="tight")
     
     return fig,ax
 

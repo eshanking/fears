@@ -14,9 +14,10 @@ class Experiment():
                 replicate_arrangement='rows',
                 drug_conc = None,
                 units = 'ug/mL',
+                data_cols = None,
                 debug=False):
         """Initializer
-
+        
         Args:
             folder_path (str): path of plate reader data
             moat (bool, optional): If true, assumes the outer row of the plate is a moat. Defaults to False.
@@ -24,10 +25,12 @@ class Experiment():
             drug_conc (list, optional): Drug concentrations corresponding to the drug diluation scheme. If none, defaults to 
             [0,0.003,0.0179,0.1072,0.643,3.858,23.1481,138.8889,833.3333,5000].
             units (str, optional): Drug concentration units. Defaults to ug/mL
+            data_cols (list of lists, optional): for each plate, defines which columns include genotype growth rate data
         """
         self.moat = moat
         self.folder_path = folder_path
         self.replicate_arrangement = replicate_arrangement
+        self.data_cols = data_cols
         
         self.plates = []
         self.units = units
@@ -46,10 +49,17 @@ class Experiment():
         self.plate_data_paths = self.get_plate_data_paths()
 
         # get plate data paths
+        i = 0
         for pdp in self.plate_data_paths:
-            p = Plate(pdp,self.drug_conc,debug=self.debug,moat=self.moat)
+            if self.data_cols is not None:
+                dc = self.data_cols[i] # expects to be a list of columns
+                i+=1
+            else:
+                dc = None
+            p = Plate(pdp,self.drug_conc,debug=self.debug,moat=self.moat,replicate_arrangement=self.replicate_arrangement,data_cols=dc)
             p.execute()
             self.plates.append(p)
+            
         
         # compute growth rate and seascape libraries
         self.growth_rate_lib = self.gen_growth_rate_lib()
@@ -86,14 +96,14 @@ class Experiment():
         gl = {}
         offset = 0
         for p in self.plates:
-            
-            for k in p.growth_rate_lib.keys():
 
-                rep_num = int(k)
-                gl[str(rep_num+offset)] = p.growth_rate_lib[k]
-                #print(str(rep_num+offset))
             keys = [int(k) for k in p.growth_rate_lib.keys()]
-            offset += max(keys)
+            
+            for k in keys:
+                rep_num =  k + offset
+                gl[str(rep_num)] = p.growth_rate_lib[str(k)]
+            
+            offset += max(keys) + 1
 
         return gl
     
@@ -228,7 +238,13 @@ class Experiment():
 class Plate():
     """96-well plate object
     """
-    def __init__(self,data_path,drug_conc,replicate_arrangement='rows',moat=False,debug=False):
+    def __init__(self,
+                 data_path,
+                 drug_conc,
+                 replicate_arrangement='rows',
+                 moat=False,
+                 debug=False,
+                 data_cols=None):
         """Initializer
 
         Args:
@@ -241,6 +257,7 @@ class Plate():
         self.moat = moat
         self.data_path = data_path
         self.data = self.parse_data_file(data_path)
+        self.data_cols = data_cols
 
         if drug_conc is None:
             self.drug_conc = [0,0.003,0.0179,0.1072,0.643,3.858,23.1481,138.8889,833.3333,5000]
@@ -281,9 +298,9 @@ class Plate():
         # print(df)
 
         if any(df.keys() == 'Cycle Nr.'):
-            data_start_indx = np.argwhere(time_array == 'Cycle Nr.')
+            data_start_indx = np.argwhere(list(time_array) == 'Cycle Nr.')
         elif any(df.keys() == 'Time [s]'):
-            data_start_indx = np.argwhere(time_array == 'Time [s]')
+            data_start_indx = np.argwhere(list(time_array) == 'Time [s]')
         else:
             raise Exception('Unknown file format. Expected either Cycle Nr. or Time [s] as column headings.')
 
@@ -316,30 +333,72 @@ class Plate():
             list: list of background keys
         """
         # row A, row H, col 1, and col 12
+        first_plate_col = 1 #first column of the plate
+        last_plate_col = 12 #last column of the plate
+
+        k = self.data.keys()
+
+        # filter out keys that don't refer to wells
+        k_filt = []
+        for key in k:
+            if self.check_if_key_is_well(key):
+                k_filt.append(key)
+
+        k = k_filt
 
         if self.moat:
-            k = self.data.keys()
-
-            # filter out keys that don't refer to wells
-            k_filt = []
-            for key in k:
-                if self.check_if_key_is_well(key):
-                    k_filt.append(key)
-
-            k = k_filt
 
             # this block of code defines the outer ring of a 96-well plate
-
-            first_plate_col = 1 #first column of the plate
-            last_plate_col = 12 #last column of the plate
 
             bg_keys = [y for y in k if int(y[1:]) == first_plate_col] # col 1
             bg_keys = bg_keys + [y for y in k if (int(y[1:]) == last_plate_col and y not in bg_keys)]
             bg_keys = bg_keys + [y for y in k if (y[0] == 'A' and y not in bg_keys)]
             bg_keys = bg_keys + [y for y in k if (y[0] == 'H' and y not in bg_keys)]
         
+            if self.data_cols is not None: # add whatever is not in a data column to the background keys
+                
+                bgk_t = self.get_not_data_keys()
+                
+                bg_keys = list(set(bg_keys) | set(bgk_t)) # union avoids repeats
+
+        elif self.data_cols is not None: # add whatever is not in a data column to the background keys
+            bg_keys = self.get_not_data_keys()
         else:
             bg_keys = None
+
+        return bg_keys
+        
+    def get_not_data_keys(self):
+        """This function is called if data_cols is not None. Return the list of keys that don't refer to wells that have actual data.
+
+        Returns:
+            list: list of keys for wells not in data_keys
+        """
+        first_plate_col = 1 #first column of the plate
+        last_plate_col = 12 #last column of the plate
+        k = self.data.keys()
+
+        # filter out keys that don't refer to wells
+        k_filt = []
+        for key in k:
+            if self.check_if_key_is_well(key):
+                k_filt.append(key)
+
+        k = k_filt
+
+        data_keys = []
+
+        if self.replicate_arrangement == 'rows': # genotypes are defined by letters corresponding to rows
+            for r in self.data_cols:
+                for col in range(first_plate_col,last_plate_col):
+                    key = r + str(col)
+                    data_keys.append(key)
+        else:
+            for col in self.data_cols:
+                for r in ['A','B','C','D','E','F','G','H']:
+                    key = r + str(col)
+                    data_keys.append(key)
+        bg_keys = [key for key in k if key not in data_keys] # for every well in the data set, add it to the background key list if it is not in the data key list
 
         return bg_keys
 
