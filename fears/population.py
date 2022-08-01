@@ -100,32 +100,6 @@ class PopParams:
                 if paramkey == optkey:
                     td = {paramkey:kwargs.get(paramkey)}
                     self.__dict__.update(td)
-        
-        # self.ic50 = dir_manager.load_fitness(self.ic50_data_path)
-        # self.drugless_rates = dir_manager.load_fitness(self.drugless_data_path)
-        # print(self.ic50)
-    #     dr, ic50 = self.initialize_fitness()
-    #     self.drugless_rates = dr
-    #     self.ic50 = ic50
-        
-    #     if self.n_genotype is None:
-    #         self.n_genotype = int(len(self.ic50))
-    #     if self.n_allele is None:
-    #         self.n_allele = int(np.log2(self.n_genotype))
-    #     if int(self.n_allele) != int(np.log2(self.n_genotype)):
-    #         raise Warning('Genotype/allele number mismatch')
-        
-    #     self.init_counts = np.zeros(self.n_genotype)
-    #     self.init_counts[0] = 10**6
-    
-    # def initialize_fitness(self):
-    #     if self.fitness_data == 'two-point':
-    #         drugless_rates = dir_manager.load_fitness(self.drugless_data_path)
-    #         ic50 = dir_manager.load_fitness(self.ic50_data_path)
-    #     else:
-    #         drugless_rates = None
-    #         ic50 = None
-    #     return drugless_rates, ic50
 
 
 class Population(PopParams):
@@ -175,6 +149,7 @@ class Population(PopParams):
                                     replicate_arrangement=self.replicate_arrangement,
                                     data_cols=self.data_cols)
             e.execute()
+            
             self.growth_rate_lib = e.growth_rate_lib
             self.seascape_lib = e.seascape_lib
 
@@ -192,6 +167,7 @@ class Population(PopParams):
                 
             self.growth_rate_lib['drug_conc'] = self.seascape_drug_conc
             self.seascape_lib['drug_conc'] = self.seascape_drug_conc
+            self.autorate_exp = e
             
     def initialize_drug_curve(self):
         curve,u = pharm.gen_curves(self)

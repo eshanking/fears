@@ -130,11 +130,16 @@ class Experiment():
         sl = {}
         dc = self.drug_conc
 
-        replicates = [int(k) for k in self.growth_rate_lib.keys()]
+        replicates = self.growth_rate_lib.keys()
         
         for r in replicates:
 
-            popt = self.fit_hill_curve(dc,gl[str(r)])
+            growth_dict = gl[r]
+
+            dc = [float(c) for c in growth_dict.keys()]
+            growth_rates = [growth_dict[k] for k in growth_dict.keys()]
+
+            popt = self.fit_hill_curve(dc,growth_rates)
             
             # inidices of optimized parameter vector
             ic50_indx = 0
@@ -149,7 +154,7 @@ class Experiment():
                 'g_drugless':g_drugless,
                 'hill_coeff':hill_coeff}
 
-            sl[str(r)] = d_t
+            sl[r] = d_t
 
         return sl
 
@@ -514,6 +519,9 @@ class Plate():
         for k in data_keys:
             gr = np.array(df[k]) # growth rate time series data
             time = np.array(time) # time vector
+            # fig,ax = plt.subplots()
+            # ax.plot(time,gr)
+            # ax.set_title(k)
             growth_rates[k] = self.est_growth_rate(gr,t=time)
 
         return growth_rates
@@ -540,17 +548,22 @@ class Plate():
             concentrations = list(set(concentrations))
 
             replicates.sort()
+            
+            concentrations = [int(c) for c in concentrations]
+
             concentrations.sort()
+            concentrations = [str(c) for c in concentrations]
             
             for r in replicates:
-                gr_vect = []
+                # gr_vect = []
+                gr_dict = {}
                 i = 0 # concentration index
                 for c in self.drug_conc:
                     key = r + concentrations[i]
-                    gr_vect.append(growth_rates[key])
+                    gr_dict[str(c)] = growth_rates[key]
                     i += 1
 
-                growth_rate_lib[str(replicate_num)] = gr_vect
+                growth_rate_lib[str(replicate_num)] = gr_dict
                 replicate_num += 1
 
         else:
@@ -563,18 +576,23 @@ class Plate():
             replicates = list(set(replicates))
             concentrations = list(set(concentrations))
 
-            replicates.sort()
             concentrations.sort()
 
+            replicates = [int(r) for r in replicates]
+            replicates.sort()
+            replicates = [str(r) for r in replicates]
+
             for r in replicates:
-                gr_vect = []
+                # gr_vect = []
+                gr_dict = {}
                 i = 0 # concentration index
                 for c in self.drug_conc:
                     key = concentrations[i] + r
-                    gr_vect.append(growth_rates[key])
+                    # gr_vect.append(growth_rates[key])
+                    gr_dict[str(c)] = growth_rates[key]
                     i += 1
 
-                growth_rate_lib[str(replicate_num)] = gr_vect
+                growth_rate_lib[str(replicate_num)] = gr_dict
                 replicate_num += 1
 
         return growth_rate_lib
