@@ -58,8 +58,8 @@ def get_data(sim_path):
         Data (typically simulation counts)
 
     """
-    data_df = pd.read_csv(sim_path)
-    data = data_df.to_numpy()
+    f = open(sim_path,'rb')
+    data = pickle.load(f)
     
     return data
 
