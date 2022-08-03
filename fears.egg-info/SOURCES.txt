@@ -13,6 +13,9 @@ fears.egg-info/top_level.txt
 fears/data/cycloguanil_ic50.csv
 fears/data/ogbunugafor_drugless.csv
 fears/data/pyrimethamine_ic50.csv
+fears/data/plates/20210929_plate1.csv
+fears/data/plates/20210929_plate2.csv
+fears/data/plates/20210929_plate3.csv
 fears/utils/AutoRate.py
 fears/utils/__init__.py
 fears/utils/dir_manager.py

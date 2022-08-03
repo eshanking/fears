@@ -8,3 +8,4 @@ lifelines
 seaborn
 networkx
 cycler
+matplotlib-label-lines

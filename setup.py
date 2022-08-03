@@ -25,5 +25,5 @@ setup(
       "matplotlib-label-lines"
     ],
     include_package_data=True,
-    package_data={'': ['data/*.csv']}
+    package_data={'': ['data/*.csv', 'data/plates/*.csv']}
 )
