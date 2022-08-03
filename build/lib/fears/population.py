@@ -51,10 +51,8 @@ class PopParams:
         plate_paths = [files('fears.data').joinpath(p) for p in plate_paths]
         self.plate_paths = [str(p) for p in plate_paths]
         self.seascape_drug_conc = [0,0.003,0.0179,0.1072,0.643,3.858,23.1481,138.8889,833.3333,5000] #ug/mL
-
-        # self.growth_rate_data = []
-        # for plate_path in self.plate_paths:
-        #     self.growth_rate_data.append(dir_manager.get_growth_rate_data(plate_path))
+        self.replicate_arrangement = 'rows'
+        self.data_cols = [['B','C','D','E','F'],['B','C','D','E','F'],['B','C','D','E','F','G']]
 
         self.constant_pop, self.use_carrying_cap = False, True
         self.carrying_cap = 10**10
@@ -62,6 +60,7 @@ class PopParams:
         self.n_allele, self.n_genotype = None, None
         self.doubling_time = 1
         self.fitness_data = 'two-point' 
+        self.moat = True
         self.seascape_type = 'natural'
         self.drug_units = '$\u03BC$M'
         self.fig_title = None
@@ -101,32 +100,6 @@ class PopParams:
                 if paramkey == optkey:
                     td = {paramkey:kwargs.get(paramkey)}
                     self.__dict__.update(td)
-        
-        # self.ic50 = dir_manager.load_fitness(self.ic50_data_path)
-        # self.drugless_rates = dir_manager.load_fitness(self.drugless_data_path)
-        # print(self.ic50)
-    #     dr, ic50 = self.initialize_fitness()
-    #     self.drugless_rates = dr
-    #     self.ic50 = ic50
-        
-    #     if self.n_genotype is None:
-    #         self.n_genotype = int(len(self.ic50))
-    #     if self.n_allele is None:
-    #         self.n_allele = int(np.log2(self.n_genotype))
-    #     if int(self.n_allele) != int(np.log2(self.n_genotype)):
-    #         raise Warning('Genotype/allele number mismatch')
-        
-    #     self.init_counts = np.zeros(self.n_genotype)
-    #     self.init_counts[0] = 10**6
-    
-    # def initialize_fitness(self):
-    #     if self.fitness_data == 'two-point':
-    #         drugless_rates = dir_manager.load_fitness(self.drugless_data_path)
-    #         ic50 = dir_manager.load_fitness(self.ic50_data_path)
-    #     else:
-    #         drugless_rates = None
-    #         ic50 = None
-    #     return drugless_rates, ic50
 
 
 class Population(PopParams):
@@ -172,21 +145,29 @@ class Population(PopParams):
             # self.seascape_library = fitness.gen_seascape_library()
 
             f = str(files('fears.data').joinpath('plates'))
-            e = AutoRate.Experiment(f,drug_conc=self.seascape_drug_conc,moat=True)
+            e = AutoRate.Experiment(f,drug_conc=self.seascape_drug_conc,moat=self.moat,
+                                    replicate_arrangement=self.replicate_arrangement,
+                                    data_cols=self.data_cols)
             e.execute()
+            
             self.growth_rate_lib = e.growth_rate_lib
             self.seascape_lib = e.seascape_lib
+
+            self.n_genotype = len(self.seascape_lib.keys())
 
             self.ic50 = np.zeros(self.n_genotype)
             self.drugless_rates = np.zeros(self.n_genotype)
 
             i = 0
-            print(self.seascape_lib.keys())
 
             for key in self.seascape_lib.keys():
                 self.ic50[i] = self.seascape_lib[key]['ic50']
                 self.drugless_rates[i] = self.seascape_lib[key]['g_drugless']
                 i+=1
+                
+            self.growth_rate_lib['drug_conc'] = self.seascape_drug_conc
+            self.seascape_lib['drug_conc'] = self.seascape_drug_conc
+            self.autorate_exp = e
             
     def initialize_drug_curve(self):
         curve,u = pharm.gen_curves(self)
