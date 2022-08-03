@@ -19,7 +19,10 @@ setup(
       "numpy",
       "importlib_resources", 
       "lifelines", 
-      "pickle"
+      "seaborn", 
+      "networkx",
+      "cycler",
+      "matplotlib-label-lines"
     ],
     include_package_data=True,
     package_data={'': ['data/*.csv']}

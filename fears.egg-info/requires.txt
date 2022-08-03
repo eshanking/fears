@@ -4,3 +4,7 @@ scipy
 matplotlib
 numpy
 importlib_resources
+lifelines
+seaborn
+networkx
+cycler

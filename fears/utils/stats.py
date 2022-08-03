@@ -1,5 +1,4 @@
 import os
-import matplotlib.pyplot as plt
 import numpy as np
 from fears.utils import results_manager
 import pickle
