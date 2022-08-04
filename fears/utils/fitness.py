@@ -16,29 +16,36 @@ def gen_fitness_curves(pop,conc=None):
         f = np.zeros(len(conc))
         i = 0
         for c in conc:
-            f[i] = gen_fitness(g,c,pop=pop) - pop.death_rate
+            f[i] = gen_fitness(pop,g,c) - pop.death_rate
             i+=1
         fc[g] = f
 
     return fc
 
 # compute fitness given a drug concentration
-def gen_fitness(pop,genotype,conc,
-                drugless_rate=None,ic50=None):        
+def gen_fitness(pop,genotype,conc,drugless_rate=None,ic50=None,hc=None):        
 
-    if drugless_rate is None:
-        drugless_rate = pop.drugless_rates
-    if ic50 is None:
-        ic50 = pop.ic50
+    if pop.fitness_data == 'estimate':
+        fitness = sl_to_fitness(pop,genotype,conc,hc=hc)
+        fitness = fitness*(60**2)
 
-    # logistic equation from Ogbunugafor 2016
-    conc = conc/10**6 # concentration in uM, convert to M
-    c = -.6824968 # empirical curve fit
-    log_eqn = lambda d,i: d/(1+np.exp((i-np.log10(conc))/c))
-    if conc <= 0:
-        fitness = drugless_rate[genotype]
     else:
-        fitness = log_eqn(drugless_rate[genotype],ic50[genotype])
+        if drugless_rate is None:
+            drugless_rate = pop.drugless_rates
+        if ic50 is None:
+            ic50 = pop.ic50
+
+        # logistic equation from Ogbunugafor 2016
+        conc = conc/10**6 # concentration in uM, convert to M
+        if hc is None:
+            c = -.6824968 # empirical curve fit
+        else:
+            c = hc
+        log_eqn = lambda d,i: d/(1+np.exp((i-np.log10(conc))/c))
+        if conc <= 0:
+            fitness = drugless_rate[genotype]
+        else:
+            fitness = log_eqn(drugless_rate[genotype],ic50[genotype])
 
     return fitness
 
@@ -122,7 +129,7 @@ def gen_digital_seascape(pop,conc,gen,min_fitness=0):
         fitness = pop.drugless_rates[gen]
     return fitness
 
-def gen_fit_land(pop,conc,mode=None):
+def gen_fit_land(pop,conc,mode=None,**kwargs):
 
     fit_land = np.zeros(pop.n_genotype)
             
@@ -131,20 +138,17 @@ def gen_fit_land(pop,conc,mode=None):
 
     else:
         
-        if pop.landscape_type == 'static':
+        if pop.static_topology:
             fit_land = gen_static_landscape(pop,conc)
             
-        if pop.landscape_type == 'digital':
+        if pop.digital_seascape:
             for kk in range(pop.n_genotype):
                 fit_land[kk] = gen_digital_seascape(pop, conc, kk)
             
-        elif pop.landscape_type == 'natural':
+        else:
             for kk in range(pop.n_genotype):
-                fit_land[kk] = gen_fitness(pop,
-                                        kk,
-                                        conc,
-                                        pop.drugless_rates,
-                                        pop.ic50)/pop.doubling_time
+                fit_land[kk] = gen_fitness(pop,kk,
+                                           conc,**kwargs)/pop.doubling_time
     
     return fit_land
 
@@ -212,35 +216,81 @@ def fit_logistic_curve(xdata,ydata):
     
     return popt
 
-def gen_null_seascape(pop,conc):
+def gen_null_seascape(pop,conc,method='curve_fit'):
 
-    landscape = gen_fit_land(conc,pop=pop)
-    start_rates = gen_fit_land(10**-3,pop=pop)
-    final_rates = gen_fit_land(10**5,pop=pop)
-    # mid_rates = gen_fit_land(pop,10**1)
+    if method == 'curve_fit':
+        if pop.fitness_data == 'estimate':
+            hc = 0
+            for key in pop.seascape_library.keys():
+                hc += pop.seascape_library[key]['hill_coeff']
+            hc = hc/(len(pop.seascape_library.keys()))
+
+            landscape = gen_fit_land(pop,conc,hc=hc)
+            start_rates = gen_fit_land(pop,10**-3,hc=hc)
+            final_rates = gen_fit_land(pop,10**5,hc=hc)
+
+        else:
+            landscape = gen_fit_land(pop,conc)
+            start_rates = gen_fit_land(pop,10**-3)
+            final_rates = gen_fit_land(pop,10**5)
+        # mid_rates = gen_fit_land(pop,10**1)
+        
+        start_points = scale_and_ignore_zeros(landscape,start_rates)
+        end_points = scale_and_ignore_zeros(landscape,final_rates)
+        # mid_points = scale_and_ignore_zeros(landscape,mid_rates)
+        mid_points = landscape
+        
+        xdata = [10**-3,conc,10**5]
+        
+        ic50_new = []
+        drugless_rates_new = []
+        
+        for genotype in range(len(landscape)):
+            ydata = [start_points[genotype],
+                    mid_points[genotype],
+                    end_points[genotype]]
+            params = fit_logistic_curve(xdata,ydata)
+            ic50_new.append(params[1])
+            drugless_rates_new.append(params[0])
+        # find the null landscape drugless rates
+        
+        drugless_rates_new = scale_and_ignore_zeros(drugless_rates_new,
+                                                    pop.drugless_rates)
+
+        # fix the fact that genotype 3 in ogbunugafor data has zero fitness
+        if hasattr(pop,'ic50_data'):
+            if pop.ic50_data[-22:] == 'pyrimethamine_ic50.csv':
+                ic50_new[3] = 0
+                drugless_rates_new[3] = 0
     
-    start_points = scale_and_ignore_zeros(landscape,start_rates)
-    end_points = scale_and_ignore_zeros(landscape,final_rates)
-    # mid_points = scale_and_ignore_zeros(landscape,mid_rates)
-    mid_points = landscape
-    
-    xdata = [10**-3,conc,10**5]
-    
-    ic50_new = []
-    drugless_rates_new = []
-    
-    for genotype in range(len(landscape)):
-        ydata = [start_points[genotype],
-                mid_points[genotype],
-                end_points[genotype]]
-        params = fit_logistic_curve(xdata,ydata)
-        ic50_new.append(params[1])
-        drugless_rates_new.append(params[0])
-    # find the null landscape drugless rates
-    
-    drugless_rates_new = scale_and_ignore_zeros(drugless_rates_new,
-                                                pop.drugless_rates)
-    
+    elif method == 'sort':
+        dr =  np.array(pop.drugless_rates)
+        ic50 = np.array(pop.ic50)
+        dr_t = dr.argsort()
+        dr_ranks = np.empty_like(dr_t)
+        dr_ranks[dr_t] = np.arange(len(dr))
+
+        ic50_t = ic50.argsort()
+        ic50_ranks = np.empty_like(ic50_t)
+        ic50_ranks[ic50_t] = np.arange(len(ic50))
+
+        ic50_new = np.zeros(len(dr))
+        k = 0
+        for g in dr_ranks:
+            indx = np.argwhere(ic50_ranks==g)
+            indx = indx[0][0]
+            ic50_new[k] = ic50[indx]
+            k+=1
+
+        drugless_rates_new = dr
+
+    if pop.fitness_data == 'estimate':
+        i = 0
+        for key in pop.seascape_lib.keys():
+            pop.seascape_lib[key]['ic50'] = ic50_new[i]
+            pop.seascape_lib[key]['g_drugless'] = drugless_rates_new[i]
+            i+=1
+
     return drugless_rates_new,ic50_new
 
 def scale_and_ignore_zeros(data,target):

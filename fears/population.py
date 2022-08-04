@@ -54,6 +54,10 @@ class PopParams:
         self.replicate_arrangement = 'rows'
         self.data_cols = [['B','C','D','E','F'],['B','C','D','E','F'],['B','C','D','E','F','G']]
 
+        min_dc = np.log10(self.seascape_drug_conc[1])
+        max_dc = np.log10(max(self.seascape_drug_conc))
+        self.drug_conc_range = [np.round(min_dc),np.round(max_dc)]
+
         self.constant_pop, self.use_carrying_cap = False, True
         self.carrying_cap = 10**10
         self.init_counts = None
