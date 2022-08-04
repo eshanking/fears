@@ -22,7 +22,7 @@ def gen_color_cycler(style=None,palette='bright',n_colors=16):
         colors[[7,8]] = colors[[8,7]]
         
         cc = (cycler(color=colors) + 
-               cycler(linestyle=['-', '-','-','-','-','-','-','-','-',
+            cycler(linestyle=['-', '-','-','-','-','-','-','-','-',
                                 '--','--','--','--','--','--','--']))
     elif style == 'solid':
         colors = sns.color_palette(palette,n_colors)
@@ -224,7 +224,7 @@ def plot_fitness_curves(pop,
         fit = np.zeros((pop.n_genotype,conc.shape[0]))
         
         for j in range(conc.shape[0]):
-            fit[:,j] = pop.gen_fit_land(conc[j])
+            fit[:,j] = fitness.gen_fit_land(pop,conc[j])
         
         if plot_r0:
             fit = fit-pop.death_rate
@@ -287,7 +287,7 @@ def plot_msw(pop,wt,conc=None,fc=None,ncols=2,figsize=(2.5,8)):
     if conc is None:
         conc = np.logspace(-3,5,1000)
     if fc is None:
-        fc =  pop.gen_fitness_curves(conc=conc)
+        fc =  fitness.gen_fitness_curves(pop,conc=conc)
 
     rows = int((pop.n_allele)/ncols)
     fig, ax = plt.subplots(rows,ncols,figsize=figsize)
@@ -495,7 +495,7 @@ def plot_timecourse_to_axes(pop,
                 yax_label = drug_curve_label
 
             drug_ax.set_ylabel(yax_label, 
-                               color=color,fontsize=labelsize)
+                            color=color,fontsize=labelsize)
             
         drug_ax.plot(drug_curve,zorder=0,**drug_kwargs)
         
@@ -514,23 +514,23 @@ def plot_timecourse_to_axes(pop,
         plt.setp(drug_ax.get_yticklabels(), color=color)
         if drug_ax_sci_notation:
             drug_ax.ticklabel_format(style='scientific',axis='y',
-                                     scilimits=(0,3))
+                                    scilimits=(0,3))
     
     for genotype in range(counts.shape[1]):
         if genotype in sorted_index_big:
             if legend_labels:
                 counts_ax.plot(counts[:,genotype],linewidth=linewidth,
-                               zorder=10,
-                               label=str(pop.int_to_binary(genotype)),
-                               **kwargs)
+                            zorder=10,
+                            label=str(pop.int_to_binary(genotype)),
+                            **kwargs)
             else:
                 counts_ax.plot(counts[:,genotype],linewidth=linewidth,
-                               zorder=10,
-                               **kwargs)
+                            zorder=10,
+                            **kwargs)
         else:
             counts_ax.plot(counts[:,genotype],linewidth=linewidth,
-                           zorder=10,
-                           label=None)
+                        zorder=10,
+                        label=None)
     
     if pop.counts_log_scale:
         counts_ax.set_yscale('log')
@@ -569,58 +569,66 @@ def plot_timecourse_to_axes(pop,
         for i in range(len(label_xpos)):
             sl = select_labels[i]
             labelLine(lines[sl],label_xpos[i],
-                      fontsize=5,
-                      zorder=100,
-                      outline_color='white',
-                      outline_width=6,
-                      **label_kwargs)
+                    fontsize=5,
+                    zorder=100,
+                    outline_color='white',
+                    outline_width=6,
+                    **label_kwargs)
     
     return counts_ax, drug_ax
 
 
 def plot_landscape(p,conc=10**0,
-                   fitness=None,
-                   relative=True,
-                   rank=True,
-                   ax=None,
-                   ignore_zero=False,
-                   colorbar_lim=None,
-                   colorbar=True,
-                   node_size = 800,
-                   textsize=11,
-                   resize_param=0.2,
-                   square=False,
-                   textcolor='black',
-                   cbax=None,
-                   cblabel='',
-                   cbloc = [0.1,0.8,0.3,0.5],
-                   **kwargs):
+                fit_land=None,
+                relative=True,
+                rank=True,
+                ax=None,
+                ignore_zero=False,
+                colorbar_lim=None,
+                colorbar=True,
+                node_size = 800,
+                textsize=11,
+                resize_param=0.2,
+                square=False,
+                textcolor='black',
+                cbax=None,
+                cblabel='',
+                cbloc = [0.1,0.8,0.3,0.5],
+                network_only=False, # plots just the network without any fit_land data
+                edge_color='gray',
+                plot_sub_network=False,
+                sub_network=None,
+                sub_network_color='white',
+                **kwargs):
     """
     Plots a graph representation of this landscape on the current matplotlib figure.
     If p is set to a vector of occupation probabilities, the edges in the graph will
     have thickness proportional to the transition probability between nodes.
     """
-    
-    if fitness is None:
-        fitness = p.gen_fit_land(conc)
+
+    if fit_land is None:
+        fit_land = fit_land.gen_fit_land(p,conc)
     
     if relative:
-        fitness = fitness-min(fitness)
-        fitness = fitness/max(fitness)
+        fit_land = fit_land-min(fit_land)
+        fit_land = fit_land/max(fit_land)
         
     if ax is None:
         fig,ax=plt.subplots()
         
     if rank:
-        fitness = scipy.stats.rankdata(fitness)
+        fit_land = scipy.stats.rankdata(fit_land)
         cblabel = 'Rank'
     
     if ignore_zero:
-        fitness_t = [f==0 for f in fitness]
-        fitness[fitness==0] = 'NaN'
+        fit_land_t = [f==0 for f in fit_land]
+        fit_land[fit_land==0] = 'NaN'
+
+    if network_only:
+        colorbar = False
     
     # Figure out the length of the bit sequences we're working with
-    N = int(np.log2(len(fitness)))
+    N = int(np.log2(len(fit_land)))
 
     # Generate all possible N-bit sequences
     genotypes = np.arange(2**N)
@@ -628,7 +636,7 @@ def plot_landscape(p,conc=10**0,
 
     # Turn the unique bit sequences array into a list of tuples with the bit sequence and its corresponding fitness
     # The tuples can still be used as nodes because they are hashable objects
-    genotypes = [(genotypes[i], fitness[i]) for i in range(len(genotypes))]
+    genotypes = [(genotypes[i], fit_land[i]) for i in range(len(genotypes))]
 
     # Build hierarchical structure for N-bit sequences that differ by 1 bit at each level
     hierarchy = [[] for i in range(N+1)]
@@ -676,12 +684,30 @@ def plot_landscape(p,conc=10**0,
     
     edgelist = list(G.edges())
     edge_pos = np.asarray([(pos[e[0]], pos[e[1]]) for e in edgelist])
+
+    edge_colors = []
+    edge_widths = []
+    if plot_sub_network:
+        sub_network_str = [p.int_to_binary(b) for b in sub_network]
+
+    for e in edgelist:
+
+        if plot_sub_network:
+            if e[0][0] in sub_network_str and e[1][0] in sub_network_str:
+                edge_colors.append('black')
+                edge_widths.append(2)
+        else:
+            edge_colors.append(edge_color)
+            edge_widths.append(1)
+
+
     edge_collection = LineCollection(
         edge_pos,
-        linewidths=1,
+        linewidths=edge_widths,
         antialiaseds=(1,),
         linestyle='solid',
-        zorder=1)
+        zorder=1,
+        color=edge_colors)
     edge_collection.set_zorder(1)
     ax.add_collection(edge_collection)
     
@@ -691,39 +717,64 @@ def plot_landscape(p,conc=10**0,
         vmin = colorbar_lim[0]
         vmax = colorbar_lim[1]
     else:
-        vmin=min(fitness)
-        vmax=max(fitness)
-    
-    ax.scatter(xy[:,0],xy[:,1],
-               s=node_size,
-               c=fitness,
-               vmin=vmin,
-               vmax=vmax,
-               clip_on=False,
-               **kwargs)
+        vmin=min(fit_land)
+        vmax=max(fit_land)
+
+    if not network_only:
+        ax.scatter(xy[:,0],xy[:,1],
+                s=node_size,
+                c=fit_land,
+                vmin=vmin,
+                vmax=vmax,
+                clip_on=False,
+                **kwargs)
+        
+    else:
+        ax.scatter(xy[:,0],xy[:,1],
+                s=node_size,
+                c='white',
+                edgecolors='black',
+                vmin=vmin,
+                vmax=vmax,
+                clip_on=False,
+                **kwargs)
+    if plot_sub_network:
+        if sub_network is None:
+            raise ValueError('sub_network should be a list of ints')
+        ax.scatter(xy[sub_network,0],xy[sub_network,1],
+                s=node_size,
+                c=sub_network_color,
+                vmin=vmin,
+                vmax=vmax,
+                clip_on=False,
+                **kwargs)
     
     # if you don't want to include nodes with fitness = 0
     if ignore_zero:
-        fitness_t = np.array(fitness_t)
-        indx = np.argwhere(fitness_t==True)
+        fit_land_t = np.array(fit_land_t)
+        indx = np.argwhere(fit_land_t==True)
         for i in indx:
             ax.scatter(xy[i,0],xy[i,1],
-               s=node_size,
-               c='gray',
-               clip_on=False,
-               **kwargs)
-    
+            s=node_size,
+            c='gray',
+            clip_on=False,
+            **kwargs)
+
     if textcolor is not None:
         for n, label in labels.items():
             (x, y) = pos[n]
             if not isinstance(label, str):
                 label = str(label)  # this makes "1" and 1 labeled the same
+            if plot_sub_network and n[0] in sub_network_str:
+                color = 'white'
+            else:
+                color = textcolor
             ax.text(
                 x,
                 y,
                 label,
                 size=textsize,
-                color=textcolor,
+                color=color,
                 horizontalalignment='center',
                 verticalalignment='center',
                 transform=ax.transData,
@@ -747,28 +798,26 @@ def plot_landscape(p,conc=10**0,
         cbax.set_yticks([])
         
         cb = plt.colorbar(sm,
-                          drawedges=False,
-                          ax=cbax,
-                          location='right',
-                          aspect=10)
+                        drawedges=False,
+                        ax=cbax,
+                        location='right',
+                        aspect=10)
         cb.outline.set_visible(False)
-        cb.set_label(cblabel,fontsize=8)
+        cb.set_label(cblabel,fontsize=10)
         
         if rank:
-            ticks = [min(fitness),max(fitness)]
+            ticks = [min(fit_land),max(fit_land)]
             cb.set_ticks(ticks)
-            ticks = [max(fitness),min(fitness)]
+            ticks = [max(fit_land),min(fit_land)]
             ticks = np.array(ticks).astype('int')
             ticks = [str(t) for t in ticks]
-            cb.set_ticklabels(ticks)
+            cb.set_ticklabels(ticks,fontsize=10)
     
     if square:
         ydata_range = max(xy[:,1])-min(xy[:,1])
         xdata_range = max(xy[:,0])-min(xy[:,0])
         ax.set_aspect(xdata_range/ydata_range)
         
-        
-    
     xl = ax.get_xlim()
     xrange = xl[1]-xl[0]
     xl = [xl[0]-resize_param*xrange,xl[1]+xrange*resize_param]
@@ -783,14 +832,14 @@ def plot_landscape(p,conc=10**0,
     return ax
 
 def add_landscape_to_fitness_curve(c,ax,pop,
-                                   textcolor='gray',
-                                   colorbar=False,
-                                   square=True,
-                                   vert_lines=True,
-                                   position = 'top',
-                                   pad = 0,
-                                   vert_lines_ydata = None,
-                                   **kwargs):
+                                textcolor='gray',
+                                colorbar=False,
+                                square=True,
+                                vert_lines=True,
+                                position = 'top',
+                                pad = 0,
+                                vert_lines_ydata = None,
+                                **kwargs):
     
     if position == 'top':
         ypos = 1+pad
@@ -819,13 +868,13 @@ def add_landscape_to_fitness_curve(c,ax,pop,
     return l
 
 def plot_population_count(pop,
-                          c,
-                          ax=None,
-                          thresh=None,
-                          normalize=False,
-                          max_cells=None,
-                          logscale=True,
-                          **kwargs):
+                        c,
+                        ax=None,
+                        thresh=None,
+                        normalize=False,
+                        max_cells=None,
+                        logscale=True,
+                        **kwargs):
     if ax is None:
         fig,ax = plt.subplots(figsize=(6,4))
     if thresh is None:
@@ -857,14 +906,14 @@ def plot_population_count(pop,
     return ax
 
 def plot_kaplan_meier(pop,
-                      event_times,
-                      label=None,
-                      t_max=None,
-                      n_sims=None,
-                      ax=None,
-                      mode='resistant',
-                      errorband=True,
-                      **kwargs):
+                    event_times,
+                    label=None,
+                    t_max=None,
+                    n_sims=None,
+                    ax=None,
+                    mode='resistant',
+                    errorband=True,
+                    **kwargs):
     
     if t_max is None:
         t_max = int(max(event_times)) # hours
@@ -881,7 +930,7 @@ def plot_kaplan_meier(pop,
             num = num.shape[0]
             perc = 100*num/n_sims
             survival_curve[t] = survival_curve[t]-perc
-   
+
     survival_curve[-1] = survival_curve[-2]
     if ax is None:
         fig,ax = plt.subplot(figsize=(5,7))
@@ -940,8 +989,8 @@ def get_msw(wt_fitness_curve,cur_fitness_curve,conc):
     return msw_left, msw_right
 
 def msw_grid(pop,genotypes,
-             ax=None,
-             legend=True):
+            ax=None,
+            legend=True):
 
     conc = np.logspace(-3,5,1000)
     fc = fitness.gen_fitness_curves(pop,conc=conc)
