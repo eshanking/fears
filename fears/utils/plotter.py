@@ -215,7 +215,9 @@ def plot_fitness_curves(pop,
         if ax is None:
             fig, ax = plt.subplots(figsize = (10,6))
         
-        conc = np.logspace(-3,5,200)
+        min_conc = pop.drug_conc_range[0]
+        max_conc = pop.drug_conc_range[1]
+        conc = np.logspace(min_conc,max_conc,1000)
         
         cc = gen_color_cycler(**color_kwargs)
         
@@ -285,7 +287,9 @@ def plot_msw(pop,wt,conc=None,fc=None,ncols=2,figsize=(2.5,8)):
     """
 
     if conc is None:
-        conc = np.logspace(-3,5,1000)
+        min_conc = pop.drug_conc_range[0]
+        max_conc = pop.drug_conc_range[1]
+        conc = np.logspace(min_conc,max_conc,1000)
     if fc is None:
         fc =  fitness.gen_fitness_curves(pop,conc=conc)
 
@@ -990,9 +994,15 @@ def get_msw(wt_fitness_curve,cur_fitness_curve,conc):
 
 def msw_grid(pop,genotypes,
             ax=None,
-            legend=True):
+            legend=True,
+            labelsize=10,
+            ticklabelsize=10,
+            comp_annotate_pos=10**-4.4,
+            legendloc='best'):
 
-    conc = np.logspace(-3,5,1000)
+    min_conc = pop.drug_conc_range[0]
+    max_conc = pop.drug_conc_range[1]
+    conc = np.logspace(min_conc,max_conc,1000)
     fc = fitness.gen_fitness_curves(pop,conc=conc)
 
     # get the row height
@@ -1015,7 +1025,7 @@ def msw_grid(pop,genotypes,
         label = 'Reference = ' + pop.int_to_binary(g)
 
         pos = (10**-3,ylevel-(0.8*h))
-        ax.annotate(label,pos,xycoords='data',annotation_clip=True,fontsize=8)
+        ax.annotate(label,pos,xycoords='data',annotation_clip=True,fontsize=labelsize)
 
         ylevel += -h
 
@@ -1043,19 +1053,20 @@ def msw_grid(pop,genotypes,
             ax.plot(conc,y,color='black',linewidth=0.5)
 
             label = pop.int_to_binary(n)
-            pos = (10**-4.4,ylevel-(0.8*h))
-            ax.annotate(label,pos,xycoords='data',annotation_clip=False,fontsize=8)
+            pos = (comp_annotate_pos,ylevel-(0.8*h))
+            ax.annotate(label,pos,xycoords='data',annotation_clip=False,fontsize=labelsize)
 
             ylevel += -h
     
     ax.set_frame_on(False)
     ax.set_xscale('log')
     ax.set_xlim([10**pop.drug_conc_range[0],10**pop.drug_conc_range[1]])
+    ax.tick_params(axis='x', which='major', labelsize=ticklabelsize)
     ax.set_yticks([])
     if legend:
         ax.legend()
         h, l = ax.get_legend_handles_labels()
-        ax.legend(h[0:3],l[0:3],loc = (0,1),frameon=False,ncol=3)
+        ax.legend(h[0:3],l[0:3],frameon=False,ncol=3,loc=legendloc)
 
     return ax
 

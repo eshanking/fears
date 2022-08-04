@@ -137,9 +137,6 @@ def gen_fit_land(pop,conc,mode=None,**kwargs):
         fit_land = pop.landscape_data/pop.doubling_time
 
     else:
-        
-        if pop.static_topology:
-            fit_land = gen_static_landscape(pop,conc)
             
         if pop.digital_seascape:
             for kk in range(pop.n_genotype):
@@ -180,12 +177,20 @@ def gen_fl_for_abm(pop,conc,counts):
     
     return fit_land
 
-def gen_random_seascape(n_allele,
-                        drugless_limits=[1,1.5],
-                        ic50_limits=[-6.5,-1.5]):
+def gen_random_seascape(pop,
+                        n_allele=None,
+                        drugless_limits=None,
+                        ic50_limits=None):
     
+    if n_allele is None:
+        n_allele = pop.n_allele
+    if drugless_limits is None:
+        drugless_limits = pop.drugless_limits
+    if ic50_limits is None:
+        ic50_limits = pop.ic50_limits
+
     n_genotype = 2**n_allele
-    
+
     drugless_rates = np.random.uniform(min(drugless_limits),
                                     max(drugless_limits),
                                     n_genotype)
@@ -196,19 +201,21 @@ def gen_random_seascape(n_allele,
     
     return drugless_rates,ic50
 
-def randomize_seascape(pop,
-                    drugless_limits=[1,1.5],
-                    ic50_limits=[-6.5,-1.5]):
+# def randomize_seascape(pop,
+#                     drugless_limits=[1,1.5],
+#                     ic50_limits=[-6.5,-1.5]):
 
-    n_genotype = pop.n_genotype
+#     n_genotype = pop.n_genotype
     
-    pop.drugless_rates = np.random.uniform(min(drugless_limits),
-                                        max(drugless_limits),
-                                        n_genotype)
+    
 
-    pop.ic50 = np.random.uniform(min(ic50_limits),
-                                max(ic50_limits),
-                                n_genotype)
+#     pop.drugless_rates = np.random.uniform(min(drugless_limits),
+#                                         max(drugless_limits),
+#                                         n_genotype)
+
+#     pop.ic50 = np.random.uniform(min(ic50_limits),
+#                                 max(ic50_limits),
+#                                 n_genotype)
     
 def fit_logistic_curve(xdata,ydata):
     

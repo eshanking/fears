@@ -96,7 +96,11 @@ class PopParams:
         self.n_sims = 10
         self.debug = False
 
-        self.landscape_type = 'natural'
+        self.drugless_limits=[1,1.5]
+        self.ic50_limits=[-6.5,-1.5]
+
+        # self.landscape_type = 'natural'
+        self.digital_seascape = False
 
 
         for paramkey in self.__dict__.keys():
@@ -172,6 +176,14 @@ class Population(PopParams):
             self.growth_rate_lib['drug_conc'] = self.seascape_drug_conc
             self.seascape_lib['drug_conc'] = self.seascape_drug_conc
             self.autorate_exp = e
+        
+        elif self.fitness_data == 'random':
+
+            if self.n_allele is None:
+                self.n_allele = 2
+            self.drugless_rates,self.ic50, = \
+                fitness.gen_random_seascape(self)
+            self.n_genotype = 2**self.n_allele
             
     def initialize_drug_curve(self):
         curve,u = pharm.gen_curves(self)
