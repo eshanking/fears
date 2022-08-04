@@ -6,6 +6,7 @@ import os
 import time
 import pickle
 import lifelines
+import copy
 
 class Experiment():
 
