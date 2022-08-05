@@ -54,6 +54,10 @@ class PopParams:
         self.replicate_arrangement = 'rows'
         self.data_cols = [['B','C','D','E','F'],['B','C','D','E','F'],['B','C','D','E','F','G']]
 
+        min_dc = np.log10(self.seascape_drug_conc[1])
+        max_dc = np.log10(max(self.seascape_drug_conc))
+        self.drug_conc_range = [np.round(min_dc),np.round(max_dc)]
+
         self.constant_pop, self.use_carrying_cap = False, True
         self.carrying_cap = 10**10
         self.init_counts = None
@@ -92,7 +96,11 @@ class PopParams:
         self.n_sims = 10
         self.debug = False
 
-        self.landscape_type = 'natural'
+        self.drugless_limits=[1,1.5]
+        self.ic50_limits=[-6.5,-1.5]
+
+        # self.landscape_type = 'natural'
+        self.digital_seascape = False
 
 
         for paramkey in self.__dict__.keys():
@@ -168,6 +176,14 @@ class Population(PopParams):
             self.growth_rate_lib['drug_conc'] = self.seascape_drug_conc
             self.seascape_lib['drug_conc'] = self.seascape_drug_conc
             self.autorate_exp = e
+        
+        elif self.fitness_data == 'random':
+
+            if self.n_allele is None:
+                self.n_allele = 2
+            self.drugless_rates,self.ic50, = \
+                fitness.gen_random_seascape(self)
+            self.n_genotype = 2**self.n_allele
             
     def initialize_drug_curve(self):
         curve,u = pharm.gen_curves(self)
