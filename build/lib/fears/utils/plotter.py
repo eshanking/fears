@@ -337,6 +337,7 @@ def plot_msw(pop,wt,conc=None,fc=None,ncols=2,figsize=(2.5,8)):
 
             ax[-1].set_xlabel('Drug concentration \n($\mathrm{\mu}$M)',
                                     fontsize=14)
+            
         else:
             for c in range(ncols):
                 n = neighbors[i]
@@ -367,9 +368,9 @@ def plot_msw(pop,wt,conc=None,fc=None,ncols=2,figsize=(2.5,8)):
                 ax[c].set_xlabel('Drug concentration \n($\mathrm{\mu}$M)',fontsize=14)
                 ax[c].tick_params(axis='both',labelsize=14)
 
-            ax[0].set_ylabel('Replication rate ($hr^{-1}$)',
+            ax[-1].set_ylabel('Replication rate ($hr^{-1}$)',
                                         fontsize=14)
-    
+            ax[-1].yaxis.set_label_position("right")
     else:
         for r in range(rows):
             for col in range(ncols):
