@@ -410,7 +410,7 @@ def plot_msw(pop,wt,conc=None,fc=None,ncols=2,figsize=(2.5,8)):
 
 
 
-    return fig
+    return fig, ax
 
 def plot_timecourse_to_axes(pop,
                         counts,
