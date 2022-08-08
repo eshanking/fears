@@ -1,2 +1,5 @@
 1. Integrate fears into seascapes_figures
 2. Get joint hill coefficient estimation working
+3. Finish utils docs (fitness and AutoRate are complete)
+4. Add :noindex: to population wrapper functions to avoid sphinx competing docs
+
