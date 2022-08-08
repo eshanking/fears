@@ -4,7 +4,17 @@ from scipy.optimize import curve_fit
 
 
 def gen_fitness_curves(pop,conc=None):
+    """Generates a dict of dose-response curves for a given population.
 
+    Args:
+        pop (population class object): Population object
+        conc (array-like, optional): Array of concentrations to generate fitness for. 
+        If None, generates a list of using np.logspace (-3,5,num=1000). Defaults to None.
+
+    Returns:
+        dict: dict of dose-reponse curves. 
+        Each entry in the dict represents a genotype-specific dose response curve.
+    """
 
     if conc is None:
         conc = np.logspace(-3,5,num=1000)
@@ -23,7 +33,23 @@ def gen_fitness_curves(pop,conc=None):
     return fc
 
 # compute fitness given a drug concentration
-def gen_fitness(pop,genotype,conc,drugless_rate=None,ic50=None,hc=None):        
+def gen_fitness(pop,genotype,conc,drugless_rate=None,ic50=None,hc=None):    
+    """Computes the fitness of a genotype at a given drug concentration.
+
+    Args:
+        pop (population class object): Population object containing data of interest
+        genotype (int): Genotype of interest
+        conc (float): drug concentration of interest
+        drugless_rate (float, optional): Drugless growth rate. 
+            If None, data is retrieved from population object. Defaults to None.
+        ic50 (float, optional): Genotype-specific IC50. 
+            If None, data is retrived from population object. Defaults to None.
+        hc (float, optional): Hill coefficient.
+            If None, data is retrived from population object. Defaults to None.
+
+    Returns:
+        float: Growth rate computed from pharmacodynamic equation.
+    """
 
     if pop.fitness_data == 'estimate':
         fitness = sl_to_fitness(pop,genotype,conc,hc=hc)
@@ -77,7 +103,15 @@ def logistic_equation(conc,drugless_rate,ic50):
     return f
 
 def gen_static_landscape(pop,conc):
-    
+    """Generates a growth rate fitness landscape at a given drug concentration
+
+    Args:
+        pop (population class object): Population object
+        conc (float): drug concentration at which to generate fitness landscape
+
+    Returns:
+        list: list of growth rates
+    """
     # get final landscape and seascape
     landscape = np.zeros(pop.n_genotype)
     for kk in range(pop.n_genotype):
@@ -116,7 +150,20 @@ def gen_static_landscape(pop,conc):
     landscape[zero_indx_land] = 0
     return landscape
 
-def gen_digital_seascape(pop,conc,gen,min_fitness=0):
+def gen_digital_seascape(pop,conc,gen,min_fitness=0.0):
+    """Boostraps a 'digital seascape' from the continuous population seascape
+       and computes the fitness at a given concentration.
+
+    Args:
+        pop (population class object): Population object
+        conc (flaot): concentration at which to compute fitness
+        gen (int): genotype of interest
+        min_fitness (float, optional): Minimum fitness at conc higher than MIC. 
+            Defaults to 0.
+
+    Returns:
+        float: growth rate (fitness)
+    """
     
     if pop.mic_estimate is not None:
         mic = est_mic(gen,Kmic=pop.mic_estimate,pop=pop)
@@ -130,6 +177,16 @@ def gen_digital_seascape(pop,conc,gen,min_fitness=0):
     return fitness
 
 def gen_fit_land(pop,conc,mode=None,**kwargs):
+    """Generates the fitness landscape at a given drug concentration
+
+    Args:
+        pop (population class object): Population object
+        conc (float): drug concentration
+        counts (array-like): list of population counts
+
+    Returns:
+        list: lits of growth rates
+    """
 
     fit_land = np.zeros(pop.n_genotype)
             
@@ -151,6 +208,16 @@ def gen_fit_land(pop,conc,mode=None,**kwargs):
 
 # Generate fitness landscape for use in the abm method
 def gen_fl_for_abm(pop,conc,counts):
+    """Same as gen_fit_land but also scales by carrying capacity
+
+    Args:
+        pop (population class object): Population object
+        conc (float): drug concentration
+        counts (array-like): list of population counts
+
+    Returns:
+        list: lits of growth rates
+    """
 
     fit_land = gen_fit_land(pop,conc)
     
@@ -181,7 +248,20 @@ def gen_random_seascape(pop,
                         n_allele=None,
                         drugless_limits=None,
                         ic50_limits=None):
-    
+    """Generates random seascape data
+
+    Args:
+        pop (population class object): Population object
+        n_allele (int, optional): Number of alleles. 
+            If None, gets data from pop. Defaults to None.
+        drugless_limits (list, optional): Range of drugless growth rates to generate random data from. 
+            If None, gets data from pop. Defaults to None.
+        ic50_limits (list, optional): Range of IC50 to generate random data from.
+            If None, gets data from pop. Defaults to None.
+
+    Returns:
+        list: list of drugless growth rates and IC50s.
+    """
     if n_allele is None:
         n_allele = pop.n_allele
     if drugless_limits is None:
@@ -201,22 +281,6 @@ def gen_random_seascape(pop,
     
     return drugless_rates,ic50
 
-# def randomize_seascape(pop,
-#                     drugless_limits=[1,1.5],
-#                     ic50_limits=[-6.5,-1.5]):
-
-#     n_genotype = pop.n_genotype
-    
-    
-
-#     pop.drugless_rates = np.random.uniform(min(drugless_limits),
-#                                         max(drugless_limits),
-#                                         n_genotype)
-
-#     pop.ic50 = np.random.uniform(min(ic50_limits),
-#                                 max(ic50_limits),
-#                                 n_genotype)
-    
 def fit_logistic_curve(xdata,ydata):
     
     popt,var = curve_fit(logistic_equation,xdata,ydata)
@@ -224,7 +288,20 @@ def fit_logistic_curve(xdata,ydata):
     return popt
 
 def gen_null_seascape(pop,conc,method='curve_fit'):
+    """Generates a 'null seascape'.
+       Methods:
+       curve_fit: fits a new set of random curves to the range of the
+       natural population seascape.
+       sort: sorts IC50 values to match rank-order of pop drugless_rates
 
+    Args:
+        pop (population class object): Population object
+        conc (float): drug concentration at which to retrieve null seascape rank order
+        method (str, optional): Null seascape method. Defaults to 'curve_fit'.
+
+    Returns:
+        list: list of drugless growth rates and IC50s.
+    """
     if method == 'curve_fit':
         if pop.fitness_data == 'estimate':
             hc = 0

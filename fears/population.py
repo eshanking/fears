@@ -285,9 +285,10 @@ class Population(PopParams):
         
         conc = self.drug_curve[mm]
             
-        # __gen_fl_for_abm automatically considers carrying capacity, but
+        # gen_fl_for_abm automatically considers carrying capacity, but
         # it does not consider timestep scale
-        fit_land = self.__gen_fl_for_abm(conc, counts)
+
+        fit_land = fitness.gen_fl_for_abm(self,conc,counts)
         
         fit_land = fit_land*self.timestep_scale
         death_rate = self.death_rate*self.timestep_scale
@@ -405,8 +406,8 @@ class Population(PopParams):
     ##############################################################################
     # wrapper methods for plotting
     def plot_timecourse(self,**kwargs):
-        fig,ax = plotter.plot_timecourse(self,**kwargs)
-        return fig,ax
+        fig = plotter.plot_timecourse(self,**kwargs)
+        return fig
 
     def plot_fitness_curves(self,**kwargs):
         fig,ax = plotter.plot_fitness_curves(self,**kwargs)
@@ -419,39 +420,29 @@ class Population(PopParams):
     ##############################################################################
     # wrapper methods for fitness
 
-    def __gen_fl_for_abm(self,conc,counts):
-        """
-        Return the fitness landscape apropriately scaled according to the 
-        population size and carrying capacity
+    # def __gen_fl_for_abm(self,conc,counts):
+    #     """
+    #     Return the fitness landscape apropriately scaled according to the 
+    #     population size and carrying capacity
 
-        Parameters
-        ----------
-        conc (float) : drug concentration
-        counts (list) : vector of genotype population counts
+    #     Parameters
+    #     ----------
+    #     conc (float) : drug concentration
+    #     counts (list) : vector of genotype population counts
 
-        Returns
-        ----------
-        fit_land (list) : scaled fitness landscape
-        """
-        fit_land = fitness.gen_fl_for_abm(self,conc,counts)
-        return fit_land
+    #     Returns
+    #     ----------
+    #     fit_land (list) : scaled fitness landscape
+    #     """
+    #     fit_land = fitness.gen_fl_for_abm(self,conc,counts)
+    #     return fit_land
 
     def gen_fit_land(self,conc,**kwargs):
-        """
-        Returns the fitness landscape at a given drug concentration
 
-        Parameters
-        ----------
-        conc (float) : drug concentration
-
-        Returns
-        ----------
-        fit_land (list) : fitness landscape
-
-        """
         fit_land = fitness.gen_fit_land(self,conc,**kwargs)
+        
         return fit_land
-
+    
     ###############################################################################
     # Wrapper methods for generating drug concentration curves
 
@@ -480,5 +471,28 @@ class Population(PopParams):
         return drug_curve
 
     def set_drug_curve(self):
+        """Sets the drug concentration curve for a given population
+        """
         dc = self.gen_curves()
         self.drug_curve = dc[0]
+
+    ###############################################################################
+    # Misc helper methods
+
+    def reset_drug_conc_curve(self,**kwargs):
+        """Resets the drug concentration curve. Also updates any paramters passed into kwargs.
+           Useful when performing experiments with a large number of population objects. Eliminates the need to repeatedly
+           estimate fitness seascapes.
+        """
+        for paramkey in self.__dict__.keys():
+            for optkey in kwargs.keys():
+                if paramkey == optkey:
+                    td = {paramkey:kwargs.get(paramkey)}
+                    self.__dict__.update(td)
+        
+        self.set_drug_curve()
+    
+    ###############################################################################
+    # Set wrapper method docs
+
+    gen_fit_land.__doc__ = fitness.gen_fit_land.__doc__
