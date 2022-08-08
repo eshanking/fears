@@ -1,0 +1,1066 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>fears.utils package &#8212; fears 0.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/traditional.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="fears package" href="fears.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="fears.html" title="fears package"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">fears 0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="modules.html" >fears</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="fears.html" accesskey="U">fears package</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">fears.utils package</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="fears-utils-package">
+<h1>fears.utils package<a class="headerlink" href="#fears-utils-package" title="Permalink to this headline">¶</a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="module-fears.utils.AutoRate">
+<span id="fears-utils-autorate-module"></span><h2>fears.utils.AutoRate module<a class="headerlink" href="#module-fears.utils.AutoRate" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="fears.utils.AutoRate.Experiment">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fears.utils.AutoRate.</span></span><span class="sig-name descname"><span class="pre">Experiment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">moat</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">replicate_arrangement</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'rows'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drug_conc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ug/mL'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_cols</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.AutoRate.Experiment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Experiment class for a given plate reader experiment</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="fears.utils.AutoRate.Experiment.execute">
+<span class="sig-name descname"><span class="pre">execute</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.AutoRate.Experiment.execute" title="Permalink to this definition">¶</a></dt>
+<dd><p>run the growth rate analyses</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fears.utils.AutoRate.Experiment.fit_hill_curve">
+<span class="sig-name descname"><span class="pre">fit_hill_curve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xdata</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ydata</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.AutoRate.Experiment.fit_hill_curve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fits dose-response curve to growth rate data</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>xdata</strong> (<em>list</em><em> or </em><em>numpy array</em>) – drug concentration curve from plate experiment</p></li>
+<li><p><strong>ydata</strong> (<em>list</em><em> or </em><em>numpy array</em>) – growth rate versus drug concetration for a given replicate</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>List of optimized paramters: IC50, drugless growth rate, and Hill coefficient</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fears.utils.AutoRate.Experiment.gen_growth_rate_lib">
+<span class="sig-name descname"><span class="pre">gen_growth_rate_lib</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.AutoRate.Experiment.gen_growth_rate_lib" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the complete growth rate library by compining the growth rate libraries of each plate</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>growth rate library</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fears.utils.AutoRate.Experiment.gen_seascape_lib">
+<span class="sig-name descname"><span class="pre">gen_seascape_lib</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.AutoRate.Experiment.gen_seascape_lib" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fits raw estimated growth rate values to a Hill dose-response curve</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pop</strong> (<em>population class object</em><em>, </em><em>optional</em>) – population class object. Defaults to None.</p></li>
+<li><p><strong>debug</strong> (<em>bool</em><em>, </em><em>optional</em>) – generates plots useful for debugging if true. Defaults to False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – raises error if there is no growth rate library in the experiment object</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>seascape library</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fears.utils.AutoRate.Experiment.get_plate_data_paths">
+<span class="sig-name descname"><span class="pre">get_plate_data_paths</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.AutoRate.Experiment.get_plate_data_paths" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets plate data paths</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>list of plate data paths</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fears.utils.AutoRate.Experiment.logistic_pharm_curve_vectorized">
+<span class="sig-name descname"><span class="pre">logistic_pharm_curve_vectorized</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">IC50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">g_drugless</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hill_coeff</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.AutoRate.Experiment.logistic_pharm_curve_vectorized" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines the logistic dose-response curve. Use if the input is a vector of drug concentration curves</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>numpy array</em>) – drug concentration vector</p></li>
+<li><p><strong>IC50</strong> (<em>float</em><em>)</em>) – IC50</p></li>
+<li><p><strong>g_drugless</strong> (<em>float</em>) – drugless growth rate</p></li>
+<li><p><strong>hill_coeff</strong> (<em>float</em>) – Hill coefficient</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>array of growth rates</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>numpy array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fears.utils.AutoRate.Experiment.save_results">
+<span class="sig-name descname"><span class="pre">save_results</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.AutoRate.Experiment.save_results" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="fears.utils.AutoRate.Plate">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fears.utils.AutoRate.</span></span><span class="sig-name descname"><span class="pre">Plate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drug_conc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">replicate_arrangement</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'rows'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">moat</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_cols</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.AutoRate.Plate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>96-well plate object</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="fears.utils.AutoRate.Plate.check_if_key_is_well">
+<span class="sig-name descname"><span class="pre">check_if_key_is_well</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.AutoRate.Plate.check_if_key_is_well" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Checks if key could refer to a well (i.e. key is in format ‘X##’ where X is a letter and # are numbers)</dt><dd><p>For instance, returns True is key is ‘A11’, returns False if key is ‘Time (s)’</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>str</strong> (<em>key</em>) – key to check</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>True if key could refer to a well, False if other.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>boolean</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fears.utils.AutoRate.Plate.est_growth_rate">
+<span class="sig-name descname"><span class="pre">est_growth_rate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">growth_curve</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">carrying_cap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.AutoRate.Plate.est_growth_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimates growth rate from OD growth curve</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>growth_curve</strong> (<em>list</em><em> or </em><em>numpy array</em>) – vector of OD data</p></li>
+<li><p><strong>t</strong> (<em>list</em><em> or </em><em>numpy array</em><em>, </em><em>optional</em>) – Time vector. If None, algorithm assumes each time step is 1 s. Defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Growth rate in units of 1/s</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fears.utils.AutoRate.Plate.execute">
+<span class="sig-name descname"><span class="pre">execute</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.AutoRate.Plate.execute" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fears.utils.AutoRate.Plate.gen_growth_rate_lib">
+<span class="sig-name descname"><span class="pre">gen_growth_rate_lib</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.AutoRate.Plate.gen_growth_rate_lib" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates growth rate library from OD data</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Dict of dose-response curves indexed by replicate</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fears.utils.AutoRate.Plate.get_background_keys">
+<span class="sig-name descname"><span class="pre">get_background_keys</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.AutoRate.Plate.get_background_keys" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the dataframe keys for the background (aka moat)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>list of background keys</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fears.utils.AutoRate.Plate.get_data_keys">
+<span class="sig-name descname"><span class="pre">get_data_keys</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.AutoRate.Plate.get_data_keys" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the dataframe keys for the data</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>df</strong> (<em>pandas dataframe</em>) – datafram containing raw OD data</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>list of keys</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fears.utils.AutoRate.Plate.get_growth_rates_from_df">
+<span class="sig-name descname"><span class="pre">get_growth_rates_from_df</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.AutoRate.Plate.get_growth_rates_from_df" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimates the growth rates from timeseries growth data in a dataframe</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><dl class="simple">
+<dt>dict</dt><dd><p>dictionary of growth rates for each experimental condition</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>growth_rates</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fears.utils.AutoRate.Plate.get_not_data_keys">
+<span class="sig-name descname"><span class="pre">get_not_data_keys</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.AutoRate.Plate.get_not_data_keys" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function is called if data_cols is not None. Return the list of keys that don’t refer to wells that have actual data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>list of keys for wells not in data_keys</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fears.utils.AutoRate.Plate.logistic_growth_curve">
+<span class="sig-name descname"><span class="pre">logistic_growth_curve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.AutoRate.Plate.logistic_growth_curve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Logistic growth equation</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t</strong> (<em>float</em>) – time</p></li>
+<li><p><strong>r</strong> (<em>float</em>) – growth rate</p></li>
+<li><p><strong>p0</strong> (<em>float</em>) – starting population size</p></li>
+<li><p><strong>k</strong> (<em>float</em>) – carrying capacity</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>population size at time t</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fears.utils.AutoRate.Plate.parse_data_file">
+<span class="sig-name descname"><span class="pre">parse_data_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.AutoRate.Plate.parse_data_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Strips metadata from raw data file to obtain timeseries OD data</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>p</strong> (<em>str</em>) – path to data file</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>dataframe of raw data</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>pandas dataframe</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-fears.utils.dir_manager">
+<span id="fears-utils-dir-manager-module"></span><h2>fears.utils.dir_manager module<a class="headerlink" href="#module-fears.utils.dir_manager" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="fears.utils.dir_manager.get_project_root">
+<span class="sig-prename descclassname"><span class="pre">fears.utils.dir_manager.</span></span><span class="sig-name descname"><span class="pre">get_project_root</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">pathlib.Path</span></span></span><a class="headerlink" href="#fears.utils.dir_manager.get_project_root" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fears.utils.dir_manager.load_experiment">
+<span class="sig-prename descclassname"><span class="pre">fears.utils.dir_manager.</span></span><span class="sig-name descname"><span class="pre">load_experiment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">exp_path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.dir_manager.load_experiment" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fears.utils.dir_manager.load_fitness">
+<span class="sig-prename descclassname"><span class="pre">fears.utils.dir_manager.</span></span><span class="sig-name descname"><span class="pre">load_fitness</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.dir_manager.load_fitness" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fears.utils.dir_manager.load_growth_rate_data">
+<span class="sig-prename descclassname"><span class="pre">fears.utils.dir_manager.</span></span><span class="sig-name descname"><span class="pre">load_growth_rate_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.dir_manager.load_growth_rate_data" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fears.utils.dir_manager.make_datapath_absolute">
+<span class="sig-prename descclassname"><span class="pre">fears.utils.dir_manager.</span></span><span class="sig-name descname"><span class="pre">make_datapath_absolute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.dir_manager.make_datapath_absolute" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fears.utils.dir_manager.make_directory">
+<span class="sig-prename descclassname"><span class="pre">fears.utils.dir_manager.</span></span><span class="sig-name descname"><span class="pre">make_directory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.dir_manager.make_directory" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fears.utils.dir_manager.make_figurepath_absolute">
+<span class="sig-prename descclassname"><span class="pre">fears.utils.dir_manager.</span></span><span class="sig-name descname"><span class="pre">make_figurepath_absolute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.dir_manager.make_figurepath_absolute" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fears.utils.dir_manager.make_resultspath_absolute">
+<span class="sig-prename descclassname"><span class="pre">fears.utils.dir_manager.</span></span><span class="sig-name descname"><span class="pre">make_resultspath_absolute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.dir_manager.make_resultspath_absolute" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-fears.utils.fitness">
+<span id="fears-utils-fitness-module"></span><h2>fears.utils.fitness module<a class="headerlink" href="#module-fears.utils.fitness" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="fears.utils.fitness.est_mic">
+<span class="sig-prename descclassname"><span class="pre">fears.utils.fitness.</span></span><span class="sig-name descname"><span class="pre">est_mic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gen</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Kmic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">growth_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.fitness.est_mic" title="Permalink to this definition">¶</a></dt>
+<dd><p>est_mic: estimates the mic based on a given Kmic (ratio of growth rate to
+max growth rate at MIC) or based on a given growth rate.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pop</strong> (<em>population class object</em>) – </p></li>
+<li><p><strong>gen</strong> (<em>int</em>) – Genotype under consideration.</p></li>
+<li><p><strong>Kmic</strong> (<em>float</em><em>, </em><em>optional</em>) – Ratio of growth rate to max growth rate at MIC. The default is None.</p></li>
+<li><p><strong>growth_rate</strong> (<em>float</em><em>, </em><em>optional</em>) – Growth rate at MIC. The default is None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>Exception</strong> – Function requires Kmic OR growth_rate to calculate MIC.</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>mic</strong> – MIC at a given growth rate or Kmic.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fears.utils.fitness.fit_logistic_curve">
+<span class="sig-prename descclassname"><span class="pre">fears.utils.fitness.</span></span><span class="sig-name descname"><span class="pre">fit_logistic_curve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xdata</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ydata</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.fitness.fit_logistic_curve" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fears.utils.fitness.gen_digital_seascape">
+<span class="sig-prename descclassname"><span class="pre">fears.utils.fitness.</span></span><span class="sig-name descname"><span class="pre">gen_digital_seascape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gen</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_fitness</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.fitness.gen_digital_seascape" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Boostraps a ‘digital seascape’ from the continuous population seascape</dt><dd><p>and computes the fitness at a given concentration.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pop</strong> (<em>population class object</em>) – Population object</p></li>
+<li><p><strong>conc</strong> (<em>flaot</em>) – concentration at which to compute fitness</p></li>
+<li><p><strong>gen</strong> (<em>int</em>) – genotype of interest</p></li>
+<li><p><strong>min_fitness</strong> (<em>float</em><em>, </em><em>optional</em>) – Minimum fitness at conc higher than MIC.
+Defaults to 0.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>growth rate (fitness)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fears.utils.fitness.gen_fit_land">
+<span class="sig-prename descclassname"><span class="pre">fears.utils.fitness.</span></span><span class="sig-name descname"><span class="pre">gen_fit_land</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.fitness.gen_fit_land" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the fitness landscape at a given drug concentration</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pop</strong> (<em>population class object</em>) – Population object</p></li>
+<li><p><strong>conc</strong> (<em>float</em>) – drug concentration</p></li>
+<li><p><strong>counts</strong> (<em>array-like</em>) – list of population counts</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>lits of growth rates</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fears.utils.fitness.gen_fitness">
+<span class="sig-prename descclassname"><span class="pre">fears.utils.fitness.</span></span><span class="sig-name descname"><span class="pre">gen_fitness</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">genotype</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drugless_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ic50</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.fitness.gen_fitness" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the fitness of a genotype at a given drug concentration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pop</strong> (<em>population class object</em>) – Population object containing data of interest</p></li>
+<li><p><strong>genotype</strong> (<em>int</em>) – Genotype of interest</p></li>
+<li><p><strong>conc</strong> (<em>float</em>) – drug concentration of interest</p></li>
+<li><p><strong>drugless_rate</strong> (<em>float</em><em>, </em><em>optional</em>) – Drugless growth rate.
+If None, data is retrieved from population object. Defaults to None.</p></li>
+<li><p><strong>ic50</strong> (<em>float</em><em>, </em><em>optional</em>) – Genotype-specific IC50.
+If None, data is retrived from population object. Defaults to None.</p></li>
+<li><p><strong>hc</strong> (<em>float</em><em>, </em><em>optional</em>) – Hill coefficient.
+If None, data is retrived from population object. Defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Growth rate computed from pharmacodynamic equation.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fears.utils.fitness.gen_fitness_curves">
+<span class="sig-prename descclassname"><span class="pre">fears.utils.fitness.</span></span><span class="sig-name descname"><span class="pre">gen_fitness_curves</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.fitness.gen_fitness_curves" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates a dict of dose-response curves for a given population.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pop</strong> (<em>population class object</em>) – Population object</p></li>
+<li><p><strong>conc</strong> (<em>array-like</em><em>, </em><em>optional</em>) – Array of concentrations to generate fitness for.</p></li>
+<li><p><strong>None</strong> (<em>If</em>) – </p></li>
+<li><p><strong>np.logspace</strong> (<em>generates a list of using</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>dict of dose-reponse curves.
+Each entry in the dict represents a genotype-specific dose response curve.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fears.utils.fitness.gen_fl_for_abm">
+<span class="sig-prename descclassname"><span class="pre">fears.utils.fitness.</span></span><span class="sig-name descname"><span class="pre">gen_fl_for_abm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">counts</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.fitness.gen_fl_for_abm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Same as gen_fit_land but also scales by carrying capacity</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pop</strong> (<em>population class object</em>) – Population object</p></li>
+<li><p><strong>conc</strong> (<em>float</em>) – drug concentration</p></li>
+<li><p><strong>counts</strong> (<em>array-like</em>) – list of population counts</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>lits of growth rates</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fears.utils.fitness.gen_null_seascape">
+<span class="sig-prename descclassname"><span class="pre">fears.utils.fitness.</span></span><span class="sig-name descname"><span class="pre">gen_null_seascape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'curve_fit'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.fitness.gen_null_seascape" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Generates a ‘null seascape’.</dt><dd><p>Methods:
+curve_fit: fits a new set of random curves to the range of the
+natural population seascape.
+sort: sorts IC50 values to match rank-order of pop drugless_rates</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pop</strong> (<em>population class object</em>) – Population object</p></li>
+<li><p><strong>conc</strong> (<em>float</em>) – drug concentration at which to retrieve null seascape rank order</p></li>
+<li><p><strong>method</strong> (<em>str</em><em>, </em><em>optional</em>) – Null seascape method. Defaults to ‘curve_fit’.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>list of drugless growth rates and IC50s.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fears.utils.fitness.gen_random_seascape">
+<span class="sig-prename descclassname"><span class="pre">fears.utils.fitness.</span></span><span class="sig-name descname"><span class="pre">gen_random_seascape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_allele</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drugless_limits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ic50_limits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.fitness.gen_random_seascape" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates random seascape data</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pop</strong> (<em>population class object</em>) – Population object</p></li>
+<li><p><strong>n_allele</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of alleles.
+If None, gets data from pop. Defaults to None.</p></li>
+<li><p><strong>drugless_limits</strong> (<em>list</em><em>, </em><em>optional</em>) – Range of drugless growth rates to generate random data from.
+If None, gets data from pop. Defaults to None.</p></li>
+<li><p><strong>ic50_limits</strong> (<em>list</em><em>, </em><em>optional</em>) – Range of IC50 to generate random data from.
+If None, gets data from pop. Defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>list of drugless growth rates and IC50s.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fears.utils.fitness.gen_static_landscape">
+<span class="sig-prename descclassname"><span class="pre">fears.utils.fitness.</span></span><span class="sig-name descname"><span class="pre">gen_static_landscape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conc</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.fitness.gen_static_landscape" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates a growth rate fitness landscape at a given drug concentration</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pop</strong> (<em>population class object</em>) – Population object</p></li>
+<li><p><strong>conc</strong> (<em>float</em>) – drug concentration at which to generate fitness landscape</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>list of growth rates</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fears.utils.fitness.logistic_equation">
+<span class="sig-prename descclassname"><span class="pre">fears.utils.fitness.</span></span><span class="sig-name descname"><span class="pre">logistic_equation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">conc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drugless_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ic50</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.fitness.logistic_equation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Logistic equation from ogbunugafor et al, PLOS CB, 2016</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dugless_rate</strong> (<em>float</em>) – Drugless growth rate of genotype.</p></li>
+<li><p><strong>ic50</strong> (<em>float</em>) – ic50 of genotype.</p></li>
+<li><p><strong>conc</strong> (<em>float</em>) – Drug concentration (in Molarity (M)).</p></li>
+<li><p><strong>c</strong> (<em>float</em><em>, </em><em>optional</em>) – Logistic curve steepness parameter. The default is -0.6824968.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>f</strong> – Replication rate.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fears.utils.fitness.logistic_pharm_curve">
+<span class="sig-prename descclassname"><span class="pre">fears.utils.fitness.</span></span><span class="sig-name descname"><span class="pre">logistic_pharm_curve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">IC50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">g_drugless</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hill_coeff</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.fitness.logistic_pharm_curve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Logistic dose-response curve. use if input is a single drug concentration</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>float</em>) – drug concentration scalar</p></li>
+<li><p><strong>IC50</strong> (<em>float</em><em>)</em>) – IC50</p></li>
+<li><p><strong>g_drugless</strong> (<em>float</em>) – drugless growth rate</p></li>
+<li><p><strong>hill_coeff</strong> (<em>float</em>) – Hill coefficient</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>array of growth rates</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>numpy array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fears.utils.fitness.scale_and_ignore_zeros">
+<span class="sig-prename descclassname"><span class="pre">fears.utils.fitness.</span></span><span class="sig-name descname"><span class="pre">scale_and_ignore_zeros</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.fitness.scale_and_ignore_zeros" title="Permalink to this definition">¶</a></dt>
+<dd><p>Scale data to range of target while ignoring the zero values in data and
+target.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>numpy array</em>) – Data to be scaled to the range of target.</p></li>
+<li><p><strong>target</strong> (<em>numpy array</em>) – Target data range.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>scaled_data</strong> – Scaled data to range of target. Zero values in data are set to zero
+in scaled_data and zero values in target are not used to calculate
+range.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>numpy array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fears.utils.fitness.sl_to_fitness">
+<span class="sig-prename descclassname"><span class="pre">fears.utils.fitness.</span></span><span class="sig-name descname"><span class="pre">sl_to_fitness</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">g</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.fitness.sl_to_fitness" title="Permalink to this definition">¶</a></dt>
+<dd><p>Seascape library to fitness value (in units per second)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pop</strong> (<em>population class object</em>) – population class object</p></li>
+<li><p><strong>g</strong> (<em>int</em>) – genotype</p></li>
+<li><p><strong>conc</strong> (<em>float</em>) – drug concentration</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>fitness</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-fears.utils.pharm">
+<span id="fears-utils-pharm-module"></span><h2>fears.utils.pharm module<a class="headerlink" href="#module-fears.utils.pharm" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="fears.utils.pharm.convolve_pharm">
+<span class="sig-prename descclassname"><span class="pre">fears.utils.pharm.</span></span><span class="sig-name descname"><span class="pre">convolve_pharm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">u</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.pharm.convolve_pharm" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fears.utils.pharm.gen_curves">
+<span class="sig-prename descclassname"><span class="pre">fears.utils.pharm.</span></span><span class="sig-name descname"><span class="pre">gen_curves</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pop</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.pharm.gen_curves" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fears.utils.pharm.gen_impulses">
+<span class="sig-prename descclassname"><span class="pre">fears.utils.pharm.</span></span><span class="sig-name descname"><span class="pre">gen_impulses</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pop</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.pharm.gen_impulses" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fears.utils.pharm.gen_on_off_regimen">
+<span class="sig-prename descclassname"><span class="pre">fears.utils.pharm.</span></span><span class="sig-name descname"><span class="pre">gen_on_off_regimen</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duty_cycle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.pharm.gen_on_off_regimen" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fears.utils.pharm.gen_passage_drug_protocol">
+<span class="sig-prename descclassname"><span class="pre">fears.utils.pharm.</span></span><span class="sig-name descname"><span class="pre">gen_passage_drug_protocol</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pop</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.pharm.gen_passage_drug_protocol" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fears.utils.pharm.pharm_eqn">
+<span class="sig-prename descclassname"><span class="pre">fears.utils.pharm.</span></span><span class="sig-name descname"><span class="pre">pharm_eqn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k_elim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k_abs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_dose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.pharm.pharm_eqn" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-fears.utils.plotter">
+<span id="fears-utils-plotter-module"></span><h2>fears.utils.plotter module<a class="headerlink" href="#module-fears.utils.plotter" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="fears.utils.plotter.add_landscape_to_fitness_curve">
+<span class="sig-prename descclassname"><span class="pre">fears.utils.plotter.</span></span><span class="sig-name descname"><span class="pre">add_landscape_to_fitness_curve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">textcolor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'gray'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">colorbar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">square</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vert_lines</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">position</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'top'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pad</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vert_lines_ydata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.plotter.add_landscape_to_fitness_curve" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fears.utils.plotter.gen_color_cycler">
+<span class="sig-prename descclassname"><span class="pre">fears.utils.plotter.</span></span><span class="sig-name descname"><span class="pre">gen_color_cycler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">style</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">palette</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'bright'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_colors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">16</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.plotter.gen_color_cycler" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fears.utils.plotter.get_msw">
+<span class="sig-prename descclassname"><span class="pre">fears.utils.plotter.</span></span><span class="sig-name descname"><span class="pre">get_msw</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wt_fitness_curve</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cur_fitness_curve</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conc</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.plotter.get_msw" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fears.utils.plotter.get_pos_in_log_space">
+<span class="sig-prename descclassname"><span class="pre">fears.utils.plotter.</span></span><span class="sig-name descname"><span class="pre">get_pos_in_log_space</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">center</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.plotter.get_pos_in_log_space" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns x or y coordinates to pass to inset_axes when the axis is a log
+scale in order to make the inset axes uniform sizes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>center</strong> (<em>float</em>) – Center point of the axes in data points (not log-ed).</p></li>
+<li><p><strong>width</strong> (<em>float</em>) – Visual width of the axes (in log units).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>x</strong> – x[0] = left point, x[1] = right point.
+log10(x[1]-x[0]) = width</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list of floats</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fears.utils.plotter.msw_grid">
+<span class="sig-prename descclassname"><span class="pre">fears.utils.plotter.</span></span><span class="sig-name descname"><span class="pre">msw_grid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">genotypes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">legend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labelsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ticklabelsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comp_annotate_pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3.9810717055349695e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">legendloc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'best'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.plotter.msw_grid" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fears.utils.plotter.plot_fitness_curves">
+<span class="sig-prename descclassname"><span class="pre">fears.utils.plotter.</span></span><span class="sig-name descname"><span class="pre">plot_fitness_curves</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fig_title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_r0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">savename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fig</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labelsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">15</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">linewidth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_legend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_axes_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raw_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.plotter.plot_fitness_curves" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fears.utils.plotter.plot_kaplan_meier">
+<span class="sig-prename descclassname"><span class="pre">fears.utils.plotter.</span></span><span class="sig-name descname"><span class="pre">plot_kaplan_meier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event_times</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t_max</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_sims</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'resistant'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">errorband</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.plotter.plot_kaplan_meier" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fears.utils.plotter.plot_landscape">
+<span class="sig-prename descclassname"><span class="pre">fears.utils.plotter.</span></span><span class="sig-name descname"><span class="pre">plot_landscape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fit_land</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relative</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rank</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_zero</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">colorbar_lim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">colorbar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">800</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">textsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">11</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resize_param</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">square</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">textcolor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'black'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cbax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cblabel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cbloc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0.1,</span> <span class="pre">0.8,</span> <span class="pre">0.3,</span> <span class="pre">0.5]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">network_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'gray'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_sub_network</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sub_network</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sub_network_color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'white'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.plotter.plot_landscape" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plots a graph representation of this landscape on the current matplotlib figure.
+If p is set to a vector of occupation probabilities, the edges in the graph will
+have thickness proportional to the transition probability between nodes.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fears.utils.plotter.plot_msw">
+<span class="sig-prename descclassname"><span class="pre">fears.utils.plotter.</span></span><span class="sig-name descname"><span class="pre">plot_msw</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ncols</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(2.5,</span> <span class="pre">8)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.plotter.plot_msw" title="Permalink to this definition">¶</a></dt>
+<dd><p>plot_msw: method for plotting mutant selection window figures.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pop</strong> (<em>population_class object</em>) – </p></li>
+<li><p><strong>fitness_curves</strong> (<em>numpy array</em>) – Columns 1-N represents a genotype that is a neighbor of column 0
+(ancestor). Rows represent drug concentration.</p></li>
+<li><p><strong>conc</strong> (<em>numpy array</em>) – Drug concentration used to calculate fitness_curves</p></li>
+<li><p><strong>genotypes</strong> (<em>list of ints</em>) – Genotypes that were used to calculate the fitness_curves.</p></li>
+<li><p><strong>save</strong> (<em>bool</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>fig</strong> – MSW figures</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>figure object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fears.utils.plotter.plot_population_count">
+<span class="sig-prename descclassname"><span class="pre">fears.utils.plotter.</span></span><span class="sig-name descname"><span class="pre">plot_population_count</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_cells</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logscale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.plotter.plot_population_count" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fears.utils.plotter.plot_timecourse">
+<span class="sig-prename descclassname"><span class="pre">fears.utils.plotter.</span></span><span class="sig-name descname"><span class="pre">plot_timecourse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">counts_t</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title_t</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.plotter.plot_timecourse" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fears.utils.plotter.plot_timecourse_to_axes">
+<span class="sig-prename descclassname"><span class="pre">fears.utils.plotter.</span></span><span class="sig-name descname"><span class="pre">plot_timecourse_to_axes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">counts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">counts_ax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drug_curve</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drug_curve_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Drug</span> <span class="pre">Concentration</span> <span class="pre">\n($μ$M)'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drug_curve_legend_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drug_ax_sci_notation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drug_ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labelsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">15</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">linewidth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">legend_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_lines</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">select_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_xpos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grayscale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">legend_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drug_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.plotter.plot_timecourse_to_axes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plots simulation timecourse to user defined axes (counts_ax).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pop</strong> (<em>Population class object</em>) – Population class object containing population visualization options.</p></li>
+<li><p><strong>counts</strong> (<em>numpy array</em>) – Simulation data to be plotted.</p></li>
+<li><p><strong>counts_ax</strong> (<em>matplotlib axes object</em>) – Axes on which data is plotted.</p></li>
+<li><p><strong>drug_curve</strong> (<em>numpy array</em><em>, </em><em>optional</em>) – Optional drug concentration curve to plot. Requires additional drug
+axes. The default is None.</p></li>
+<li><p><strong>drug_ax</strong> (<em>matplotlib axes</em><em>, </em><em>optional</em>) – Axes on which drug curve is plotted. The default is None.</p></li>
+<li><p><strong>labelsize</strong> (<em>float</em><em>, </em><em>optional</em>) – Font size of the labels. The default is 15.</p></li>
+<li><p><strong>linewidth</strong> (<em>float</em><em>, </em><em>optional</em>) – Width parameter passed to matplotlib plot function. The default is 3.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>Exception</strong> – Error given if no drug axes are provided but the drug curve is not
+    None (drug data needs drug axes to plot to).</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><ul class="simple">
+<li><p><strong>counts_ax</strong> (<em>matplotlib axes</em>) – Axes with counts data plotted.</p></li>
+<li><p><strong>drug_ax</strong> (<em>matplotlib axes</em>) – Axes with drug curve data plotted.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fears.utils.plotter.shiftx">
+<span class="sig-prename descclassname"><span class="pre">fears.utils.plotter.</span></span><span class="sig-name descname"><span class="pre">shiftx</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pad</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.plotter.shiftx" title="Permalink to this definition">¶</a></dt>
+<dd><p>shiftx: shifts ax in the x direction by pad units</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ax</strong> (<em>matplotlib axes</em>) – axes whose position is shifted</p></li>
+<li><p><strong>pad</strong> (<em>float</em>) – shift amount</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>ax</strong> – shifted axes</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>matplotlib axes</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fears.utils.plotter.shifty">
+<span class="sig-prename descclassname"><span class="pre">fears.utils.plotter.</span></span><span class="sig-name descname"><span class="pre">shifty</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pad</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.plotter.shifty" title="Permalink to this definition">¶</a></dt>
+<dd><p>shifty: shifts ax in the y direction by pad units</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ax</strong> (<em>matplotlib axes</em>) – axes whose position is shifted</p></li>
+<li><p><strong>pad</strong> (<em>float</em>) – shift amount</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>ax</strong> – shifted axes</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>matplotlib axes</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fears.utils.plotter.shrinky">
+<span class="sig-prename descclassname"><span class="pre">fears.utils.plotter.</span></span><span class="sig-name descname"><span class="pre">shrinky</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pad</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.plotter.shrinky" title="Permalink to this definition">¶</a></dt>
+<dd><p>shrinky: shrinks axes by pad by moving the top border down</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ax</strong> (<em>matplotlib axes</em>) – axes whose position is shifted</p></li>
+<li><p><strong>pad</strong> (<em>float</em>) – shrink amount</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>ax</strong> – shrunk axes</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>matplotlib axes</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fears.utils.plotter.x_ticks_to_days">
+<span class="sig-prename descclassname"><span class="pre">fears.utils.plotter.</span></span><span class="sig-name descname"><span class="pre">x_ticks_to_days</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.plotter.x_ticks_to_days" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-fears.utils.results_manager">
+<span id="fears-utils-results-manager-module"></span><h2>fears.utils.results_manager module<a class="headerlink" href="#module-fears.utils.results_manager" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="fears.utils.results_manager.get_data">
+<span class="sig-prename descclassname"><span class="pre">fears.utils.results_manager.</span></span><span class="sig-name descname"><span class="pre">get_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sim_path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.results_manager.get_data" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>sim_path</strong> (<em>str</em>) – Path of the simulation run to load</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>data</strong> – Data (typically simulation counts)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>numpy array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fears.utils.results_manager.get_experiment_results">
+<span class="sig-prename descclassname"><span class="pre">fears.utils.results_manager.</span></span><span class="sig-name descname"><span class="pre">get_experiment_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">suffix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.results_manager.get_experiment_results" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data_folder</strong> (<em>str</em>) – Name (not path) of the results folder within /fears/results/</p></li>
+<li><p><strong>exp_info_file</strong> (<em>str</em>) – Name (not path) of the experiment info file (.p) within
+/fears/results/</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>experiment_folders</strong> (<em>list</em>) – list of experiment folder paths</p></li>
+<li><p><strong>exp_info</strong> (<em>Experiment class object</em>) – Experiment class object used to run the experiment</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fears.utils.results_manager.save_fig">
+<span class="sig-prename descclassname"><span class="pre">fears.utils.results_manager.</span></span><span class="sig-name descname"><span class="pre">save_fig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fig</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">savename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bbox_inches</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'tight'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.results_manager.save_fig" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-fears.utils.stats">
+<span id="fears-utils-stats-module"></span><h2>fears.utils.stats module<a class="headerlink" href="#module-fears.utils.stats" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="fears.utils.stats.km_curve">
+<span class="sig-prename descclassname"><span class="pre">fears.utils.stats.</span></span><span class="sig-name descname"><span class="pre">km_curve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">exp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exp_info_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resistance_outcome</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[14,</span> <span class="pre">15]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fears.utils.stats.km_curve" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Returns a dictionary of dictionaries of K-M curves from the</dt><dd><p>given experiment. Each experimental condition has two
+resistance curves (defined by resistance_outcome) and a
+survival curve.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>exp</strong> (<em>fears Experiment object</em><em>, </em><em>optional</em>) – Experiment to analyze. Defaults to None.</p></li>
+<li><p><strong>exp_info_path</strong> (<em>str</em><em>, </em><em>optional</em>) – Optional path to Experiment object. Defaults to None.</p></li>
+<li><p><strong>resistance_outcome</strong> (<em>list</em><em>, </em><em>optional</em>) – List of resistance outcomes. Defaults to [14,15].</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Dict of dicts containing KM curves. Sub-dictionaries are different
+experimental conditions.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-fears.utils">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-fears.utils" title="Permalink to this headline">¶</a></h2>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">fears.utils package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-fears.utils.AutoRate">fears.utils.AutoRate module</a></li>
+<li><a class="reference internal" href="#module-fears.utils.dir_manager">fears.utils.dir_manager module</a></li>
+<li><a class="reference internal" href="#module-fears.utils.fitness">fears.utils.fitness module</a></li>
+<li><a class="reference internal" href="#module-fears.utils.pharm">fears.utils.pharm module</a></li>
+<li><a class="reference internal" href="#module-fears.utils.plotter">fears.utils.plotter module</a></li>
+<li><a class="reference internal" href="#module-fears.utils.results_manager">fears.utils.results_manager module</a></li>
+<li><a class="reference internal" href="#module-fears.utils.stats">fears.utils.stats module</a></li>
+<li><a class="reference internal" href="#module-fears.utils">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="fears.html"
+                          title="previous chapter">fears package</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/fears.utils.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="fears.html" title="fears package"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">fears 0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="modules.html" >fears</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="fears.html" >fears package</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">fears.utils package</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2022, Eshan King and Davis Weaver.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.4.0.
+    </div>
+  </body>
+</html>
