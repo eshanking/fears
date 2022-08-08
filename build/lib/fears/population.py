@@ -438,21 +438,11 @@ class Population(PopParams):
     #     return fit_land
 
     def gen_fit_land(self,conc,**kwargs):
-        """
-        Returns the fitness landscape at a given drug concentration
 
-        Parameters
-        ----------
-        conc (float) : drug concentration
-
-        Returns
-        ----------
-        fit_land (list) : fitness landscape
-
-        """
         fit_land = fitness.gen_fit_land(self,conc,**kwargs)
+        
         return fit_land
-
+    
     ###############################################################################
     # Wrapper methods for generating drug concentration curves
 
@@ -481,6 +471,8 @@ class Population(PopParams):
         return drug_curve
 
     def set_drug_curve(self):
+        """Sets the drug concentration curve for a given population
+        """
         dc = self.gen_curves()
         self.drug_curve = dc[0]
 
@@ -499,3 +491,8 @@ class Population(PopParams):
                     self.__dict__.update(td)
         
         self.set_drug_curve()
+    
+    ###############################################################################
+    # Set wrapper method docs
+
+    gen_fit_land.__doc__ = fitness.gen_fit_land.__doc__
