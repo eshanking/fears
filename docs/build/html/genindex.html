@@ -42,6 +42,7 @@
 <div class="genindex-jumpbox">
  <a href="#A"><strong>A</strong></a>
  | <a href="#C"><strong>C</strong></a>
+ | <a href="#D"><strong>D</strong></a>
  | <a href="#E"><strong>E</strong></a>
  | <a href="#F"><strong>F</strong></a>
  | <a href="#G"><strong>G</strong></a>
@@ -50,10 +51,14 @@
  | <a href="#K"><strong>K</strong></a>
  | <a href="#L"><strong>L</strong></a>
  | <a href="#M"><strong>M</strong></a>
+ | <a href="#N"><strong>N</strong></a>
  | <a href="#P"><strong>P</strong></a>
  | <a href="#R"><strong>R</strong></a>
  | <a href="#S"><strong>S</strong></a>
+ | <a href="#T"><strong>T</strong></a>
+ | <a href="#U"><strong>U</strong></a>
  | <a href="#X"><strong>X</strong></a>
+ | <a href="#Y"><strong>Y</strong></a>
  
 </div>
 <h2 id="A">A</h2>
@@ -73,13 +78,17 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="fears.html#fears.experiment.Experiment.calculate_msw">calculate_msw() (fears.experiment.Experiment method)</a>
 </li>
+      <li><a href="fears.html#fears.population.PopParams.carrying_cap">carrying_cap (fears.population.PopParams attribute)</a>
+</li>
       <li><a href="fears.utils.html#fears.utils.AutoRate.Plate.check_if_key_is_well">check_if_key_is_well() (fears.utils.AutoRate.Plate method)</a>
 </li>
       <li><a href="fears.html#fears.population.Population.check_stop_cond">check_stop_cond() (fears.population.Population method)</a>
 </li>
+      <li><a href="fears.html#fears.experiment.Experiment.compute_regimen">compute_regimen() (fears.experiment.Experiment method)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="fears.html#fears.experiment.Experiment.compute_regimen">compute_regimen() (fears.experiment.Experiment method)</a>
+      <li><a href="fears.html#fears.population.PopParams.constant_pop">constant_pop (fears.population.PopParams attribute)</a>
 </li>
       <li><a href="fears.html#fears.population.Population.convertIntToGenotype">convertIntToGenotype() (fears.population.Population method)</a>
 </li>
@@ -89,6 +98,38 @@
         <li><a href="fears.utils.html#fears.utils.pharm.convolve_pharm">(in module fears.utils.pharm)</a>
 </li>
       </ul></li>
+      <li><a href="fears.html#fears.population.PopParams.counts_log_scale">counts_log_scale (fears.population.PopParams attribute)</a>
+</li>
+      <li><a href="fears.html#fears.population.PopParams.curve_type">curve_type (fears.population.PopParams attribute)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="D">D</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="fears.html#fears.population.PopParams.data_cols">data_cols (fears.population.PopParams attribute)</a>
+</li>
+      <li><a href="fears.html#fears.population.PopParams.death_rate">death_rate (fears.population.PopParams attribute)</a>
+</li>
+      <li><a href="fears.html#fears.population.PopParams.debug">debug (fears.population.PopParams attribute)</a>
+</li>
+      <li><a href="fears.html#fears.population.PopParams.dilution">dilution (fears.population.PopParams attribute)</a>
+</li>
+      <li><a href="fears.html#fears.population.PopParams.dose_schedule">dose_schedule (fears.population.PopParams attribute)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="fears.html#fears.population.PopParams.drug_conc_range">drug_conc_range (fears.population.PopParams attribute)</a>
+</li>
+      <li><a href="fears.html#fears.population.PopParams.drug_log_scale">drug_log_scale (fears.population.PopParams attribute)</a>
+</li>
+      <li><a href="fears.html#fears.population.PopParams.drug_unit">drug_unit (fears.population.PopParams attribute)</a>
+</li>
+      <li><a href="fears.html#fears.population.PopParams.drugless_data_path">drugless_data_path (fears.population.PopParams attribute)</a>
+</li>
+      <li><a href="fears.html#fears.population.PopParams.drugless_limits">drugless_limits (fears.population.PopParams attribute)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -163,8 +204,6 @@
         <li><a href="fears.utils.html#module-fears.utils.dir_manager">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     fears.utils.fitness
 
@@ -172,6 +211,8 @@
         <li><a href="fears.utils.html#module-fears.utils.fitness">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     fears.utils.pharm
 
@@ -200,9 +241,13 @@
         <li><a href="fears.utils.html#module-fears.utils.stats">module</a>
 </li>
       </ul></li>
+      <li><a href="fears.html#fears.population.PopParams.fig_title">fig_title (fears.population.PopParams attribute)</a>
+</li>
       <li><a href="fears.utils.html#fears.utils.AutoRate.Experiment.fit_hill_curve">fit_hill_curve() (fears.utils.AutoRate.Experiment method)</a>
 </li>
       <li><a href="fears.utils.html#fears.utils.fitness.fit_logistic_curve">fit_logistic_curve() (in module fears.utils.fitness)</a>
+</li>
+      <li><a href="fears.html#fears.population.PopParams.fitness_data">fitness_data (fears.population.PopParams attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -304,10 +349,16 @@
 <h2 id="I">I</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="fears.html#fears.population.Population.initialize_drug_curve">initialize_drug_curve() (fears.population.Population method)</a>
+      <li><a href="fears.html#fears.population.PopParams.ic50_data_path">ic50_data_path (fears.population.PopParams attribute)</a>
+</li>
+      <li><a href="fears.html#fears.population.PopParams.ic50_limits">ic50_limits (fears.population.PopParams attribute)</a>
+</li>
+      <li><a href="fears.html#fears.population.PopParams.init_counts">init_counts (fears.population.PopParams attribute)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="fears.html#fears.population.Population.initialize_drug_curve">initialize_drug_curve() (fears.population.Population method)</a>
+</li>
       <li><a href="fears.html#fears.population.Population.initialize_fitness">initialize_fitness() (fears.population.Population method)</a>
 </li>
       <li><a href="fears.html#fears.population.Population.int_to_binary">int_to_binary() (fears.population.Population method)</a>
@@ -318,6 +369,12 @@
 <h2 id="K">K</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="fears.html#fears.population.PopParams.k_abs">k_abs (fears.population.PopParams attribute)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="fears.html#fears.population.PopParams.k_elim">k_elim (fears.population.PopParams attribute)</a>
+</li>
       <li><a href="fears.utils.html#fears.utils.stats.km_curve">km_curve() (in module fears.utils.stats)</a>
 </li>
   </ul></td>
@@ -358,6 +415,12 @@
 </li>
       <li><a href="fears.utils.html#fears.utils.dir_manager.make_resultspath_absolute">make_resultspath_absolute() (in module fears.utils.dir_manager)</a>
 </li>
+      <li><a href="fears.html#fears.population.PopParams.max_cells">max_cells (fears.population.PopParams attribute)</a>
+</li>
+      <li><a href="fears.html#fears.population.PopParams.max_dose">max_dose (fears.population.PopParams attribute)</a>
+</li>
+      <li><a href="fears.html#fears.population.PopParams.moat">moat (fears.population.PopParams attribute)</a>
+</li>
       <li>
     module
 
@@ -389,15 +452,39 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="fears.utils.html#fears.utils.plotter.msw_grid">msw_grid() (in module fears.utils.plotter)</a>
 </li>
+      <li><a href="fears.html#fears.population.PopParams.mut_rate">mut_rate (fears.population.PopParams attribute)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="N">N</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="fears.html#fears.population.PopParams.n_allele">n_allele (fears.population.PopParams attribute)</a>
+</li>
+      <li><a href="fears.html#fears.population.PopParams.n_genotype">n_genotype (fears.population.PopParams attribute)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="fears.html#fears.population.PopParams.n_sims">n_sims (fears.population.PopParams attribute)</a>
+</li>
+      <li><a href="fears.html#fears.population.PopParams.n_timestep">n_timestep (fears.population.PopParams attribute)</a>
+</li>
   </ul></td>
 </tr></table>
 
 <h2 id="P">P</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="fears.html#fears.population.PopParams.pad_right">pad_right (fears.population.PopParams attribute)</a>
+</li>
       <li><a href="fears.utils.html#fears.utils.AutoRate.Plate.parse_data_file">parse_data_file() (fears.utils.AutoRate.Plate method)</a>
 </li>
+      <li><a href="fears.html#fears.population.PopParams.passage">passage (fears.population.PopParams attribute)</a>
+</li>
       <li><a href="fears.html#fears.population.Population.passage_cells">passage_cells() (fears.population.Population method)</a>
+</li>
+      <li><a href="fears.html#fears.population.PopParams.passage_time">passage_time (fears.population.PopParams attribute)</a>
 </li>
       <li><a href="fears.html#fears.population.Population.pharm_eqn">pharm_eqn() (fears.population.Population method)</a>
 
@@ -407,16 +494,22 @@
       </ul></li>
       <li><a href="fears.utils.html#fears.utils.AutoRate.Plate">Plate (class in fears.utils.AutoRate)</a>
 </li>
+      <li><a href="fears.html#fears.population.PopParams.plate_paths">plate_paths (fears.population.PopParams attribute)</a>
+</li>
+      <li><a href="fears.html#fears.population.PopParams.plot_drug_curve">plot_drug_curve (fears.population.PopParams attribute)</a>
+</li>
+      <li><a href="fears.html#fears.population.PopParams.plot_entropy">plot_entropy (fears.population.PopParams attribute)</a>
+</li>
       <li><a href="fears.html#fears.population.Population.plot_fitness_curves">plot_fitness_curves() (fears.population.Population method)</a>
 
       <ul>
         <li><a href="fears.utils.html#fears.utils.plotter.plot_fitness_curves">(in module fears.utils.plotter)</a>
 </li>
       </ul></li>
-      <li><a href="fears.utils.html#fears.utils.plotter.plot_kaplan_meier">plot_kaplan_meier() (in module fears.utils.plotter)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="fears.utils.html#fears.utils.plotter.plot_kaplan_meier">plot_kaplan_meier() (in module fears.utils.plotter)</a>
+</li>
       <li><a href="fears.html#fears.population.Population.plot_landscape">plot_landscape() (fears.population.Population method)</a>
 
       <ul>
@@ -439,6 +532,8 @@
 </li>
       <li><a href="fears.html#fears.population.Population">Population (class in fears.population)</a>
 </li>
+      <li><a href="fears.html#fears.population.PopParams.prob_drop">prob_drop (fears.population.PopParams attribute)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -446,6 +541,8 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="fears.html#fears.population.Population.random_mutations">random_mutations() (fears.population.Population method)</a>
+</li>
+      <li><a href="fears.html#fears.population.PopParams.replicate_arrangement">replicate_arrangement (fears.population.PopParams attribute)</a>
 </li>
       <li><a href="fears.html#fears.population.Population.reset_drug_conc_curve">reset_drug_conc_curve() (fears.population.Population method)</a>
 </li>
@@ -473,10 +570,14 @@
 </li>
       <li><a href="fears.utils.html#fears.utils.fitness.scale_and_ignore_zeros">scale_and_ignore_zeros() (in module fears.utils.fitness)</a>
 </li>
-      <li><a href="fears.html#fears.population.Population.set_drug_curve">set_drug_curve() (fears.population.Population method)</a>
+      <li><a href="fears.html#fears.population.PopParams.seascape_drug_conc">seascape_drug_conc (fears.population.PopParams attribute)</a>
+</li>
+      <li><a href="fears.html#fears.population.PopParams.seascape_type">seascape_type (fears.population.PopParams attribute)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="fears.html#fears.population.Population.set_drug_curve">set_drug_curve() (fears.population.Population method)</a>
+</li>
       <li><a href="fears.html#fears.experiment.Experiment.set_ramp_ud">set_ramp_ud() (fears.experiment.Experiment method)</a>
 </li>
       <li><a href="fears.utils.html#fears.utils.plotter.shiftx">shiftx() (in module fears.utils.plotter)</a>
@@ -489,13 +590,43 @@
 </li>
       <li><a href="fears.utils.html#fears.utils.fitness.sl_to_fitness">sl_to_fitness() (in module fears.utils.fitness)</a>
 </li>
+      <li><a href="fears.html#fears.population.PopParams.stop_condition">stop_condition (fears.population.PopParams attribute)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="T">T</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="fears.html#fears.population.PopParams.timestep_scale">timestep_scale (fears.population.PopParams attribute)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="U">U</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="fears.html#fears.population.PopParams.use_carrying_cap">use_carrying_cap (fears.population.PopParams attribute)</a>
+</li>
   </ul></td>
 </tr></table>
 
 <h2 id="X">X</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="fears.html#fears.population.PopParams.x_lim">x_lim (fears.population.PopParams attribute)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="fears.utils.html#fears.utils.plotter.x_ticks_to_days">x_ticks_to_days() (in module fears.utils.plotter)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="Y">Y</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="fears.html#fears.population.PopParams.y_lim">y_lim (fears.population.PopParams attribute)</a>
 </li>
   </ul></td>
 </tr></table>

@@ -1,3 +1,9 @@
+"""Simulate evolution with arbitrary fitness seascapes
+
+Classes:
+    PopParams
+    Population
+"""
 import numpy as np
 import math
 import random
@@ -7,33 +13,103 @@ from fears.utils import dir_manager, pharm, fitness, plotter, AutoRate
 class PopParams:
     """Population parameters class
 
+    Attributes:
+        death_rate (float): death rate. Defaults to 0.1.
+        mut_rate (float): mutation rate. Defaults to 10**-9.
+
+        ic50_data_path (str): path to IC50 data. Defaults to 
+            pyrimethamine_ic50.csv.
+        drugless_data_path (str): path to drugless data. Defaults to 
+            ogbunugafor_drugless.csv.
+
+        plate_paths (list): list of strings to plate csv files for seascape estimation. 
+            Defaults to test data.
+        seascape_drug_conc (array-like): array of drug concentrations to be used to 
+            compute the estimated fitness seascape
+            Defaults to [0,0.003,0.0179,0.1072,0.643,3.858,23.1481,138.8889,833.3333,5000] 
+            ug/mL
+        replicate_arrangement (str): arrangement of the genotype replicates on the plates. 
+            Defaults to 'rows'
+            'rows': each row represents a different genotype
+            'columns': each column represents a different genotype
+        data_cols (list): explicitely define the plate columns that include data. Expects 
+            a list of lists of column names.
+            Defaults to [['B','C','D','E','F'],['B','C','D','E','F'],['B','C',
+                'D','E','F','G']] (for test data).
+        moat (bool): if true, assumes the outer ring of wells in each plate is a moat 
+            (i.e., contains no data). Defaults to True.
+
+        drug_conc_range (array-like): defines the range of drug concentrations, mainly for 
+            plotting purposes.
+        
+        constant_pop (bool): if true, normalizes population at each timestep to a constant 
+            population size. Defaults to False.
+        use_carrying_cap (bool): if true, attenuates growth rate as population approaches 
+            carrying cap. Defaults to True.
+        carrying_cap (int or float): Carrying capacity. Defaults to 10**10.
+        init_counts (array-like): array of genotype counts to initialize simulations. 
+            Defaults to 10^10 of genotype 0.
+        n_allele (int): number of alleles in the model system.
+        n_genotype (int): number of genotypes in the model system.
+
+        fitness_data (str): Sets how to calculate fitness. Defaults to 'two-point'
+            'two-point': program uses IC50 and drugless growth rate to parametrize 
+                dose-response curve
+            'estimate': estimates seascape data from plate_paths.
+            'random': boostraps a random seascape
+        seascape_type (str): For generating random seascapes. Defaults to 'natural'.
+            'natural': no trade-off constraint. 
+            'null': enforces no trade-off condition
+        drugless_limits (array-like): limits of drugless growth rate for generating random 
+            seascapes.
+        ic50_limits (array-like): limits of ic50 for generating random seascapes.
+        
+        drug_unit (str): units of drug concentration for plotting purposes. Defaults to 
+            '$\u03BC$M' (micro-Molar).
+        fig_title (str): figure title used in plot_timecourse. Defaults to None
+        plot_entropy (bool): if true, plots the population entropy over time in 
+            plot_timecourse. Defaults to False.
+        plot_drug_curve (bool): if true, plots the drug concentration curve over the 
+            population curves in plot_timecourse. Defaults to True.
+        x_lim (array-like): x limits for plot_timecourse. Defaults to none.
+        y_lim (array-like): y limits for plot_timecourse. Defaults to none.
+        counts_log_scale (bool): plots population counts in log scale. Defaults to False.
+        drug_log_scale (bool): plots the drug concentration curve in log scale. Defaults 
+            to False.
+
+        n_timestep (int): total number of timesteps for a simulation. Defaults to 1000.
+        timestep_scale (float): hours per timestep. Defaults to 1.
+        passage (bool): if true, simulates passaging cells (bottleneck population every 
+            passage_time).
+        passage_time (int): frequency of cell passaging in units of timestep_scale.
+        dilution (int): dilution factor for passaging. Defaults to 40.
+        max_cells (int): if constant_pop is true, the population size is scaled to 
+            max_cells every timestep.
+        curve_type (str): sets the type of drug concentration curve. Defaults to 'pharm'.
+            'pharm': one compartment pharmacokinetic curve
+            'constant'
+            'linear': linear ramp with slope set by slope attribute.
+            'pulsed': simulates patient dosing
+        prob_drop (float): for simulating patient nonadherence. Probability of forgetting 
+            to take an individual dose. Defaults to 0.
+        k_elim (float): elimination rate for 1-compartment pharmacokinetic model. Defaults 
+            to 0.001.
+        k_abs (float):  absorption rate for 1-compartment pharmacokinetic model. Defaults 
+            to 0.01.
+        pad_right (bool):
+        max_dose (float): maximum drug concentration in drug concentration curve.
+        dose_schedule (int): hours between doses. Defaults to 24.
+
+        stop_condition (bool): if true, stops the simulation when the most frequent 
+            genotype is also the most fit genotype.
+        n_sims (int): number of times run_abm is called in simulate. Defaults to 10.
+        debug (bool): if true, abm() prints some values useful for debugging.
+
+
     """
 
     def __init__(self,**kwargs):
         """Initializer
-        
-        Optional arguments: (all rates are in units per hour)
-            death_rate (float): death rate. Defaults to 0.1.
-            mut_rate (float): mutation rate. Defaults to 10**-9.
-
-            ic50_data_path (str): path to IC50 data. Defaults to pyrimethamine_ic50.csv.
-            drugless_data_path (str): path to drugless data. Defaults to ogbunugafor_drugless.csv.
-
-            constant_pop (bool): if true, normalizes population at each timestep to a constant population size. Defaults to False.
-            use_carrying_cap (bool): if true, attenuates growth rate as population approaches carrying cap. Defaults to True.
-            carrying_cap (float): Carrying capacity. Defaults to 10**10.
-
-            n_allele (int): number of alleles in the model system.
-            n_genotype (int): number of genotypes in the model system.
-            doubling_time (float): Average rate at which the model population divides.
-
-            fitness_data (str): Sets how to calculate fitness. two-point: program uses IC50 and drugless growth rate to parametrize dose-response curve
-            seascape_type (str): For generating random seascapes. natural: no trade-off constraint. null: enforces no trade-off condition
-            
-            drug_unit (str): units of drug concentration for plotting purposes.
-            
-
-
 
         Raises:
             Warning: Genotype/allele number mismatch.
@@ -50,9 +126,11 @@ class PopParams:
         plate_paths = ['20210929_plate1.csv','20210929_plate2.csv','20210929_plate3.csv']
         plate_paths = [files('fears.data').joinpath(p) for p in plate_paths]
         self.plate_paths = [str(p) for p in plate_paths]
-        self.seascape_drug_conc = [0,0.003,0.0179,0.1072,0.643,3.858,23.1481,138.8889,833.3333,5000] #ug/mL
+        self.seascape_drug_conc = \
+            [0,0.003,0.0179,0.1072,0.643,3.858,23.1481,138.8889,833.3333,5000] #ug/mL
         self.replicate_arrangement = 'rows'
-        self.data_cols = [['B','C','D','E','F'],['B','C','D','E','F'],['B','C','D','E','F','G']]
+        self.data_cols = [['B','C','D','E','F'],\
+            ['B','C','D','E','F'],['B','C','D','E','F','G']]
 
         min_dc = np.log10(self.seascape_drug_conc[1])
         max_dc = np.log10(max(self.seascape_drug_conc))
@@ -62,7 +140,6 @@ class PopParams:
         self.carrying_cap = 10**10
         self.init_counts = None
         self.n_allele, self.n_genotype = None, None
-        self.doubling_time = 1
         self.fitness_data = 'two-point' 
         self.moat = True
         self.seascape_type = 'natural'
@@ -79,6 +156,7 @@ class PopParams:
         self.timestep_scale = 1
         self.passage = False
         self.passage_time = 24
+        self.dilution = 40
         self.max_cells = 10**9
 
         self.curve_type = 'pharm'
@@ -88,10 +166,8 @@ class PopParams:
         self.pad_right = True
         self.max_dose = 10
         self.dose_schedule = 24
-        self.p_forget = 0
 
         self.stop_condition = None
-        self.state = {}
         self.plot = True
         self.n_sims = 10
         self.debug = False
@@ -111,13 +187,110 @@ class PopParams:
 
 
 class Population(PopParams):
+    """Population class for simulating evolution.
+
+    Population class inherits almost all atttributes from PopParams.
+
+        Attributes:
+        death_rate (float): death rate. Defaults to 0.1.
+        mut_rate (float): mutation rate. Defaults to 10**-9.
+
+        ic50_data_path (str): path to IC50 data. Defaults to 
+            pyrimethamine_ic50.csv.
+        drugless_data_path (str): path to drugless data. Defaults to 
+            ogbunugafor_drugless.csv.
+
+        plate_paths (list): list of strings to plate csv files for seascape estimation. 
+            Defaults to test data.
+        seascape_drug_conc (array-like): array of drug concentrations to be used to 
+            compute the estimated fitness seascape
+            Defaults to [0,0.003,0.0179,0.1072,0.643,3.858,23.1481,138.8889,833.3333,5000] 
+            ug/mL
+        replicate_arrangement (str): arrangement of the genotype replicates on the plates. 
+            Defaults to 'rows'
+            'rows': each row represents a different genotype
+            'columns': each column represents a different genotype
+        data_cols (list): explicitely define the plate columns that include data. Expects 
+            a list of lists of column names.
+            Defaults to [['B','C','D','E','F'],['B','C','D','E','F'],['B','C',
+                'D','E','F','G']] (for test data).
+        moat (bool): if true, assumes the outer ring of wells in each plate is a moat 
+            (i.e., contains no data). Defaults to True.
+
+        drug_conc_range (array-like): defines the range of drug concentrations, mainly for 
+            plotting purposes.
+        
+        constant_pop (bool): if true, normalizes population at each timestep to a constant 
+            population size. Defaults to False.
+        use_carrying_cap (bool): if true, attenuates growth rate as population approaches 
+            carrying cap. Defaults to True.
+        carrying_cap (int or float): Carrying capacity. Defaults to 10**10.
+        init_counts (array-like): array of genotype counts to initialize simulations. 
+            Defaults to 10^10 of genotype 0.
+        n_allele (int): number of alleles in the model system.
+        n_genotype (int): number of genotypes in the model system.
+
+        fitness_data (str): Sets how to calculate fitness. Defaults to 'two-point'
+            'two-point': program uses IC50 and drugless growth rate to parametrize 
+                dose-response curve
+            'estimate': estimates seascape data from plate_paths.
+            'random': boostraps a random seascape
+        seascape_type (str): For generating random seascapes. Defaults to 'natural'.
+            'natural': no trade-off constraint. 
+            'null': enforces no trade-off condition
+        drugless_limits (array-like): limits of drugless growth rate for generating random 
+            seascapes.
+        ic50_limits (array-like): limits of ic50 for generating random seascapes.
+        
+        drug_unit (str): units of drug concentration for plotting purposes. Defaults to 
+            '$\u03BC$M' (micro-Molar).
+        fig_title (str): figure title used in plot_timecourse. Defaults to None
+        plot_entropy (bool): if true, plots the population entropy over time in 
+            plot_timecourse. Defaults to False.
+        plot_drug_curve (bool): if true, plots the drug concentration curve over the 
+            population curves in plot_timecourse. Defaults to True.
+        x_lim (array-like): x limits for plot_timecourse. Defaults to none.
+        y_lim (array-like): y limits for plot_timecourse. Defaults to none.
+        counts_log_scale (bool): plots population counts in log scale. Defaults to False.
+        drug_log_scale (bool): plots the drug concentration curve in log scale. Defaults 
+            to False.
+
+        n_timestep (int): total number of timesteps for a simulation. Defaults to 1000.
+        timestep_scale (float): hours per timestep. Defaults to 1.
+        passage (bool): if true, simulates passaging cells (bottleneck population every 
+            passage_time).
+        passage_time (int): frequency of cell passaging in units of timestep_scale.
+        dilution (int): dilution factor for passaging. Defaults to 40.
+        max_cells (int): if constant_pop is true, the population size is scaled to 
+            max_cells every timestep.
+        curve_type (str): sets the type of drug concentration curve. Defaults to 'pharm'.
+            'pharm': one compartment pharmacokinetic curve
+            'constant'
+            'linear': linear ramp with slope set by slope attribute.
+            'pulsed': simulates patient dosing
+        prob_drop (float): for simulating patient nonadherence. Probability of forgetting 
+            to take an individual dose. Defaults to 0.
+        k_elim (float): elimination rate for 1-compartment pharmacokinetic model. Defaults 
+            to 0.001.
+        k_abs (float):  absorption rate for 1-compartment pharmacokinetic model. Defaults 
+            to 0.01.
+        pad_right (bool):
+        max_dose (float): maximum drug concentration in drug concentration curve.
+        dose_schedule (int): hours between doses. Defaults to 24.
+
+        stop_condition (bool): if true, stops the simulation when the most frequent 
+            genotype is also the most fit genotype.
+        n_sims (int): number of times run_abm is called in simulate. Defaults to 10.
+        debug (bool): if true, abm() prints some values useful for debugging.
+    """
 
     def __init__(self,**kwargs):
         super().__init__(**kwargs)
 
         # initialize constant population condition
         if self.constant_pop:
-            self.init_counts = self.init_counts*self.max_cells/sum(self.init_counts)
+            self.init_counts = \
+                self.init_counts*self.max_cells/sum(self.init_counts)
             self.init_counts = np.floor(self.init_counts)
             self.carrying_cap = False
 
@@ -145,7 +318,8 @@ class Population(PopParams):
         
     def initialize_fitness(self):
         if self.fitness_data == 'two-point':
-            self.drugless_rates = dir_manager.load_fitness(self.drugless_data_path)
+            self.drugless_rates = \
+                dir_manager.load_fitness(self.drugless_data_path)
             self.ic50 = dir_manager.load_fitness(self.ic50_data_path)
         elif self.fitness_data == 'estimate':
             
@@ -153,8 +327,10 @@ class Population(PopParams):
             # self.seascape_library = fitness.gen_seascape_library()
 
             f = str(files('fears.data').joinpath('plates'))
-            e = AutoRate.Experiment(f,drug_conc=self.seascape_drug_conc,moat=self.moat,
-                                    replicate_arrangement=self.replicate_arrangement,
+            e = AutoRate.Experiment(f,drug_conc=self.seascape_drug_conc,
+                                    moat=self.moat,
+                                    replicate_arrangement=\
+                                        self.replicate_arrangement,
                                     data_cols=self.data_cols)
             e.execute()
             
@@ -190,7 +366,7 @@ class Population(PopParams):
         self.drug_curve = curve
         self.impulses = u
 
-    ###############################################################################
+    ###########################################################################
     # ABM helper methods
     def gen_neighbors(self,genotype):
         mut = range(self.n_allele)
@@ -232,7 +408,9 @@ class Population(PopParams):
         trans_mat = np.zeros([N,N])
         for mm in range(N):
             for nn in range(N):
-                trans_mat[mm, nn] = self.hammingDistance( self.int_to_binary(mm) , self.int_to_binary(nn))
+                trans_mat[mm, nn] = self.hammingDistance( 
+                    self.int_to_binary(mm) , self.int_to_binary(nn))
+
         trans_mat[trans_mat>1] = 0
         trans_mat = trans_mat/trans_mat.sum(axis=1)
         return trans_mat
@@ -276,9 +454,11 @@ class Population(PopParams):
         if (np.mod(mm*self.timestep_scale,self.passage_time) == 0 
             and not mm == 0 and self.passage):
             counts = np.divide(counts,self.dilution)
+            counts[counts<1] == 0
+            counts = [int(c) for c in counts]
         return counts
 
-    ##############################################################################
+    ###########################################################################
     # core evolutionary model
     
     def abm(self,mm,n_genotype,P,counts):
@@ -321,13 +501,16 @@ class Population(PopParams):
         
         for genotype in np.arange(n_genotype):
             
-            n_mut = np.random.poisson(daughter_counts[genotype]*mut_rate*self.n_allele)
+            n_mut = np.random.poisson(
+                daughter_counts[genotype]*mut_rate*self.n_allele)
 
             # Substract mutating cells from that allele
             daughter_counts[genotype] -= n_mut
             
             # Mutate cells
-            mutations = np.random.choice(n_genotype, size=n_mut, p=P[:,genotype]).astype(np.uint8)
+            mutations = np.random.choice(n_genotype, 
+                                         size=n_mut, 
+                                         p=P[:,genotype]).astype(np.uint8)
 
             # Add mutating cell to their final types
             counts_t += np.bincount( mutations , minlength=n_genotype )
@@ -340,9 +523,6 @@ class Population(PopParams):
             counts_t = counts_t*scale
             counts_t = np.ceil(counts_t).astype('int')
         
-        self.state['counts'] = counts_t
-        self.state['n_mut'] = n_mut
-        self.state['t'] = mm
         return counts_t
     
     def run_abm(self):
@@ -403,7 +583,7 @@ class Population(PopParams):
         self.counts = avg_counts
         return avg_counts, fixation_time
 
-    ##############################################################################
+    ###########################################################################
     # wrapper methods for plotting
     def plot_timecourse(self,**kwargs):
         fig = plotter.plot_timecourse(self,**kwargs)
@@ -417,7 +597,7 @@ class Population(PopParams):
         fig,ax = plotter.plot_landscape(self,**kwargs)
         return fig,ax
 
-    ##############################################################################
+    ###########################################################################
     # wrapper methods for fitness
 
     # def __gen_fl_for_abm(self,conc,counts):
@@ -443,11 +623,12 @@ class Population(PopParams):
         
         return fit_land
     
-    ###############################################################################
+    ###########################################################################
     # Wrapper methods for generating drug concentration curves
 
     def pharm_eqn(self,t,k_elim=None,k_abs=None,max_dose=None):
-        conc = pharm.pharm_eqn(self,t,k_elim=k_elim,k_abs=k_abs,max_dose=max_dose)
+        conc = pharm.pharm_eqn(self,t,k_elim=k_elim,k_abs=k_abs,
+                               max_dose=max_dose)
         return conc
     
     def convolve_pharm(self,u):
@@ -476,13 +657,14 @@ class Population(PopParams):
         dc = self.gen_curves()
         self.drug_curve = dc[0]
 
-    ###############################################################################
+    ###########################################################################
     # Misc helper methods
 
     def reset_drug_conc_curve(self,**kwargs):
         """Resets the drug concentration curve. Also updates any paramters passed into kwargs.
-           Useful when performing experiments with a large number of population objects. Eliminates the need to repeatedly
-           estimate fitness seascapes.
+
+           Useful when performing experiments with a large number of population objects. 
+           Eliminates the need to repeatedly estimate fitness seascapes.
         """
         for paramkey in self.__dict__.keys():
             for optkey in kwargs.keys():
@@ -492,7 +674,7 @@ class Population(PopParams):
         
         self.set_drug_curve()
     
-    ###############################################################################
+    ###########################################################################
     # Set wrapper method docs
 
     gen_fit_land.__doc__ = fitness.gen_fit_land.__doc__

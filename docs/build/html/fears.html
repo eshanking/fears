@@ -131,17 +131,661 @@
 </section>
 <section id="module-fears.population">
 <span id="fears-population-module"></span><h2>fears.population module<a class="headerlink" href="#module-fears.population" title="Permalink to this headline">¶</a></h2>
+<p>Simulate evolution with arbitrary fitness seascapes</p>
+<dl class="simple">
+<dt>Classes:</dt><dd><p>PopParams
+Population</p>
+</dd>
+</dl>
 <dl class="py class">
 <dt class="sig sig-object py" id="fears.population.PopParams">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fears.population.</span></span><span class="sig-name descname"><span class="pre">PopParams</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fears.population.PopParams" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Population parameters class</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="fears.population.PopParams.death_rate">
+<span class="sig-name descname"><span class="pre">death_rate</span></span><a class="headerlink" href="#fears.population.PopParams.death_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>death rate. Defaults to 0.1.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="fears.population.PopParams.mut_rate">
+<span class="sig-name descname"><span class="pre">mut_rate</span></span><a class="headerlink" href="#fears.population.PopParams.mut_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>mutation rate. Defaults to 10**-9.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="fears.population.PopParams.ic50_data_path">
+<span class="sig-name descname"><span class="pre">ic50_data_path</span></span><a class="headerlink" href="#fears.population.PopParams.ic50_data_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>path to IC50 data. Defaults to
+pyrimethamine_ic50.csv.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="fears.population.PopParams.drugless_data_path">
+<span class="sig-name descname"><span class="pre">drugless_data_path</span></span><a class="headerlink" href="#fears.population.PopParams.drugless_data_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>path to drugless data. Defaults to
+ogbunugafor_drugless.csv.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="fears.population.PopParams.plate_paths">
+<span class="sig-name descname"><span class="pre">plate_paths</span></span><a class="headerlink" href="#fears.population.PopParams.plate_paths" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of strings to plate csv files for seascape estimation.
+Defaults to test data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="fears.population.PopParams.seascape_drug_conc">
+<span class="sig-name descname"><span class="pre">seascape_drug_conc</span></span><a class="headerlink" href="#fears.population.PopParams.seascape_drug_conc" title="Permalink to this definition">¶</a></dt>
+<dd><p>array of drug concentrations to be used to
+compute the estimated fitness seascape
+Defaults to [0,0.003,0.0179,0.1072,0.643,3.858,23.1481,138.8889,833.3333,5000]
+ug/mL</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>array-like</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="fears.population.PopParams.replicate_arrangement">
+<span class="sig-name descname"><span class="pre">replicate_arrangement</span></span><a class="headerlink" href="#fears.population.PopParams.replicate_arrangement" title="Permalink to this definition">¶</a></dt>
+<dd><p>arrangement of the genotype replicates on the plates.
+Defaults to ‘rows’
+‘rows’: each row represents a different genotype
+‘columns’: each column represents a different genotype</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="fears.population.PopParams.data_cols">
+<span class="sig-name descname"><span class="pre">data_cols</span></span><a class="headerlink" href="#fears.population.PopParams.data_cols" title="Permalink to this definition">¶</a></dt>
+<dd><p>explicitely define the plate columns that include data. Expects
+a list of lists of column names.
+Defaults to [[‘B’,’C’,’D’,’E’,’F’],[‘B’,’C’,’D’,’E’,’F’],[‘B’,’C’,</p>
+<blockquote>
+<div><p>‘D’,’E’,’F’,’G’]] (for test data).</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="fears.population.PopParams.moat">
+<span class="sig-name descname"><span class="pre">moat</span></span><a class="headerlink" href="#fears.population.PopParams.moat" title="Permalink to this definition">¶</a></dt>
+<dd><p>if true, assumes the outer ring of wells in each plate is a moat
+(i.e., contains no data). Defaults to True.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="fears.population.PopParams.drug_conc_range">
+<span class="sig-name descname"><span class="pre">drug_conc_range</span></span><a class="headerlink" href="#fears.population.PopParams.drug_conc_range" title="Permalink to this definition">¶</a></dt>
+<dd><p>defines the range of drug concentrations, mainly for
+plotting purposes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>array-like</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="fears.population.PopParams.constant_pop">
+<span class="sig-name descname"><span class="pre">constant_pop</span></span><a class="headerlink" href="#fears.population.PopParams.constant_pop" title="Permalink to this definition">¶</a></dt>
+<dd><p>if true, normalizes population at each timestep to a constant
+population size. Defaults to False.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="fears.population.PopParams.use_carrying_cap">
+<span class="sig-name descname"><span class="pre">use_carrying_cap</span></span><a class="headerlink" href="#fears.population.PopParams.use_carrying_cap" title="Permalink to this definition">¶</a></dt>
+<dd><p>if true, attenuates growth rate as population approaches
+carrying cap. Defaults to True.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="fears.population.PopParams.carrying_cap">
+<span class="sig-name descname"><span class="pre">carrying_cap</span></span><a class="headerlink" href="#fears.population.PopParams.carrying_cap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Carrying capacity. Defaults to 10**10.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int or float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="fears.population.PopParams.init_counts">
+<span class="sig-name descname"><span class="pre">init_counts</span></span><a class="headerlink" href="#fears.population.PopParams.init_counts" title="Permalink to this definition">¶</a></dt>
+<dd><p>array of genotype counts to initialize simulations.
+Defaults to 10^10 of genotype 0.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>array-like</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="fears.population.PopParams.n_allele">
+<span class="sig-name descname"><span class="pre">n_allele</span></span><a class="headerlink" href="#fears.population.PopParams.n_allele" title="Permalink to this definition">¶</a></dt>
+<dd><p>number of alleles in the model system.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="fears.population.PopParams.n_genotype">
+<span class="sig-name descname"><span class="pre">n_genotype</span></span><a class="headerlink" href="#fears.population.PopParams.n_genotype" title="Permalink to this definition">¶</a></dt>
+<dd><p>number of genotypes in the model system.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="fears.population.PopParams.fitness_data">
+<span class="sig-name descname"><span class="pre">fitness_data</span></span><a class="headerlink" href="#fears.population.PopParams.fitness_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets how to calculate fitness. Defaults to ‘two-point’
+‘two-point’: program uses IC50 and drugless growth rate to parametrize</p>
+<blockquote>
+<div><p>dose-response curve</p>
+</div></blockquote>
+<p>‘estimate’: estimates seascape data from plate_paths.
+‘random’: boostraps a random seascape</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="fears.population.PopParams.seascape_type">
+<span class="sig-name descname"><span class="pre">seascape_type</span></span><a class="headerlink" href="#fears.population.PopParams.seascape_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>For generating random seascapes. Defaults to ‘natural’.
+‘natural’: no trade-off constraint.
+‘null’: enforces no trade-off condition</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="fears.population.PopParams.drugless_limits">
+<span class="sig-name descname"><span class="pre">drugless_limits</span></span><a class="headerlink" href="#fears.population.PopParams.drugless_limits" title="Permalink to this definition">¶</a></dt>
+<dd><p>limits of drugless growth rate for generating random
+seascapes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>array-like</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="fears.population.PopParams.ic50_limits">
+<span class="sig-name descname"><span class="pre">ic50_limits</span></span><a class="headerlink" href="#fears.population.PopParams.ic50_limits" title="Permalink to this definition">¶</a></dt>
+<dd><p>limits of ic50 for generating random seascapes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>array-like</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="fears.population.PopParams.drug_unit">
+<span class="sig-name descname"><span class="pre">drug_unit</span></span><a class="headerlink" href="#fears.population.PopParams.drug_unit" title="Permalink to this definition">¶</a></dt>
+<dd><p>units of drug concentration for plotting purposes. Defaults to
+‘$μ$M’ (micro-Molar).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="fears.population.PopParams.fig_title">
+<span class="sig-name descname"><span class="pre">fig_title</span></span><a class="headerlink" href="#fears.population.PopParams.fig_title" title="Permalink to this definition">¶</a></dt>
+<dd><p>figure title used in plot_timecourse. Defaults to None</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="fears.population.PopParams.plot_entropy">
+<span class="sig-name descname"><span class="pre">plot_entropy</span></span><a class="headerlink" href="#fears.population.PopParams.plot_entropy" title="Permalink to this definition">¶</a></dt>
+<dd><p>if true, plots the population entropy over time in
+plot_timecourse. Defaults to False.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="fears.population.PopParams.plot_drug_curve">
+<span class="sig-name descname"><span class="pre">plot_drug_curve</span></span><a class="headerlink" href="#fears.population.PopParams.plot_drug_curve" title="Permalink to this definition">¶</a></dt>
+<dd><p>if true, plots the drug concentration curve over the
+population curves in plot_timecourse. Defaults to True.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="fears.population.PopParams.x_lim">
+<span class="sig-name descname"><span class="pre">x_lim</span></span><a class="headerlink" href="#fears.population.PopParams.x_lim" title="Permalink to this definition">¶</a></dt>
+<dd><p>x limits for plot_timecourse. Defaults to none.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>array-like</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="fears.population.PopParams.y_lim">
+<span class="sig-name descname"><span class="pre">y_lim</span></span><a class="headerlink" href="#fears.population.PopParams.y_lim" title="Permalink to this definition">¶</a></dt>
+<dd><p>y limits for plot_timecourse. Defaults to none.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>array-like</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="fears.population.PopParams.counts_log_scale">
+<span class="sig-name descname"><span class="pre">counts_log_scale</span></span><a class="headerlink" href="#fears.population.PopParams.counts_log_scale" title="Permalink to this definition">¶</a></dt>
+<dd><p>plots population counts in log scale. Defaults to False.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="fears.population.PopParams.drug_log_scale">
+<span class="sig-name descname"><span class="pre">drug_log_scale</span></span><a class="headerlink" href="#fears.population.PopParams.drug_log_scale" title="Permalink to this definition">¶</a></dt>
+<dd><p>plots the drug concentration curve in log scale. Defaults
+to False.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="fears.population.PopParams.n_timestep">
+<span class="sig-name descname"><span class="pre">n_timestep</span></span><a class="headerlink" href="#fears.population.PopParams.n_timestep" title="Permalink to this definition">¶</a></dt>
+<dd><p>total number of timesteps for a simulation. Defaults to 1000.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="fears.population.PopParams.timestep_scale">
+<span class="sig-name descname"><span class="pre">timestep_scale</span></span><a class="headerlink" href="#fears.population.PopParams.timestep_scale" title="Permalink to this definition">¶</a></dt>
+<dd><p>hours per timestep. Defaults to 1.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="fears.population.PopParams.passage">
+<span class="sig-name descname"><span class="pre">passage</span></span><a class="headerlink" href="#fears.population.PopParams.passage" title="Permalink to this definition">¶</a></dt>
+<dd><p>if true, simulates passaging cells (bottleneck population every
+passage_time).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="fears.population.PopParams.passage_time">
+<span class="sig-name descname"><span class="pre">passage_time</span></span><a class="headerlink" href="#fears.population.PopParams.passage_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>frequency of cell passaging in units of timestep_scale.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="fears.population.PopParams.dilution">
+<span class="sig-name descname"><span class="pre">dilution</span></span><a class="headerlink" href="#fears.population.PopParams.dilution" title="Permalink to this definition">¶</a></dt>
+<dd><p>dilution factor for passaging. Defaults to 40.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="fears.population.PopParams.max_cells">
+<span class="sig-name descname"><span class="pre">max_cells</span></span><a class="headerlink" href="#fears.population.PopParams.max_cells" title="Permalink to this definition">¶</a></dt>
+<dd><p>if constant_pop is true, the population size is scaled to
+max_cells every timestep.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="fears.population.PopParams.curve_type">
+<span class="sig-name descname"><span class="pre">curve_type</span></span><a class="headerlink" href="#fears.population.PopParams.curve_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>sets the type of drug concentration curve. Defaults to ‘pharm’.
+‘pharm’: one compartment pharmacokinetic curve
+‘constant’
+‘linear’: linear ramp with slope set by slope attribute.
+‘pulsed’: simulates patient dosing</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="fears.population.PopParams.prob_drop">
+<span class="sig-name descname"><span class="pre">prob_drop</span></span><a class="headerlink" href="#fears.population.PopParams.prob_drop" title="Permalink to this definition">¶</a></dt>
+<dd><p>for simulating patient nonadherence. Probability of forgetting
+to take an individual dose. Defaults to 0.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="fears.population.PopParams.k_elim">
+<span class="sig-name descname"><span class="pre">k_elim</span></span><a class="headerlink" href="#fears.population.PopParams.k_elim" title="Permalink to this definition">¶</a></dt>
+<dd><p>elimination rate for 1-compartment pharmacokinetic model. Defaults
+to 0.001.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="fears.population.PopParams.k_abs">
+<span class="sig-name descname"><span class="pre">k_abs</span></span><a class="headerlink" href="#fears.population.PopParams.k_abs" title="Permalink to this definition">¶</a></dt>
+<dd><p>absorption rate for 1-compartment pharmacokinetic model. Defaults
+to 0.01.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="fears.population.PopParams.pad_right">
+<span class="sig-name descname"><span class="pre">pad_right</span></span><a class="headerlink" href="#fears.population.PopParams.pad_right" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="fears.population.PopParams.max_dose">
+<span class="sig-name descname"><span class="pre">max_dose</span></span><a class="headerlink" href="#fears.population.PopParams.max_dose" title="Permalink to this definition">¶</a></dt>
+<dd><p>maximum drug concentration in drug concentration curve.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="fears.population.PopParams.dose_schedule">
+<span class="sig-name descname"><span class="pre">dose_schedule</span></span><a class="headerlink" href="#fears.population.PopParams.dose_schedule" title="Permalink to this definition">¶</a></dt>
+<dd><p>hours between doses. Defaults to 24.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="fears.population.PopParams.stop_condition">
+<span class="sig-name descname"><span class="pre">stop_condition</span></span><a class="headerlink" href="#fears.population.PopParams.stop_condition" title="Permalink to this definition">¶</a></dt>
+<dd><p>if true, stops the simulation when the most frequent
+genotype is also the most fit genotype.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="fears.population.PopParams.n_sims">
+<span class="sig-name descname"><span class="pre">n_sims</span></span><a class="headerlink" href="#fears.population.PopParams.n_sims" title="Permalink to this definition">¶</a></dt>
+<dd><p>number of times run_abm is called in simulate. Defaults to 10.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="fears.population.PopParams.debug">
+<span class="sig-name descname"><span class="pre">debug</span></span><a class="headerlink" href="#fears.population.PopParams.debug" title="Permalink to this definition">¶</a></dt>
+<dd><p>if true, abm() prints some values useful for debugging.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="fears.population.Population">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fears.population.</span></span><span class="sig-name descname"><span class="pre">Population</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fears.population.Population" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#fears.population.PopParams" title="fears.population.PopParams"><code class="xref py py-class docutils literal notranslate"><span class="pre">fears.population.PopParams</span></code></a></p>
+<p>Population class for simulating evolution.</p>
+<p>Population class inherits almost all atttributes from PopParams.</p>
+<blockquote>
+<div><p>Attributes:
+death_rate (float): death rate. Defaults to 0.1.
+mut_rate (float): mutation rate. Defaults to 10**-9.</p>
+<dl>
+<dt>ic50_data_path (str): path to IC50 data. Defaults to</dt><dd><p>pyrimethamine_ic50.csv.</p>
+</dd>
+<dt>drugless_data_path (str): path to drugless data. Defaults to</dt><dd><p>ogbunugafor_drugless.csv.</p>
+</dd>
+<dt>plate_paths (list): list of strings to plate csv files for seascape estimation.</dt><dd><p>Defaults to test data.</p>
+</dd>
+<dt>seascape_drug_conc (array-like): array of drug concentrations to be used to</dt><dd><p>compute the estimated fitness seascape
+Defaults to [0,0.003,0.0179,0.1072,0.643,3.858,23.1481,138.8889,833.3333,5000]
+ug/mL</p>
+</dd>
+<dt>replicate_arrangement (str): arrangement of the genotype replicates on the plates.</dt><dd><p>Defaults to ‘rows’
+‘rows’: each row represents a different genotype
+‘columns’: each column represents a different genotype</p>
+</dd>
+<dt>data_cols (list): explicitely define the plate columns that include data. Expects</dt><dd><p>a list of lists of column names.
+Defaults to [[‘B’,’C’,’D’,’E’,’F’],[‘B’,’C’,’D’,’E’,’F’],[‘B’,’C’,</p>
+<blockquote>
+<div><p>‘D’,’E’,’F’,’G’]] (for test data).</p>
+</div></blockquote>
+</dd>
+<dt>moat (bool): if true, assumes the outer ring of wells in each plate is a moat</dt><dd><p>(i.e., contains no data). Defaults to True.</p>
+</dd>
+<dt>drug_conc_range (array-like): defines the range of drug concentrations, mainly for</dt><dd><p>plotting purposes.</p>
+</dd>
+<dt>constant_pop (bool): if true, normalizes population at each timestep to a constant</dt><dd><p>population size. Defaults to False.</p>
+</dd>
+<dt>use_carrying_cap (bool): if true, attenuates growth rate as population approaches</dt><dd><p>carrying cap. Defaults to True.</p>
+</dd>
+</dl>
+<p>carrying_cap (int or float): Carrying capacity. Defaults to 10**10.
+init_counts (array-like): array of genotype counts to initialize simulations.</p>
+<blockquote>
+<div><p>Defaults to 10^10 of genotype 0.</p>
+</div></blockquote>
+<p>n_allele (int): number of alleles in the model system.
+n_genotype (int): number of genotypes in the model system.</p>
+<dl>
+<dt>fitness_data (str): Sets how to calculate fitness. Defaults to ‘two-point’</dt><dd><dl class="simple">
+<dt>‘two-point’: program uses IC50 and drugless growth rate to parametrize</dt><dd><p>dose-response curve</p>
+</dd>
+</dl>
+<p>‘estimate’: estimates seascape data from plate_paths.
+‘random’: boostraps a random seascape</p>
+</dd>
+<dt>seascape_type (str): For generating random seascapes. Defaults to ‘natural’.</dt><dd><p>‘natural’: no trade-off constraint.
+‘null’: enforces no trade-off condition</p>
+</dd>
+<dt>drugless_limits (array-like): limits of drugless growth rate for generating random</dt><dd><p>seascapes.</p>
+</dd>
+</dl>
+<p>ic50_limits (array-like): limits of ic50 for generating random seascapes.</p>
+<dl class="simple">
+<dt>drug_unit (str): units of drug concentration for plotting purposes. Defaults to</dt><dd><p>‘$μ$M’ (micro-Molar).</p>
+</dd>
+</dl>
+<p>fig_title (str): figure title used in plot_timecourse. Defaults to None
+plot_entropy (bool): if true, plots the population entropy over time in</p>
+<blockquote>
+<div><p>plot_timecourse. Defaults to False.</p>
+</div></blockquote>
+<dl class="simple">
+<dt>plot_drug_curve (bool): if true, plots the drug concentration curve over the</dt><dd><p>population curves in plot_timecourse. Defaults to True.</p>
+</dd>
+</dl>
+<p>x_lim (array-like): x limits for plot_timecourse. Defaults to none.
+y_lim (array-like): y limits for plot_timecourse. Defaults to none.
+counts_log_scale (bool): plots population counts in log scale. Defaults to False.
+drug_log_scale (bool): plots the drug concentration curve in log scale. Defaults</p>
+<blockquote>
+<div><p>to False.</p>
+</div></blockquote>
+<p>n_timestep (int): total number of timesteps for a simulation. Defaults to 1000.
+timestep_scale (float): hours per timestep. Defaults to 1.
+passage (bool): if true, simulates passaging cells (bottleneck population every</p>
+<blockquote>
+<div><p>passage_time).</p>
+</div></blockquote>
+<p>passage_time (int): frequency of cell passaging in units of timestep_scale.
+dilution (int): dilution factor for passaging. Defaults to 40.
+max_cells (int): if constant_pop is true, the population size is scaled to</p>
+<blockquote>
+<div><p>max_cells every timestep.</p>
+</div></blockquote>
+<dl class="simple">
+<dt>curve_type (str): sets the type of drug concentration curve. Defaults to ‘pharm’.</dt><dd><p>‘pharm’: one compartment pharmacokinetic curve
+‘constant’
+‘linear’: linear ramp with slope set by slope attribute.
+‘pulsed’: simulates patient dosing</p>
+</dd>
+<dt>prob_drop (float): for simulating patient nonadherence. Probability of forgetting</dt><dd><p>to take an individual dose. Defaults to 0.</p>
+</dd>
+<dt>k_elim (float): elimination rate for 1-compartment pharmacokinetic model. Defaults</dt><dd><p>to 0.001.</p>
+</dd>
+<dt>k_abs (float):  absorption rate for 1-compartment pharmacokinetic model. Defaults</dt><dd><p>to 0.01.</p>
+</dd>
+</dl>
+<p>pad_right (bool):
+max_dose (float): maximum drug concentration in drug concentration curve.
+dose_schedule (int): hours between doses. Defaults to 24.</p>
+<dl class="simple">
+<dt>stop_condition (bool): if true, stops the simulation when the most frequent</dt><dd><p>genotype is also the most fit genotype.</p>
+</dd>
+</dl>
+<p>n_sims (int): number of times run_abm is called in simulate. Defaults to 10.
+debug (bool): if true, abm() prints some values useful for debugging.</p>
+</div></blockquote>
 <dl class="py method">
 <dt class="sig sig-object py" id="fears.population.Population.abm">
 <span class="sig-name descname"><span class="pre">abm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_genotype</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">P</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">counts</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fears.population.Population.abm" title="Permalink to this definition">¶</a></dt>
@@ -291,9 +935,9 @@ appropriate.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="fears.population.Population.reset_drug_conc_curve">
 <span class="sig-name descname"><span class="pre">reset_drug_conc_curve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fears.population.Population.reset_drug_conc_curve" title="Permalink to this definition">¶</a></dt>
-<dd><p>Resets the drug concentration curve. Also updates any paramters passed into kwargs.
-Useful when performing experiments with a large number of population objects. Eliminates the need to repeatedly
-estimate fitness seascapes.</p>
+<dd><p>Resets the drug concentration curve. Also updates any paramters passed into kwargs.</p>
+<p>Useful when performing experiments with a large number of population objects.
+Eliminates the need to repeatedly estimate fitness seascapes.</p>
 </dd></dl>
 
 <dl class="py method">
