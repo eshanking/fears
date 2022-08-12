@@ -612,3 +612,70 @@ class Plate():
         p = k/(1+((k-p0)/p0)*np.exp(-r*t))
 
         return p
+
+    def OD_rate_eqn(t_obs,OD_max,OD_obs,L):
+        """Estimates the growth rate using a single OD measurement
+
+        Args:
+            t_obs (int): Time of observation (seconds)
+            OD_max (float): Estimated max OD
+            OD_obs (float): Observed OD
+            L (float): Experimental constant ((OD_max - OD_0)/OD_0)
+
+        Returns:
+            float: Growth rate (s^-1)
+        """
+        r = (-1/t_obs)*np.log((OD_max-OD_obs)/(OD_obs*L))
+        return r
+    
+    def parse_exp_layout_file(df):
+        """Return a dict of genotypes with locations.
+
+        Each entry in the dict contains a list of keys referring to wells in the plate
+        where data for the genotype is found.
+
+        Args:
+            df (pandas dataframe): Experiment layout dataframe.
+
+        Returns:
+            dict: Dict of genotypes where each genotype contains a list of wells
+        """
+        # Get the total number of genotypes
+        cur_max = 0
+        for col in df.columns:
+            if col != 'row':
+                for d in df[col]:
+                    if d.isnumeric():
+                        if int(d) > cur_max:
+                            cur_max = int(d)
+        
+        # For each genotype, generate keys that are associated with that 
+        # genotype's location in the plate
+
+        genotype_dict = {}
+
+        for g in np.arange(cur_max+1):
+            # generate a list of tuples that are row-col pairs
+            indx = df[df == str(g)].stack().index.tolist()
+
+            # transform l into wells (i.e. A1, etc)
+            gen_locs = []
+            for l in indx:
+                row = l[0]
+                col = l[1]
+
+                if col.isnumeric(): # rows of the dataframe are letters
+                    key0 = df['row'][row]
+                    key1 = col
+
+                else: # rows of the dataframe are numbers
+                    key0 = col
+                    key1 = df['row'][row]
+                key = key0+str(int(key1))
+                gen_locs.append(key)
+            genotype_dict[str(g)] = gen_locs
+
+        return genotype_dict
+
+    def parse_od_data_file():
+        return
