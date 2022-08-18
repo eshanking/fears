@@ -7,7 +7,6 @@ import os
 import math
 import scipy.stats
 from fears.utils import dir_manager, fitness
-# from fears.utils.experiment_class import Experiment
 from matplotlib.collections import LineCollection
 import networkx as nx
 from labellines import labelLine
@@ -28,7 +27,6 @@ def gen_color_cycler(style=None,palette='bright',n_colors=16):
         colors = sns.color_palette(palette,n_colors)
         cc = cycler(color=colors)
     return cc
-
 
 def plot_timecourse(pop,counts_t=None,title_t=None,**kwargs):
 

@@ -1,3 +1,4 @@
+from weakref import ref
 import pandas as pd
 import os
 import scipy.optimize as sciopt
@@ -245,11 +246,17 @@ class Plate():
     """
     def __init__(self,
                  data_path,
-                 drug_conc,
+                 drug_conc=None,
+                 mode='timeseries',
                  replicate_arrangement='rows',
                  moat=False,
                  debug=False,
-                 data_cols=None):
+                 data_cols=None,
+                 ref_data_path=None,
+                 exp_layout_path=None,
+                 ref_genotypes='0',
+                 ref_keys='B2',
+                 t_obs=None):
         """Initializer
 
         Args:
@@ -261,8 +268,18 @@ class Plate():
         """
         self.moat = moat
         self.data_path = data_path
-        self.data = self.parse_data_file(data_path)
+        self.mode = mode
         self.data_cols = data_cols
+
+        if self.mode == 'timeseries':
+            self.data = self.parse_data_file(data_path)
+        elif self.mode == 'single_measurement':
+            self.data = self.parse_od_data_file(data_path)
+            self.ref_data = self.parse_data_file(ref_data_path)
+            self.ref_genotypes = ref_genotypes
+            self.ref_keys = ref_keys
+            self.exp_layout_path = exp_layout_path
+            self.t_obs = t_obs
 
         if drug_conc is None:
             self.drug_conc = [0,0.003,0.0179,0.1072,0.643,3.858,23.1481,138.8889,833.3333,5000]
@@ -273,10 +290,30 @@ class Plate():
         self.debug = debug
 
     def execute(self):
+        
+        if self.mode == 'timeseries':
+            self.background_keys = self.get_background_keys()
+            self.data_keys = self.get_data_keys()
+            self.growth_rate_lib = self.gen_growth_rate_lib_ts()
+        elif self.mode == 'single_measurement':
+            self.set_ref_params()
+            self.set_constants()
+            # self.constants = self.compute_constants()
+            # self.OD_max = self.constants['OD_max']
+            # self.OD_0 = self.constants['OD_0']
+            # self.L = self.constants['L']
+            self.growth_rate_lib = self.gen_growth_rate_lib_sm()
+            
+    def set_constants(self):
+        constants = self.compute_constants()
+        self.OD_max = constants['OD_max']
+        self.OD_0 = constants['OD_0']
+        self.L = constants['L']
 
-        self.background_keys = self.get_background_keys()
-        self.data_keys = self.get_data_keys()
-        self.growth_rate_lib = self.gen_growth_rate_lib()
+    def set_ref_params(self):
+        self.ref_params = self.get_reference_params(self.ref_genotypes,
+                                                    self.ref_keys,
+                                                    self.ref_data)
 
     def parse_data_file(self,p):
         """Strips metadata from raw data file to obtain timeseries OD data
@@ -526,8 +563,8 @@ class Plate():
 
         return growth_rates
 
-    def gen_growth_rate_lib(self):
-        """Generates growth rate library from OD data
+    def gen_growth_rate_lib_ts(self):
+        """Generates growth rate library from timeseries OD data
 
         Returns:
             dict: Dict of dose-response curves indexed by replicate
@@ -535,7 +572,7 @@ class Plate():
         growth_rates = self.get_growth_rates_from_df()
         replicate_num = 0
         growth_rate_lib = {}
-
+        
         if self.replicate_arrangement == 'rows': # letters represent individual replicates
             # get all the letters in the data keys
             replicates = []
@@ -613,7 +650,53 @@ class Plate():
 
         return p
 
-    def OD_rate_eqn(t_obs,OD_max,OD_obs,L):
+    def gen_growth_rate_lib_sm(self):
+        """Generate growth rate library from a single measurement experiment
+
+        Returns:
+            dict: Dict of dicts. Keys are genotypes. Sub-dicts contain mean growth rate
+            ('avg') and standard deviation ('std')
+        """
+        gd = self.parse_exp_layout_file()
+        gr_lib = {}
+        data_dict = self.od_data_to_dict(self.data)
+
+        for g in gd.keys():
+            keys = gd[g]
+            r_t = []
+            for k in keys:
+                od = data_dict[k]
+                r = self.OD_rate_eqn(od)
+                r_t.append(r)
+            gr_t = {'avg':np.mean(r_t),
+                    'std':np.std(r_t)}
+            gr_lib[g] = gr_t
+
+        return gr_lib
+
+    def compute_constants(self,ref_params=None):
+
+        if ref_params is None:
+            ref_params = self.ref_params
+
+        OD_max = 0
+        OD_0 = 0
+        count = 0
+
+        for key in ref_params.keys():
+            OD_max += ref_params[key]['OD_max']
+            OD_0 += ref_params[key]['OD_0']
+            count+=1
+        OD_max = OD_max/count
+        OD_0 = OD_0/count
+        L = (OD_max - OD_0)/OD_0
+
+        constants = {'OD_max':OD_max,
+                     'OD_0':OD_0,
+                     'L':L}
+        return constants
+
+    def OD_rate_eqn(self,OD_obs,t_obs=None,OD_max=None,L=None):
         """Estimates the growth rate using a single OD measurement
 
         Args:
@@ -625,10 +708,18 @@ class Plate():
         Returns:
             float: Growth rate (s^-1)
         """
+        if t_obs is None:
+            t_obs = self.t_obs
+        if OD_max is None:
+            OD_max = self.OD_max
+        if L is None:
+            L = self.L
+
+
         r = (-1/t_obs)*np.log((OD_max-OD_obs)/(OD_obs*L))
         return r
     
-    def parse_exp_layout_file(df):
+    def parse_exp_layout_file(self):
         """Return a dict of genotypes with locations.
 
         Each entry in the dict contains a list of keys referring to wells in the plate
@@ -640,6 +731,11 @@ class Plate():
         Returns:
             dict: Dict of genotypes where each genotype contains a list of wells
         """
+        data_path = self.exp_layout_path
+        if '.csv' in data_path:
+            df = pd.read_csv(data_path)
+        elif '.xlsx' in data_path:
+            df = pd.read_excel(data_path)
         # Get the total number of genotypes
         cur_max = 0
         for col in df.columns:
@@ -677,5 +773,206 @@ class Plate():
 
         return genotype_dict
 
-    def parse_od_data_file():
-        return
+    def parse_od_data_file(self,data_path):
+        """Loads the raw OD data files and strips metadata
+
+        OD data files refers to the type of data that is a single OD reading in time (i.e
+        not timeseries data).
+
+        Args:
+            data_path (str): path to data file
+
+        Returns:
+            pandas dataframe: Formatted dataframe with metadata stripped
+        """
+        if '.csv' in data_path:
+            df = pd.read_csv(data_path)
+        elif '.xlsx' in data_path:
+            df = pd.read_excel(data_path)
+
+        # get the first column as an array
+        col_0 = df.columns[0]
+        col_0_array = np.array(df[col_0])
+
+        data_start_indx = np.argwhere(col_0_array=='<>')
+        data_start_indx = data_start_indx[0][0]
+
+        # the data end index should be the first NaN after the data start index
+        col_0_array_bool = [pd.isna(x) for x in col_0_array]
+        data_end_indx = np.argwhere(col_0_array_bool[data_start_indx:])
+        data_end_indx = data_end_indx[0][0] + data_start_indx - 1
+
+        df_filt = df.loc[data_start_indx:data_end_indx,:]
+
+        # fix the columns
+        i = 0
+        columns = list(df_filt.iloc[0])
+        columns_t = []
+        for c in columns:
+            if type(c) is not str:
+                columns_t.append(str(int(c)))
+            else:
+                columns_t.append(c)
+            i+=1
+        
+        columns_t[0] = 'Rows'
+
+        df_filt.columns = columns_t
+
+        df_filt = df_filt.drop(df_filt.index[0])
+        df_filt = df_filt.reset_index(drop=True)
+
+        return df_filt
+
+    def od_data_to_dict(self,df):
+        """Takes an OD data file and returns a dict with each data well as a key
+
+        OD data files refers to the type of data that is a single OD reading in time (i.e
+        not timeseries data).
+
+        Args:
+            df (pandas dataframe): Parsed OD data file
+
+        Returns:
+            dict: Dict of key-value pairs where each key is a well location and each value
+            is the OD reading.
+        """
+        rownum = 0
+        d = {}
+
+        for k0 in df['Rows']:
+            for k1 in df.columns[1:]:
+                if k0.isnumeric():
+                    key = k1+k0
+                else:
+                    key = k0+k1
+                d[key] = df[k1][rownum]
+            rownum+=1
+
+        return d
+
+    
+    # def est_gr_from_single_od(self,data_dict,genotype_dict):
+
+    #     result = {}
+
+    #     for key in genotype_dict.keys():
+    #         wells = genotype_dict[key]
+    #         result_t = []
+    #         for well in wells:
+    #             od = data_dict[well]
+    #             r = self.OD_rate_eqn(od)
+    #             result_t.append(r)
+            
+    #         r_avg = np.mean(result_t)
+    #         std = np.std(result_t)
+
+    #         dict_t = {'avg':r_avg,
+    #                   'std':std}
+    #         result[key] = dict_t
+            
+
+    #     return
+
+    def get_reference_params(self,genotypes=None,keys=None,df=None):
+        """Gets the growth rates for one or more wells
+
+        Given a genotype and key or list of genotypes and keys, estimates the growth 
+        rate for each genotype using the keys provided.
+
+        Args:
+            genotypes (int or list of int): Genotype(s) analyzed
+            keys (str or list of str): Plate well keys correspoding to genotypes
+            df (pandas dataframe): data
+
+        Returns:
+            dict: Dict of results. Keys are genotypes and entries are growth rates.
+        """
+        if genotypes is None:
+            genotypes = self.ref_genotypes
+        if keys is None:
+            keys = self.ref_keys
+        if df is None:
+            df = self.ref_data
+
+        time = np.array(df['Time [s]'])
+        
+        ref_params = {}
+        if type(keys) == list:
+            g_indx = 0
+            for k in keys:
+
+                od = np.array(df[k]) # growth rate time series data
+                d = self.est_logistic_params(od,t=time)
+
+                g = genotypes[g_indx]
+                ref_params[str(g)] = d
+
+                g_indx +=1
+        
+        else:
+            od = np.array(df[keys])
+            d = self.est_logistic_params(od,t=time)
+            ref_params[str(genotypes)] = d
+
+        return ref_params
+
+    def est_logistic_params(self,growth_curve,t=None,carrying_cap=1):
+        """Estimates growth rate from OD growth curve
+
+        Args:
+            growth_curve (list or numpy array): vector of OD data
+            t (list or numpy array, optional): Time vector. If None, algorithm assumes each time step is 1 s. Defaults to None.
+
+        Returns:
+            dict: Dict of logistic growth curve paramters
+        """
+        
+        if t is None:
+            t = np.arange(len(growth_curve))
+
+        growth_curve = growth_curve/carrying_cap
+
+        p0 = [10**-6,0.1,1.5] # starting parameters
+
+        popt, pcov = sciopt.curve_fit(self.logistic_growth_curve,
+                                            t,growth_curve,p0=p0,
+                                            bounds=(0,2))
+        
+        rate_indx = 0 # index of the optimized data points referring to the growth rate
+        p0_indx = 1 # index of the optimized data points referring to initial population size
+        carrying_cap_indx = 2 # index of the optmized data points referring to carrying capacity
+
+        r = popt[rate_indx]
+        p0 = popt[p0_indx]
+        cc = popt[carrying_cap_indx]
+
+        min_carrying_cap = 0.1
+
+        if r < 0: # if the growth rate is negative
+            r = 0
+        if cc < p0: # if the carrying capacity is less than the initial population size
+            r = 0
+        if cc < min_carrying_cap: # if the carrying cap is less the minimum threshold
+            r = 0
+
+        d = {'gr':r,
+             'OD_0':p0,
+             'OD_max':cc}   
+
+        if self.debug:
+            fig,ax = plt.subplots()
+
+            ax.plot(t,growth_curve)
+
+            est = self.logistic_growth_curve(t,popt[0],popt[1],popt[2])
+            
+            ax.plot(t,est)
+            # print(popt[0])
+            p0 = round(popt[1]*10**5)/10**5
+            k = round(popt[2]*10**5)/10**5
+            r = round(r*10**5)/10**5
+            title = 'rate = ' + str(r*(60**2)) + ' cc = ' + str(k)
+            ax.set_title(title)   
+
+        return d

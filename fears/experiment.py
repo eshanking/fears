@@ -599,4 +599,3 @@ class Experiment():
                                           event_observed_B=event_observed_B)
         
         return results
-        
