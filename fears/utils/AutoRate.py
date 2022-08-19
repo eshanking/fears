@@ -11,12 +11,18 @@ class Experiment():
     """
     def __init__(self,
                 folder_path,
-                moat=False,
-                replicate_arrangement='rows',
+                moat = False,
+                replicate_arrangement = 'rows',
+                mode = 'timeseries',
+                exp_layout_path = None,
+                ref_data_path = None,
+                ref_genotypes = 0,
+                ref_keys = 'B2',
+                t_obs=None,
                 drug_conc = None,
                 units = 'ug/mL',
                 data_cols = None,
-                debug=False):
+                debug = False):
         """Initializer
         
         Args:
@@ -37,6 +43,14 @@ class Experiment():
         self.units = units
         self.debug = debug
 
+        self.mode = mode
+        self.exp_layout_path = exp_layout_path
+        self.ref_data_path = ref_data_path
+        self.ref_genotypes = ref_genotypes
+        self.ref_keys = ref_keys
+        self.t_obs = t_obs
+        
+        # if mode is single_measurement, assumes each drug conc refers to a single plate
         if drug_conc is None:
             self.drug_conc = [0,0.003,0.0179,0.1072,0.643,3.858,23.1481,138.8889,833.3333,5000]
         else:
@@ -57,14 +71,24 @@ class Experiment():
                 i+=1
             else:
                 dc = None
-            p = Plate(pdp,self.drug_conc,debug=self.debug,moat=self.moat,replicate_arrangement=self.replicate_arrangement,data_cols=dc)
+            p = Plate(pdp,self.drug_conc,
+                      debug=self.debug,
+                      moat=self.moat,
+                      replicate_arrangement=self.replicate_arrangement,
+                      data_cols=dc,
+                      mode=self.mode,
+                      exp_layout_path=self.exp_layout_path,
+                      ref_data_path=self.ref_data_path,
+                      ref_genotypes=self.ref_genotypes,
+                      ref_keys=self.ref_keys,
+                      t_obs=self.t_obs)
             p.execute()
             self.plates.append(p)
             
         
         # compute growth rate and seascape libraries
-        self.growth_rate_lib = self.gen_growth_rate_lib()
-        self.seascape_lib = self.gen_seascape_lib()
+        # self.growth_rate_lib = self.gen_growth_rate_lib()
+        # self.seascape_lib = self.gen_seascape_lib()
 
     def get_plate_data_paths(self):
         """Gets plate data paths
@@ -95,16 +119,20 @@ class Experiment():
             dict: growth rate library
         """
         gl = {}
-        offset = 0
-        for p in self.plates:
+        if self.mode == 'timeseries':
+            
+            offset = 0
+            for p in self.plates:
 
-            keys = [int(k) for k in p.growth_rate_lib.keys()]
-            
-            for k in keys:
-                rep_num =  k + offset
-                gl[str(rep_num)] = p.growth_rate_lib[str(k)]
-            
-            offset += max(keys) + 1
+                keys = [int(k) for k in p.growth_rate_lib.keys()]
+                
+                for k in keys:
+                    rep_num =  k + offset
+                    gl[str(rep_num)] = p.growth_rate_lib[str(k)]
+                
+                offset += max(keys) + 1
+        # elif self.mode == 'single_measurement':
+        #     # get the total number of genotypes
 
         return gl
     
@@ -273,13 +301,16 @@ class Plate():
 
         if self.mode == 'timeseries':
             self.data = self.parse_data_file(data_path)
+
         elif self.mode == 'single_measurement':
-            self.data = self.parse_od_data_file(data_path)
-            self.ref_data = self.parse_data_file(ref_data_path)
             self.ref_genotypes = ref_genotypes
             self.ref_keys = ref_keys
             self.exp_layout_path = exp_layout_path
             self.t_obs = t_obs
+            self.genotype_dict = self.parse_exp_layout_file()
+            self.data = self.parse_od_data_file(data_path)
+            self.ref_data = self.parse_data_file(ref_data_path)
+            self.set_background()
 
         if drug_conc is None:
             self.drug_conc = [0,0.003,0.0179,0.1072,0.643,3.858,23.1481,138.8889,833.3333,5000]
@@ -298,10 +329,6 @@ class Plate():
         elif self.mode == 'single_measurement':
             self.set_ref_params()
             self.set_constants()
-            # self.constants = self.compute_constants()
-            # self.OD_max = self.constants['OD_max']
-            # self.OD_0 = self.constants['OD_0']
-            # self.L = self.constants['L']
             self.growth_rate_lib = self.gen_growth_rate_lib_sm()
             
     def set_constants(self):
@@ -650,6 +677,24 @@ class Plate():
 
         return p
 
+    def est_background(self,data=None,background_keys=None):
+        if background_keys is None:
+            background_keys=self.background_keys
+        if data is None:
+            data = self.data
+        data_dict = self.od_data_to_dict(data)
+
+        bg_est = 0
+        for key in background_keys:
+            bg_est += data_dict[key]
+        bg_est = bg_est/len(background_keys)
+        return bg_est
+
+    def set_background(self,data=None,background_keys=None):
+        self.background_od = self.est_background(data=data,
+                                                 background_keys=background_keys)
+
+
     def gen_growth_rate_lib_sm(self):
         """Generate growth rate library from a single measurement experiment
 
@@ -657,20 +702,26 @@ class Plate():
             dict: Dict of dicts. Keys are genotypes. Sub-dicts contain mean growth rate
             ('avg') and standard deviation ('std')
         """
+        
         gd = self.parse_exp_layout_file()
         gr_lib = {}
         data_dict = self.od_data_to_dict(self.data)
 
         for g in gd.keys():
-            keys = gd[g]
-            r_t = []
-            for k in keys:
-                od = data_dict[k]
-                r = self.OD_rate_eqn(od)
-                r_t.append(r)
-            gr_t = {'avg':np.mean(r_t),
-                    'std':np.std(r_t)}
-            gr_lib[g] = gr_t
+            if g != 'CONTROL':
+                keys = gd[g]
+                r_t = []
+                for k in keys:
+
+                    od = data_dict[k] - self.background_od
+                    r = self.OD_rate_eqn(od)
+
+                    if not pd.isna(r):
+                        r_t.append(r)
+
+                gr_t = {'avg':np.mean(r_t),
+                        'std':np.std(r_t)}
+                gr_lib[g] = gr_t
 
         return gr_lib
 
@@ -687,6 +738,7 @@ class Plate():
             OD_max += ref_params[key]['OD_max']
             OD_0 += ref_params[key]['OD_0']
             count+=1
+
         OD_max = OD_max/count
         OD_0 = OD_0/count
         L = (OD_max - OD_0)/OD_0
@@ -715,8 +767,13 @@ class Plate():
         if L is None:
             L = self.L
 
-
-        r = (-1/t_obs)*np.log((OD_max-OD_obs)/(OD_obs*L))
+        if OD_obs<=0:
+            r = 0
+        else:
+            r = (-1/t_obs)*np.log((OD_max-OD_obs)/(OD_obs*L))
+        
+        if r < 0:
+            r = 0
         return r
     
     def parse_exp_layout_file(self):
@@ -736,6 +793,7 @@ class Plate():
             df = pd.read_csv(data_path)
         elif '.xlsx' in data_path:
             df = pd.read_excel(data_path)
+
         # Get the total number of genotypes
         cur_max = 0
         for col in df.columns:
@@ -751,6 +809,7 @@ class Plate():
         genotype_dict = {}
 
         for g in np.arange(cur_max+1):
+
             # generate a list of tuples that are row-col pairs
             indx = df[df == str(g)].stack().index.tolist()
 
@@ -770,6 +829,28 @@ class Plate():
                 key = key0+str(int(key1))
                 gen_locs.append(key)
             genotype_dict[str(g)] = gen_locs
+        
+        # Get the location of control wells
+
+        indx = df[df=='CONTROL'].stack().index.tolist()
+        control_locs = []
+        for l in indx:
+            row = l[0]
+            col = l[1]
+
+            if col.isnumeric(): # rows of the dataframe are letters
+                key0 = df['row'][row]
+                key1 = col
+
+            else: # rows of the dataframe are numbers
+                key0 = col
+                key1 = str(int(df['row'][row]))
+
+            key = key0+key1
+            control_locs.append(key)
+        
+        genotype_dict['CONTROL'] = control_locs
+        self.background_keys = control_locs
 
         return genotype_dict
 
