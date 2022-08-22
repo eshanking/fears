@@ -5,6 +5,7 @@ import scipy.optimize as sciopt
 import scipy.interpolate as sciinter
 import matplotlib.pyplot as plt
 import numpy as np
+from fears.utils.plotter import gen_color_cycler
 
 class Experiment():
     """Experiment class for a given plate reader experiment
@@ -87,7 +88,7 @@ class Experiment():
             
         
         # compute growth rate and seascape libraries
-        # self.growth_rate_lib = self.gen_growth_rate_lib()
+        self.growth_rate_lib = self.gen_growth_rate_lib()
         # self.seascape_lib = self.gen_seascape_lib()
 
     def get_plate_data_paths(self):
@@ -131,9 +132,20 @@ class Experiment():
                     gl[str(rep_num)] = p.growth_rate_lib[str(k)]
                 
                 offset += max(keys) + 1
-        # elif self.mode == 'single_measurement':
-        #     # get the total number of genotypes
+        elif self.mode == 'single_measurement':
+            # get the total number of genotypes
+            gd = self.plates[0].genotype_dict
+            genotypes = [g for g in gd.keys() if g.isnumeric()]
+            num = 0
 
+            for g in genotypes:
+                g_dict = {}
+                num = 0
+                for p in self.plates:
+                    key = str(self.drug_conc[num])
+                    g_dict[key] = p.growth_rate_lib[g]
+                    num+=1
+                gl[g] = g_dict
         return gl
     
     def gen_seascape_lib(self):
@@ -267,6 +279,31 @@ class Experiment():
 
         seascape_df.to_csv(path_or_buf='sl.csv')
         growth_rate_df.to_csv(path_or_buf='gr.csv')
+
+    def plot_seascape(self):
+
+        fig,ax = plt.subplots()
+
+        cc = gen_color_cycler()
+        ax.set_prop_cycle(cc)
+
+        x = self.drug_conc
+
+        for g in self.growth_rate_lib.keys():
+            y = []
+            yerr = []
+            dose_response_curve = self.growth_rate_lib[g]
+            for key in dose_response_curve.keys():
+                avg = dose_response_curve[key]['avg']*3600
+                err = dose_response_curve[key]['std']*3600
+                y.append(avg)
+                yerr.append(err)
+            ax.errorbar(x,y,yerr=yerr,label=g)
+        ax.set_xscale('log')
+        ax.set_ylabel('Growth rate ($hr^{-1}$)')
+        ax.set_xlabel('Drug concentration (ug/mL)')
+        ax.legend(loc=(1.05,0),frameon=False)
+        return fig
 
 
 class Plate():
