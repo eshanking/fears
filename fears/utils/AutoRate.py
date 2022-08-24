@@ -5,11 +5,8 @@ import scipy
 import scipy.interpolate as sciinter
 import matplotlib.pyplot as plt
 import numpy as np
-<<<<<<< HEAD
 from functools import partial
-=======
 from fears.utils.plotter import gen_color_cycler
->>>>>>> f21c1f4400ff488dab5687d4945096c44e067bb3
 
 class Experiment():
     """Experiment class for a given plate reader experiment
@@ -96,11 +93,7 @@ class Experiment():
         
         # compute growth rate and seascape libraries
         self.growth_rate_lib = self.gen_growth_rate_lib()
-<<<<<<< HEAD
         self.seascape_lib = self.gen_seascape_lib()
-=======
-        # self.seascape_lib = self.gen_seascape_lib()
->>>>>>> f21c1f4400ff488dab5687d4945096c44e067bb3
 
     def get_plate_data_paths(self):
         """Gets plate data paths
