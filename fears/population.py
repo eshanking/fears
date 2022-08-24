@@ -6,7 +6,6 @@ Classes:
 """
 import numpy as np
 import math
-import random
 from importlib_resources import files
 from fears.utils import dir_manager, pharm, fitness, plotter, AutoRate
 
@@ -38,6 +37,9 @@ class PopParams:
                 'D','E','F','G']] (for test data).
         moat (bool): if true, assumes the outer ring of wells in each plate is a moat 
             (i.e., contains no data). Defaults to True.
+        hc_estimate (str): how AutoRate estimate the hill coefficient. Defaults to 
+            'per_genotype'. If 'joint', estimates a single hill coefficient for the 
+            whole seascape.
 
         drug_conc_range (array-like): defines the range of drug concentrations, mainly for 
             plotting purposes.
@@ -142,6 +144,7 @@ class PopParams:
         self.n_allele, self.n_genotype = None, None
         self.fitness_data = 'two-point' 
         self.moat = True
+        self.hc_estimate = 'per_genotype'
         self.seascape_type = 'natural'
         self.drug_units = '$\u03BC$M'
         self.fig_title = None
@@ -331,9 +334,9 @@ class Population(PopParams):
                                     moat=self.moat,
                                     replicate_arrangement=\
                                         self.replicate_arrangement,
-                                    data_cols=self.data_cols)
+                                    data_cols=self.data_cols,
+                                    hc_estimate=self.hc_estimate)
             e.execute()
-            
             self.growth_rate_lib = e.growth_rate_lib
             self.seascape_lib = e.seascape_lib
 

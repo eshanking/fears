@@ -1,10 +1,11 @@
-from weakref import ref
 import pandas as pd
 import os
 import scipy.optimize as sciopt
+import scipy
 import scipy.interpolate as sciinter
 import matplotlib.pyplot as plt
 import numpy as np
+from functools import partial
 
 class Experiment():
     """Experiment class for a given plate reader experiment
@@ -14,6 +15,7 @@ class Experiment():
                 moat = False,
                 replicate_arrangement = 'rows',
                 mode = 'timeseries',
+                hc_estimate = 'per_genotype',
                 exp_layout_path = None,
                 ref_data_path = None,
                 ref_genotypes = 0,
@@ -49,6 +51,8 @@ class Experiment():
         self.ref_genotypes = ref_genotypes
         self.ref_keys = ref_keys
         self.t_obs = t_obs
+
+        self.hc_estimate = hc_estimate
         
         # if mode is single_measurement, assumes each drug conc refers to a single plate
         if drug_conc is None:
@@ -87,8 +91,8 @@ class Experiment():
             
         
         # compute growth rate and seascape libraries
-        # self.growth_rate_lib = self.gen_growth_rate_lib()
-        # self.seascape_lib = self.gen_seascape_lib()
+        self.growth_rate_lib = self.gen_growth_rate_lib()
+        self.seascape_lib = self.gen_seascape_lib()
 
     def get_plate_data_paths(self):
         """Gets plate data paths
@@ -160,6 +164,11 @@ class Experiment():
         dc = self.drug_conc
 
         replicates = self.growth_rate_lib.keys()
+
+        if self.hc_estimate == 'joint':
+            hc = self.estimate_hill_coeff()
+        else:
+            hc = None
         
         for r in replicates:
 
@@ -168,7 +177,7 @@ class Experiment():
             dc = [float(c) for c in growth_dict.keys()]
             growth_rates = [growth_dict[k] for k in growth_dict.keys()]
 
-            popt = self.fit_hill_curve(dc,growth_rates)
+            popt = self.fit_hill_curve(dc,growth_rates,hc=hc)
             
             # inidices of optimized parameter vector
             ic50_indx = 0
@@ -177,7 +186,10 @@ class Experiment():
 
             ic50 = popt[ic50_indx]
             g_drugless = popt[g_drugless_indx]
-            hill_coeff = popt[hill_coeff_indx]
+            if hc is None:
+                hill_coeff = popt[hill_coeff_indx]
+            else:
+                hill_coeff = hc
 
             d_t = {'ic50':ic50,
                 'g_drugless':g_drugless,
@@ -187,7 +199,7 @@ class Experiment():
 
         return sl
 
-    def fit_hill_curve(self,xdata,ydata):
+    def fit_hill_curve(self,xdata,ydata,hc=None):
         """Fits dose-response curve to growth rate data
 
         Args:
@@ -214,19 +226,36 @@ class Experiment():
 
         ydata = f(xdata) # interpolate new ydata points
 
+        if hc is None: # want to estimate hill coefficient as well
+            p0 = [0,ydata[0],-0.08]
+
+            if ydata[0] == 0:
+                g_drugless_bound = [0,1]
+            else:
+                # want the estimated drugless growth rate to be very close to the value given in ydata
+                g_drugless_bound = [ydata[0]-0.0001*ydata[0],ydata[0]+0.0001*ydata[0]]
+
+            bounds = ([-5,g_drugless_bound[0],-1],[4,g_drugless_bound[1],-0.001]) # these aren't magic numbers these are just starting parameters that happen to work
+
+            popt, pcov = sciopt.curve_fit(self.logistic_pharm_curve_vectorized,
+                                                xdata,ydata,p0=p0,bounds=bounds)
         
-        p0 = [0,ydata[0],-0.08]
+        else: # we already know the hill coefficient, estimate everything else
+            p0 = [0,ydata[0]]
 
-        if ydata[0] == 0:
-            g_drugless_bound = [0,1]
-        else:
-            # want the estimated drugless growth rate to be very close to the value given in ydata
-            g_drugless_bound = [ydata[0]-0.0001*ydata[0],ydata[0]+0.0001*ydata[0]]
+            # print(p0)
 
-        bounds = ([-5,g_drugless_bound[0],-1],[4,g_drugless_bound[1],-0.001]) # these aren't magic numbers these are just starting parameters that happen to work
+            if ydata[0] == 0:
+                g_drugless_bound = [0,1]
+            else:
+                # want the estimated drugless growth rate to be very close to the value given in ydata
+                g_drugless_bound = [ydata[0]-0.0001*ydata[0],ydata[0]+0.0001*ydata[0]]
 
-        popt, pcov = sciopt.curve_fit(self.logistic_pharm_curve_vectorized,
-                                            xdata,ydata,p0=p0,bounds=bounds)
+            fitfun = partial(self.logistic_pharm_curve_vectorized,hill_coeff=hc)
+
+            bounds = ([-5,g_drugless_bound[0]],[4,g_drugless_bound[1]])
+            popt, pcov = scipy.optimize.curve_fit(fitfun,
+                                                xdata,ydata,p0=p0,bounds=bounds)            
 
         if self.debug:
             est = [self.logistic_pharm_curve(x,popt[0],popt[1],popt[2]) for x in xdata]
@@ -267,6 +296,117 @@ class Experiment():
 
         seascape_df.to_csv(path_or_buf='sl.csv')
         growth_rate_df.to_csv(path_or_buf='gr.csv')
+    
+    def hill_curve_loss(self,genotype,x0,gr_lib=None,hc_est=None):
+        """Calculates the loss for an individual hill curve based on the absolute value of the difference
+
+        Args:
+            genotype (int): genotype whose loss you want to calculate
+            x0 (list or array): hill paramters: ic50, g_drugless, and hill coefficient (in that order)
+            gr_lib (dict, optional): Growth rate library. Defaults to None.
+            hc_est (float, optional): Hill coefficient estimate. Defaults to None.
+
+        Returns:
+            flaot: loss
+        """
+        if gr_lib is None:
+            gr_lib = self.growth_rate_lib
+
+        # drug_conc = gr_lib['drug_conc']
+        drug_conc = self.drug_conc
+
+        ic50_est = x0[0]
+        g_drugless_est = x0[1]
+
+        if hc_est is None:
+            hc_est = x0[2]
+        l=0
+        for c in range(len(drug_conc)):
+
+            gr_est = self.logistic_pharm_curve(float(c),ic50_est,g_drugless_est,hc_est)
+            # plt.plot(gr_est)
+            # gr_vect = gr_lib[str(genotype)]
+            gr_vect = self.get_gr_vect_from_gr_lib(str(genotype),gr_lib=gr_lib)
+
+            l += np.abs(gr_est - gr_vect[c])
+
+        return l
+
+    def get_gr_vect_from_gr_lib(self,g,gr_lib = None):
+
+        if gr_lib is None:
+            gr_lib = self.growth_rate_lib
+
+        gr_vect_t = gr_lib[g]
+        gr_vect = [gr_vect_t[key] for key in gr_vect_t.keys()]
+        return gr_vect
+    
+    def hill_coeff_loss(self,hc):
+        """Calculates the loss across the entire seascape for a given hill coefficient.
+
+        Args:
+            hc (float): Hill coefficient
+
+        Returns:
+            float: loss
+        """
+        # estimates the loss for different hill coefficients
+        # hc = np.zeros(self.n_genotype)
+
+        # xdata = self.growth_rate_lib['drug_conc']
+        xdata = self.drug_conc
+        loss = 0
+
+        n_genotype = 0
+        for key in self.growth_rate_lib.keys():
+            if key.isnumeric():
+                n_genotype+=1
+
+        for g in range(n_genotype):
+            # print(g)
+            ydata_t = self.growth_rate_lib[str(g)]
+            ydata = [ydata_t[key] for key in ydata_t.keys()]
+            popt = self.fit_hill_curve(xdata,ydata,hc=hc)
+
+            x0 = [popt[0],popt[1]]
+
+            loss += self.hill_curve_loss(g,x0,hc_est=hc)
+
+
+        # loss = self.hill_curve_loss(x0)
+
+        return loss
+    
+    def estimate_hill_coeff(self):
+        """Uses scipy minimize_scalar to estimate the hill coefficient for a seascape
+
+        Returns:
+            float: optimized hill coefficient
+        """
+        hc = scipy.optimize.minimize_scalar(self.hill_coeff_loss,
+                                            bounds=[-10,-0.01],
+                                            method='bounded')
+
+        return hc.x
+    
+    def logistic_pharm_curve(self,x,IC50,g_drugless,hill_coeff):
+        """Logistic dose-response curve. use if input is a single drug concentration
+
+        Args:
+            x (float): drug concentration scalar
+            IC50 (float)): IC50
+            g_drugless (float): drugless growth rate
+            hill_coeff (float): Hill coefficient
+
+        Returns:
+            numpy array: array of growth rates
+        """
+        if x == 0:
+            g = g_drugless
+        else:
+            g = g_drugless/(1+np.exp((IC50-np.log10(x))/hill_coeff))
+
+        return g
 
 
 class Plate():
@@ -319,6 +459,7 @@ class Plate():
 
         self.replicate_arrangement = replicate_arrangement
         self.debug = debug
+        self.n_genotype = None
 
     def execute(self):
         
@@ -630,6 +771,7 @@ class Plate():
                 growth_rate_lib[str(replicate_num)] = gr_dict
                 replicate_num += 1
 
+            
         else:
             replicates = []
             concentrations = []
@@ -659,6 +801,7 @@ class Plate():
                 growth_rate_lib[str(replicate_num)] = gr_dict
                 replicate_num += 1
 
+        self.n_genotype = replicate_num
         return growth_rate_lib
 
     def logistic_growth_curve(self,t,r,p0,k):
