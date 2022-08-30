@@ -4,9 +4,21 @@ import numpy as np
 
 # Equation for a simple 1 compartment pharmacokinetic model
 def pharm_eqn(pop,t,k_elim=None,k_abs=None,max_dose=None):
-    
-    # scale constants according to timestep scale
-    
+    """One-compartment pharmacokinetic model
+
+    Args:
+        pop (population): Population class object
+        t (float or int): time
+        k_elim (float, optional): Elimination rate constant. If None,
+        gets data from population object. Defaults to None.
+        k_abs (float, optional): Absorption rate constant. If None,
+        gets data from population object. Defaults to None.
+        max_dose (float, optional): Max serum drug concentration. If None,
+        gets data from population object. Defaults to None.
+
+    Returns:
+        float: drug concentration according to pharmacokinetic model
+    """
     if k_elim is None:
         k_elim = pop.k_elim
     if k_abs is None:
@@ -32,6 +44,18 @@ def convolve_pharm(pop,u):
                    # k_elim=0.01,
                    # k_abs=0.1,
                    # max_dose=1):
+    """Models serum drug concentration of a patient undergoing a drug regimen.
+
+    Convolves an impulse train (u) with a 1-compartment pharmacokinetic model.
+
+    Args:
+        pop (population): Population class object
+        u (array-like): Impulse train of length pop.n_timestep. 0 for each time step where
+        no drug is administered, 1 when drug is administered.
+
+    Returns:
+        numpy array: result of convolution
+    """
     k_elim = pop.k_elim
     k_abs = pop.k_abs
     max_dose = pop.max_dose
@@ -46,7 +70,16 @@ def convolve_pharm(pop,u):
 
 # Generates an impulse train to input to convolve_pharm()
 def gen_impulses(pop):
+    """Generates an impulse train of administered drug doses.
+
+        0 for each time step whereno drug is administered, 1 when drug is administered.   
     
+    Args:
+        pop (population): Population class object
+
+    Returns:
+        numpy array: impulse train
+    """
     u = np.zeros(pop.n_timestep)
     impulse_indx = [0]
     
@@ -92,6 +125,16 @@ def gen_on_off_regimen(pop,duty_cycle=None):
 
 # generates drug concentration curves
 def gen_curves(pop):
+    """General method for generating drug concentration curves for populations
+
+    Generates drug concentration curves based on paramters in population object
+
+    Args:
+        pop (population): Population class object
+
+    Returns:
+        list of numpy arrays: Drug concentration curve and impulse train
+    """
     curve = np.zeros(pop.n_timestep)
     u = None
     if pop.curve_type == 'linear': # aka ramp linearly till timestep defined by steepness
@@ -143,7 +186,16 @@ def gen_curves(pop):
     return curve, u
 
 def gen_passage_drug_protocol(pop):
-    
+    """Generated drug dose over time when simulating cell passaging
+
+    Drug concentration is constant between cell transfers (determined by pop.passage_time)
+
+    Args:
+        pop (population): Population class object
+
+    Returns:
+        numpy array: drug concentration curve
+    """
     drug_curve = np.zeros(pop.n_timestep)
     
     gt = 0 # time in growth phase
