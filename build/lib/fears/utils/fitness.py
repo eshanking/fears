@@ -51,9 +51,9 @@ def gen_fitness(pop,genotype,conc,drugless_rate=None,ic50=None,hc=None):
         float: Growth rate computed from pharmacodynamic equation.
     """
 
-    if pop.fitness_data == 'estimate':
+    if pop.seascape_lib is not None:
         fitness = sl_to_fitness(pop,genotype,conc,hc=hc)
-        fitness = fitness*(60**2)
+        # fitness = fitness*(60**2)
 
     else:
         if drugless_rate is None:
@@ -62,7 +62,7 @@ def gen_fitness(pop,genotype,conc,drugless_rate=None,ic50=None,hc=None):
             ic50 = pop.ic50
 
         # logistic equation from Ogbunugafor 2016
-        conc = conc/10**6 # concentration in uM, convert to M
+        # conc = conc/10**6 # concentration in uM, convert to M
         if hc is None:
             c = -.6824968 # empirical curve fit
         else:
@@ -235,7 +235,7 @@ def gen_fl_for_abm(pop,conc,counts):
     # Scale division rates based on carrying capacity
     if pop.use_carrying_cap:
         division_scale = 1-np.sum(counts)/pop.carrying_cap
-        if counts.sum()>pop.max_cells:
+        if counts.sum()>pop.carrying_cap:
             division_scale = 0
     else:
         division_scale = 1
@@ -484,7 +484,7 @@ def sl_to_fitness(pop,g,conc,hc=None):
     g_drugless = pop.seascape_lib[str(g)]['g_drugless']
 
     if hc is None:
-        hc = pop.seascape_lib[str(g)]['hill_coeff']
+        hc = pop.seascape_lib[str(g)]['hc']
     
     # hc = -0.28
 

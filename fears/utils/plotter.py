@@ -193,10 +193,10 @@ def plot_fitness_curves(pop,
     Returns:
         tuple: fig,ax
     """
-    if pop.fitness_data == 'estimate':
+    if pop.seascape_lib is not None:
         
-        gl = pop.growth_rate_lib
-        xdata = gl['drug_conc']
+        xdata = np.logspace(pop.drug_conc_range[0],pop.drug_conc_range[1],
+                            num=100)
 
         if ax is None:
             fig, ax = plt.subplots(figsize = (10,6))
@@ -205,7 +205,7 @@ def plot_fitness_curves(pop,
         ax.set_prop_cycle(cc)
 
         if raw_data:
-
+            gl = pop.growth_rate_lib
             for g in range(pop.n_genotype):
 
                 f = gl[str(g)]
@@ -214,13 +214,14 @@ def plot_fitness_curves(pop,
 
         
         else:
-            if min(xdata) == 0:
-                xmin = np.log10(xdata[1])
-            else:
-                xmin = np.log10(min(xdata))
-            xmax = np.log10(max(xdata))
+            # if min(xdata) == 0:
+            #     xmin = np.log10(xdata[1])
+            # else:
+            #     xmin = np.log10(min(xdata))
+            # xmax = np.log10(max(xdata))
 
-            xdata = np.logspace(xmin,xmax)
+            # xdata = np.logspace(xmin,xmax)
+
             if not xdata[0] == 0:
                 xdata = np.insert(xdata,0,0)
             sl = pop.seascape_lib
@@ -229,13 +230,13 @@ def plot_fitness_curves(pop,
                 
                 f = []
                 sl_t = sl[str(g)]
-                ic50 = sl_t['ic50']
+                # ic50 = sl_t['ic50']
 
                 for c in xdata:
                     
                     # f_t = pop.logistic_pharm_curve(c,ic50,sl_t['g_drugless'],sl_t['hill_coeff'])
                     f_t = fitness.sl_to_fitness(pop,g,c)
-                    f_t = f_t*(60**2)
+                    # f_t = f_t*(60**2)
                     f.append(f_t)
                     
 

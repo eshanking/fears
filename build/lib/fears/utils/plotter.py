@@ -12,6 +12,17 @@ import networkx as nx
 from labellines import labelLine
 
 def gen_color_cycler(style=None,palette='bright',n_colors=16):
+    """Generates a custom matplotlib color cycler
+
+    Args:
+        style (str, optional): Determines linestyle. If solid, all lines are solid.
+        Else, half are dashed and half are solid. Defaults to None.
+        palette (str, optional): Matplotlib palette. Defaults to 'bright'.
+        n_colors (int, optional): Number of colors to cycle through. Defaults to 16.
+
+    Returns:
+        cycler: Matplotlib cycle object
+    """
     
     if style is None:
         colors = sns.color_palette(palette)
@@ -29,7 +40,18 @@ def gen_color_cycler(style=None,palette='bright',n_colors=16):
     return cc
 
 def plot_timecourse(pop,counts_t=None,title_t=None,**kwargs):
+    """Plot timecourse of evolution experiment
 
+    Args:
+        pop (population): Population class object
+        counts_t (array-like, optional): Experiment counts. Columns are different 
+        genotypes and rows are timesteps. If None, gets data from population object.
+        Defaults to None.
+        title_t (str, optional): Figure title. Defaults to None.
+
+    Returns:
+        figure: Matplotlib figure object
+    """
     
     if (pop.counts == 0).all() and counts_t is None:
         print('No data to plot!')
@@ -135,15 +157,11 @@ def plot_timecourse(pop,counts_t=None,title_t=None,**kwargs):
     ax1.set_xticklabels(xlabels)
     ax1.set_xlabel('Days',fontsize=20)
 
-    plt.show()
-
     return fig
 
 def plot_fitness_curves(pop,
                         fig_title='',
                         plot_r0 = False,
-                        save=False,
-                        savename=None,
                         fig=None,
                         ax=None,
                         labelsize=15,
@@ -152,19 +170,42 @@ def plot_fitness_curves(pop,
                         show_axes_labels=True,
                         raw_data = False,
                         color_kwargs={}):
+    """Plots genotype-specific dose reponse curves (fitness seascape)
 
-    if pop.fitness_data == 'estimate':
+    Args:
+        pop (population): Population class object
+        fig_title (str, optional): Figure title. Defaults to ''.
+        plot_r0 (bool, optional): If true, subtracts death rate from fitness. 
+        Defaults to False.
+        fig (figure, optional): Optional matplotlib figure object to plot to. 
+        Defaults to None.
+        ax (axes, optional): Optional matplotlib axes object to plot to. 
+        Defaults to None.
+        labelsize (int, optional): Fontsize of tick labels. Defaults to 15.
+        linewidth (int, optional): Plot linewidth. Defaults to 3.
+        show_legend (bool, optional): If true, plots the legend. Defaults to True.
+        show_axes_labels (bool, optional): If true, adds x- and y-axis labels. Defaults to 
+        True.
+        raw_data (bool, optional): If true, plots growth rate point estimates rather than 
+        estimated dose-response curves. Defaults to False.
+        color_kwargs (dict, optional): Options for generating color cycler. Defaults to {}.
+
+    Returns:
+        tuple: fig,ax
+    """
+    if pop.seascape_lib is not None:
         
-        gl = pop.growth_rate_lib
-        xdata = gl['drug_conc']
+        xdata = np.logspace(pop.drug_conc_range[0],pop.drug_conc_range[1],
+                            num=100)
 
-        fig, ax = plt.subplots(figsize = (10,6))
+        if ax is None:
+            fig, ax = plt.subplots(figsize = (10,6))
 
         cc = gen_color_cycler(**color_kwargs)
         ax.set_prop_cycle(cc)
 
         if raw_data:
-
+            gl = pop.growth_rate_lib
             for g in range(pop.n_genotype):
 
                 f = gl[str(g)]
@@ -173,13 +214,14 @@ def plot_fitness_curves(pop,
 
         
         else:
-            if min(xdata) == 0:
-                xmin = np.log10(xdata[1])
-            else:
-                xmin = np.log10(min(xdata))
-            xmax = np.log10(max(xdata))
+            # if min(xdata) == 0:
+            #     xmin = np.log10(xdata[1])
+            # else:
+            #     xmin = np.log10(min(xdata))
+            # xmax = np.log10(max(xdata))
 
-            xdata = np.logspace(xmin,xmax)
+            # xdata = np.logspace(xmin,xmax)
+
             if not xdata[0] == 0:
                 xdata = np.insert(xdata,0,0)
             sl = pop.seascape_lib
@@ -188,13 +230,13 @@ def plot_fitness_curves(pop,
                 
                 f = []
                 sl_t = sl[str(g)]
-                ic50 = sl_t['ic50']
+                # ic50 = sl_t['ic50']
 
                 for c in xdata:
                     
                     # f_t = pop.logistic_pharm_curve(c,ic50,sl_t['g_drugless'],sl_t['hill_coeff'])
                     f_t = fitness.sl_to_fitness(pop,g,c)
-                    f_t = f_t*(60**2)
+                    # f_t = f_t*(60**2)
                     f.append(f_t)
                     
 
@@ -251,38 +293,23 @@ def plot_fitness_curves(pop,
             ax.set_xlabel('Drug concentration ($\mathrm{\mu}$M)',fontsize=labelsize)
             ax.set_ylabel(ylabel,fontsize=labelsize)
         # ax.set_frame_on(False)
-        
-        if save:
-            if savename is None:
-                savename = 'fitness_seascape.pdf'
-            r = dir_manager.get_project_root()
-            savename = str(r) + os.sep + 'figures' + os.sep + savename
-            plt.savefig(savename,bbox_inches="tight")
     
     return fig,ax
 
 def plot_msw(pop,wt,conc=None,fc=None,ncols=2,figsize=(2.5,8)):
-    """
-    plot_msw: method for plotting mutant selection window figures.
+    """Plot mutant selection window figures
 
-    Parameters
-    ----------
-    pop : population_class object
-        
-    fitness_curves : numpy array
-        Columns 1-N represents a genotype that is a neighbor of column 0 
-        (ancestor). Rows represent drug concentration.
-    conc : numpy array
-        Drug concentration used to calculate fitness_curves
-    genotypes : list of ints
-        Genotypes that were used to calculate the fitness_curves.
-    save : bool
-    
-    Returns
-    -------
-    fig : figure object
-        MSW figures
+    Args:
+        pop (population): Population class object
+        wt (int): wild-tyoe (reference) genotype
+        conc (array-like, optional): Drug concentrations. Defaults to None.
+        fc (dict, optional): Dict of dose reponse curves. If none, gets data from pop. 
+        Defaults to None.
+        ncols (int, optional): _description_. Defaults to 2.
+        figsize (tuple, optional): _description_. Defaults to (2.5,8).
 
+    Returns:
+        _type_: _description_
     """
 
     if conc is None:

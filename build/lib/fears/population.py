@@ -8,6 +8,7 @@ import numpy as np
 import math
 from importlib_resources import files
 from fears.utils import dir_manager, pharm, fitness, plotter, AutoRate
+import pandas as pd
 
 class PopParams:
     """Population parameters class
@@ -118,6 +119,8 @@ class PopParams:
         """
         self.death_rate, self.mut_rate = 0.1, 10**-9
         # self.ic50_data_path, self.drugless_data_path = 'pyrimethamine_ic50.csv','ogbunugafor_drugless.csv'
+
+        self.seascape_path = None
   
         p = files('fears.data').joinpath('pyrimethamine_ic50.csv')
         self.ic50_data_path = str(p)
@@ -140,6 +143,7 @@ class PopParams:
 
         self.constant_pop, self.use_carrying_cap = False, True
         self.carrying_cap = 10**10
+        self.doubling_time = 1
         self.init_counts = None
         self.n_allele, self.n_genotype = None, None
         self.fitness_data = 'two-point' 
@@ -295,7 +299,7 @@ class Population(PopParams):
             self.init_counts = \
                 self.init_counts*self.max_cells/sum(self.init_counts)
             self.init_counts = np.floor(self.init_counts)
-            self.carrying_cap = False
+            self.use_carrying_cap = False
 
         # initialize drug curve
         self.drug_curve = None
@@ -363,6 +367,22 @@ class Population(PopParams):
             self.drugless_rates,self.ic50, = \
                 fitness.gen_random_seascape(self)
             self.n_genotype = 2**self.n_allele
+
+        elif self.fitness_data == 'from_file':
+            if self.seascape_path is not None:
+                self.seascape_lib = pd.read_excel(self.seascape_path,index_col=0)
+            
+            self.n_genotype = len(self.seascape_lib.keys())
+
+            self.ic50 = np.zeros(self.n_genotype)
+            self.drugless_rates = np.zeros(self.n_genotype)
+
+            i = 0
+
+            for key in self.seascape_lib.keys():
+                self.ic50[i] = self.seascape_lib[key]['ic50']
+                self.drugless_rates[i] = self.seascape_lib[key]['g_drugless']
+                i+=1
             
     def initialize_drug_curve(self):
         curve,u = pharm.gen_curves(self)
@@ -456,9 +476,12 @@ class Population(PopParams):
         
         if (np.mod(mm*self.timestep_scale,self.passage_time) == 0 
             and not mm == 0 and self.passage):
+
             counts = np.divide(counts,self.dilution)
             counts[counts<1] == 0
             counts = [int(c) for c in counts]
+            counts = np.array(counts)
+
         return counts
 
     ###########################################################################
