@@ -86,7 +86,13 @@ def gen_impulses(pop):
     i = 0
     
     # generate the drug dose regimen
-    while impulse_indx[i] < pop.n_timestep*pop.timestep_scale-pop.dose_schedule:
+
+    if pop.regimen_length is None:
+        regimen_length = pop.n_timestep
+    else:
+        regimen_length = pop.regimen_length
+
+    while impulse_indx[i] < regimen_length*pop.timestep_scale-pop.dose_schedule:
         impulse_indx.append(pop.dose_schedule*(i+1))
         i+=1
     
@@ -100,6 +106,11 @@ def gen_impulses(pop):
     impulse_indx = impulse_indx.astype(int)
     
     u[impulse_indx]=1 # list of impulses at the simulated drug dosage times
+
+    if pop.dwell:
+        dwell_time = int(pop.dwell_time/pop.timestep_scale)
+        u[0:dwell_time] = 0
+
     return u
 
 # method to simulate an evolutionary on_off by pulsing drug 

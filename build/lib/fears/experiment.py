@@ -197,17 +197,20 @@ class Experiment():
         elif self.experiment_type == 'drug-regimen':
             
             self.prob_drops = prob_drops
-            
+
+            if population_template is None:
+                p0 = Population(curve_type='pulsed',
+                                prob_drop=self.prob_drops[0],
+                                n_sims = 1,
+                                **self.population_options)
+            else:
+                p0 = population_template
+
             for prob_drop in self.prob_drops:
-                curve_type = 'pulsed'
-                self.populations.append(Population(curve_type=curve_type,
-                                                   prob_drop=prob_drop,
-                                                   # n_impulse = 1,
-                                                   n_sims = 1,
-                                                   # fig_title = fig_title,
-                                                   # init_counts=init_counts,
-                                            
-                                                   **self.population_options))
+                p = copy.copy(p0)
+                p.reset_drug_conc_curve(prob_drop=prob_drop)
+                self.populations.append(p)
+
             self.n_survive = np.zeros([len(self.populations)])
             
         elif self.experiment_type == 'dose-entropy':
@@ -372,7 +375,7 @@ class Experiment():
                         data_dict = {'counts':counts,
                                      'drug_curve':drug,
                                      'regimen':u}
-                        self.save_dict(data_dict,save_folder,num=i)
+                        self.save_dict(data_dict,i,save_folder)
                 # kk+=1
                 # pbar.update()
                 self.perc_survive = 100*self.n_survive/self.n_sims

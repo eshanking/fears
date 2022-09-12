@@ -173,6 +173,9 @@ class PopParams:
         self.pad_right = True
         self.max_dose = 10
         self.dose_schedule = 24
+        self.dwell = False
+        self.dwell_time = 48
+        self.regimen_length = None
 
         self.stop_condition = None
         self.plot = True
