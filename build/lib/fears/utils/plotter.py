@@ -119,7 +119,22 @@ def plot_timecourse(pop,counts_t=None,title_t=None,**kwargs):
             ax1.plot(counts[:,allele],linewidth=3.0,label=str(pop.int_to_binary(allele)))
         else:
             ax1.plot(counts[:,allele],linewidth=3.0,label=None)
-            
+
+    if pop.plot_pop_size:
+        c = np.sum(counts,axis=1)
+        ax1.plot(c,'--',color='black',linewidth=3)
+
+        ext_time = np.argwhere(c<=1)
+        if len(ext_time) == 0:
+            ext_time = 'None'
+        else:
+            ext_time = str(ext_time[0][0])
+
+        title = 'Min population size = ' + str(np.min(c)) +\
+            ' Ext. time = ' + ext_time
+
+        ax1.set_title(title)
+
     ax1.legend(loc=(1.25,-.12),frameon=False,fontsize=15)
         
     ax1.set_xlim(0,pop.x_lim)
@@ -167,6 +182,7 @@ def plot_fitness_curves(pop,
                         labelsize=15,
                         linewidth=3,
                         show_legend=True,
+                        legend_cols=1,
                         show_axes_labels=True,
                         raw_data = False,
                         color_kwargs={}):
@@ -249,7 +265,7 @@ def plot_fitness_curves(pop,
         ax.set_xlabel('Drug concentration (ug/ml)',fontsize=labelsize)
 
         if show_legend:
-            ax.legend(fontsize=labelsize,frameon=False,loc=(1.08,-0.08))
+            ax.legend(fontsize=labelsize,frameon=False,loc=(1.08,0),ncol=2)
 
     else:
         if ax is None:
@@ -281,7 +297,7 @@ def plot_fitness_curves(pop,
             ax.plot(conc,fit[gen,:],linewidth=linewidth,label=str(pop.int_to_binary(gen)))
         
         if show_legend:
-            ax.legend(fontsize=labelsize,frameon=False,loc=(1,-.10))
+            ax.legend(fontsize=labelsize,frameon=False,loc=(1,-.10),ncol=legend_cols)
         
         ax.set_xscale('log')
         
@@ -627,7 +643,7 @@ def plot_landscape(p,conc=10**0,
     """
 
     if fit_land is None:
-        fit_land = fit_land.gen_fit_land(p,conc)
+        fit_land = fitness.gen_fit_land(p,conc)
     
     if relative:
         fit_land = fit_land-min(fit_land)
@@ -852,28 +868,29 @@ def plot_landscape(p,conc=10**0,
     return ax
 
 def add_landscape_to_fitness_curve(c,ax,pop,
-                                textcolor='gray',
-                                colorbar=False,
-                                square=True,
                                 vert_lines=True,
                                 position = 'top',
                                 pad = 0,
+                                ypos=1,
                                 vert_lines_ydata = None,
+                                width=3,
+                                height=None,
+                                vert_lines_kwargs={},
                                 **kwargs):
-    
+
     if position == 'top':
-        ypos = 1+pad
+        ypos = ypos+pad
     elif position == 'bottom':
-        ypos = -1-pad
+        ypos = -ypos-pad
     else:
         raise Exception('Position argument not recognized')
     
-    x = get_pos_in_log_space(c, 3)
-    l = ax.inset_axes([x[0],ypos,x[1]-x[0],0.5],transform=ax.transData)
-    l = plot_landscape(pop,c,ax=l,node_size=200,
-                        colorbar=colorbar,
-                        textcolor=textcolor,
-                        square=square,
+    if height is None:
+        height = width
+
+    x = get_pos_in_log_space(c, width)
+    lax = ax.inset_axes([x[0],ypos,x[1]-x[0],height],transform=ax.transData)
+    lax = plot_landscape(pop,c,ax=lax,
                         **kwargs)
     
     if vert_lines:
@@ -883,9 +900,9 @@ def add_landscape_to_fitness_curve(c,ax,pop,
         else:
             ydata = vert_lines_ydata
         xdata = np.ones(len(ydata))*c
-        ax.plot(xdata,ydata,'--',color='black',alpha=0.5)        
+        ax.plot(xdata,ydata,'--',color='black',**vert_lines_kwargs)        
     
-    return l
+    return ax,lax
 
 def plot_population_count(pop,
                         c,

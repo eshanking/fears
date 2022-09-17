@@ -158,6 +158,7 @@ class PopParams:
         self.y_lim = None
         self.counts_log_scale = None
         self.drug_log_scale = False
+        self.plot_pop_size = False
         
         self.n_timestep = 1000
         self.timestep_scale = 1

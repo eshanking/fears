@@ -3,6 +3,7 @@ import numpy as np
 from fears.utils import results_manager
 import pickle
 import lifelines
+import matplotlib.pyplot as plt
 
 def km_curve(exp=None,exp_info_path=None,resistance_outcome=[14,15]):
     """Returns a dictionary of dictionaries of K-M curves from the 
