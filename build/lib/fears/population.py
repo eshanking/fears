@@ -121,6 +121,7 @@ class PopParams:
         # self.ic50_data_path, self.drugless_data_path = 'pyrimethamine_ic50.csv','ogbunugafor_drugless.csv'
 
         self.seascape_path = None
+        self.seascape_lib = None
   
         p = files('fears.data').joinpath('pyrimethamine_ic50.csv')
         self.ic50_data_path = str(p)
@@ -184,7 +185,7 @@ class PopParams:
         self.debug = False
 
         self.drugless_limits=[1,1.5]
-        self.ic50_limits=[-6.5,-1.5]
+        self.ic50_limits=[-3,3]
 
         # self.landscape_type = 'natural'
         self.digital_seascape = False
