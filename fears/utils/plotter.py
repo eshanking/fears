@@ -306,7 +306,7 @@ def plot_fitness_curves(pop,
         ax.tick_params(labelsize=labelsize)
         
         if show_axes_labels:
-            ax.set_xlabel('Drug concentration ($\mathrm{\mu}$M)',fontsize=labelsize)
+            ax.set_xlabel('Drug concentration ($\mathrm{\mu}$g/mL)',fontsize=labelsize)
             ax.set_ylabel(ylabel,fontsize=labelsize)
         # ax.set_frame_on(False)
     
@@ -376,7 +376,7 @@ def plot_msw(pop,wt,conc=None,fc=None,ncols=2,figsize=(2.5,8)):
                 ax[r].set_ylabel('Replication rate',fontsize=14)
                 ax[r].tick_params(axis='both',labelsize=14)
 
-            ax[-1].set_xlabel('Drug concentration \n($\mathrm{\mu}$M)',
+            ax[-1].set_xlabel('Drug concentration \n($\mathrm{\mu}$g/mL)',
                                     fontsize=14)
             
         else:
@@ -406,7 +406,7 @@ def plot_msw(pop,wt,conc=None,fc=None,ncols=2,figsize=(2.5,8)):
                 shiftx(ax[c],i*0.05)
                 i+=1
 
-                ax[c].set_xlabel('Drug concentration \n($\mathrm{\mu}$M)',fontsize=14)
+                ax[c].set_xlabel('Drug concentration \n($\mathrm{\mu}$g/mL)',fontsize=14)
                 ax[c].tick_params(axis='both',labelsize=14)
 
             ax[-1].set_ylabel('Replication rate ($hr^{-1}$)',
@@ -446,7 +446,7 @@ def plot_msw(pop,wt,conc=None,fc=None,ncols=2,figsize=(2.5,8)):
         #     ax[c].set_xlabel('Drug concentration \n($\mathrm{\mu}$M)',
         #                           fontsize=15)
         for col in range(ncols):
-            ax[-1,col].set_xlabel('Drug concentration \n($\mathrm{\mu}$M)',
+            ax[-1,col].set_xlabel('Drug concentration \n($\mathrm{\mu}$g/mL)',
                                     fontsize=20)
 
 
