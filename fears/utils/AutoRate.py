@@ -476,15 +476,19 @@ class Plate():
         self.mode = mode
         self.data_cols = data_cols
 
+        self.exp_layout_path = exp_layout_path
+        if exp_layout_path is not None:
+            self.genotype_dict = self.parse_exp_layout_file()
+        else:
+            self.genotype_dict = None
+
         if self.mode == 'timeseries':
             self.data = self.parse_data_file(data_path)
 
         elif self.mode == 'single_measurement':
             self.ref_genotypes = ref_genotypes
             self.ref_keys = ref_keys
-            self.exp_layout_path = exp_layout_path
             self.t_obs = t_obs
-            self.genotype_dict = self.parse_exp_layout_file()
             self.data = self.parse_od_data_file(data_path)
             self.ref_data = self.parse_data_file(ref_data_path)
             self.set_background()
@@ -501,9 +505,12 @@ class Plate():
     def execute(self):
         
         if self.mode == 'timeseries':
-            self.background_keys = self.get_background_keys()
-            self.data_keys = self.get_data_keys()
-            self.growth_rate_lib = self.gen_growth_rate_lib_ts()
+            if self.genotype_dict is None:
+                self.background_keys = self.get_background_keys()
+                self.data_keys = self.get_data_keys()
+                self.growth_rate_lib = self.gen_growth_rate_lib_ts()
+            else:
+                self.growth_rate_lib = self.gen_growth_rate_lib_ts()
         elif self.mode == 'single_measurement':
             self.set_ref_params()
             self.set_constants()
@@ -542,10 +549,10 @@ class Plate():
         time_array = np.array(time_col)
         
         # raw data starts after cycle nr.
-        if any(df.keys() == 'Cycle Nr.'):
-            data_start_indx = np.argwhere(list(time_array) == 'Cycle Nr.')
-        elif any(df.keys() == 'Time [s]'):
-            data_start_indx = np.argwhere(list(time_array) == 'Time [s]')
+        if any(time_array == 'Cycle Nr.'):
+            data_start_indx = np.argwhere(time_array == 'Cycle Nr.')
+        elif any(time_array == 'Time [s]'):
+            data_start_indx = np.argwhere(time_array == 'Time [s]')
         else:
             raise Exception('Unknown file format. Expected either Cycle Nr. or Time [s] as column headings.')
 
@@ -754,17 +761,20 @@ class Plate():
 
         growth_rates = {}
         df = self.data
+        if self.genotype_dict is None:
+            data_keys = self.get_data_keys()
+            time = df['Time [s]']
 
-        data_keys = self.get_data_keys()
-        time = df['Time [s]']
-
-        for k in data_keys:
-            gr = np.array(df[k]) # growth rate time series data
-            time = np.array(time) # time vector
-            # fig,ax = plt.subplots()
-            # ax.plot(time,gr)
-            # ax.set_title(k)
-            growth_rates[k] = self.est_growth_rate(gr,t=time)
+            for k in data_keys:
+                gr = np.array(df[k]) # growth rate time series data
+                time = np.array(time) # time vector
+                # fig,ax = plt.subplots()
+                # ax.plot(time,gr)
+                # ax.set_title(k)
+                growth_rates[k] = self.est_growth_rate(gr,t=time)
+        
+        else:
+            
 
         return growth_rates
 
@@ -979,7 +989,11 @@ class Plate():
         for col in df.columns:
             if col != 'row':
                 for d in df[col]:
-                    if d.isnumeric():
+                    data_type = type(d)
+                    if type(d) == int:
+                        if d > cur_max:
+                            cur_max = d
+                    elif d.isnumeric():
                         if int(d) > cur_max:
                             cur_max = int(d)
         
@@ -991,7 +1005,10 @@ class Plate():
         for g in np.arange(cur_max+1):
 
             # generate a list of tuples that are row-col pairs
-            indx = df[df == str(g)].stack().index.tolist()
+            if data_type == int:
+                indx = df[df == g].stack().index.tolist()
+            elif data_type == str:
+                indx = df[df == str(g)].stack().index.tolist()
 
             # transform l into wells (i.e. A1, etc)
             gen_locs = []
@@ -1237,3 +1254,6 @@ class Plate():
             ax.set_title(title)   
 
         return d
+
+# Misc helper functions
+
