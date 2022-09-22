@@ -1,12 +1,12 @@
-import sys
+# import sys
 import matplotlib.pyplot as plt
 from cycler import cycler
 import seaborn as sns
 import numpy as np
-import os
+# import os
 import math
 import scipy.stats
-from fears.utils import dir_manager, fitness
+from fears.utils import fitness
 from matplotlib.collections import LineCollection
 import networkx as nx
 from labellines import labelLine
@@ -311,39 +311,6 @@ def plot_fitness_curves(pop,
         # ax.set_frame_on(False)
     
     return fig,ax
-
-def plot_msw_to_ax(ax,conc,wt_fitness_curve,mut_fitness_curve,wtlabel,mutlabel):
-    
-    ax.plot(conc,wt_fitness_curve,color='black',
-                        label=wtlabel,linewidth=3)
-                
-    ax.plot(conc,mut_fitness_curve,color='white',
-            label=mutlabel,linewidth=3)
-
-    chunks = get_msw(wt_fitness_curve,mut_fitness_curve)
-
-    for key in chunks:
-        # label = key
-        if key == 'net loss':
-            color = '#e41a1c'
-        elif key == 'reference':
-            color = '#ff7f00'
-        else:
-            color = '#2ca02c'
-
-        for c in chunks[key]:
-            ax.axvspan(conc[c[0]],conc[c[1]-1],facecolor=color,alpha=0.7)
-
-    # ax.axvspan(msw_left, msw_right, 
-    #         facecolor='#2ca02c',alpha=0.7)
-    #         # label='MSW')
-    # ax.axvspan(min(conc),msw_left, 
-    #         facecolor='#ff7f00',alpha=0.7)
-    #         # label='MSW')
-    # ax.axvspan(msw_right,max(conc), 
-    #         facecolor='#e41a1c',alpha=0.7)
-    #         # label='MSW')
-    return ax
 
 def plot_msw(pop,wt,conc=None,fc=None,ncols=2,figsize=(2.5,8)):
     """Plot mutant selection window figures
@@ -1000,24 +967,27 @@ def plot_kaplan_meier(pop,
     ax.set_xlabel('Days')
     return ax
 
-# def get_msw(wt_fitness_curve,cur_fitness_curve,conc):
+def find_zero_crossing(v):
 
-#     msw_left = np.argwhere(wt_fitness_curve<cur_fitness_curve)
-#     msw_right = \
-#         np.intersect1d(np.argwhere(wt_fitness_curve<0),np.argwhere(cur_fitness_curve<0))
-    
-#     if msw_right.shape[0] == 0:
-#         msw_right = max(conc)
-#     else:
-#         msw_right = conc[min(msw_right)]
+    indx = None
 
-#     if msw_left.shape[0] == 0:
-#         msw_left = msw_right
-#     else:
-#         msw_left = conc[min(msw_left[0])]
-#     return msw_left, msw_right
+    for i in range(len(v)-1):
+        if v[i]*v[i+1] < 0:
+            indx = i + 1
+            break
+
+    return indx
 
 def get_msw(ref_fitness_curve,cur_fitness_curve):
+    """Computes selection windows for two dose-response curves
+
+    Args:
+        ref_fitness_curve (array-like): reference dose response curve
+        cur_fitness_curve (array-like): mutant dose response curve
+
+    Returns:
+        dict: dict of selection windows
+    """
 
     chunks = {}
 
@@ -1052,9 +1022,11 @@ def get_msw(ref_fitness_curve,cur_fitness_curve):
         rfc_t = ref_fitness_curve[left_indx:]
         cfc_t = cur_fitness_curve[left_indx:]
 
-        if any(rfc_t-cfc_t == 0): # this means there is a crossing
-            right_indx = np.argwhere(rfc_t-cfc_t == 0)
-            right_indx = right_indx[0][0]
+        indx = find_zero_crossing(rfc_t-cfc_t)
+
+        if indx is not None:
+        # if any(rfc_t-cfc_t == 0): # this means there is a crossing
+            right_indx = indx
         else:
             # this must be the last chunk before net loss
             right_indx = left_death_window_indx - left_indx -1
@@ -1090,6 +1062,39 @@ def get_msw(ref_fitness_curve,cur_fitness_curve):
             left_indx = right_indx + left_indx + 1
 
     return chunks
+
+def plot_msw_to_ax(ax,conc,wt_fitness_curve,mut_fitness_curve,wtlabel,mutlabel):
+    
+    ax.plot(conc,wt_fitness_curve,color='black',
+                        label=wtlabel,linewidth=3)
+                
+    ax.plot(conc,mut_fitness_curve,color='white',
+            label=mutlabel,linewidth=3)
+
+    chunks = get_msw(wt_fitness_curve,mut_fitness_curve)
+
+    for key in chunks:
+        # label = key
+        if key == 'net loss':
+            color = '#e41a1c'
+        elif key == 'reference':
+            color = '#ff7f00'
+        else:
+            color = '#2ca02c'
+
+        for c in chunks[key]:
+            ax.axvspan(conc[c[0]],conc[c[1]-1],facecolor=color,alpha=0.7)
+
+    # ax.axvspan(msw_left, msw_right, 
+    #         facecolor='#2ca02c',alpha=0.7)
+    #         # label='MSW')
+    # ax.axvspan(min(conc),msw_left, 
+    #         facecolor='#ff7f00',alpha=0.7)
+    #         # label='MSW')
+    # ax.axvspan(msw_right,max(conc), 
+    #         facecolor='#e41a1c',alpha=0.7)
+    #         # label='MSW')
+    return ax
 
 def msw_grid(pop,genotypes,
             ax=None,
@@ -1130,23 +1135,39 @@ def msw_grid(pop,genotypes,
 
         for n in neighbors:
 
-            msw_left, msw_right = get_msw(fc[g],
-                                        fc[n],
-                                        conc)
-    
-            # wt selection window
-            x = [min(conc),min(conc),msw_left,msw_left]
+            chunks = get_msw(fc[g],fc[n])
+
             y = [ylevel-h,ylevel,ylevel,ylevel-h]
-            wt = ax.fill(x,y,'#ff7f00',alpha=0.7,label='wt selection')
 
-            # mutant selection window
-            # print(msw_right)
-            x = [msw_left,msw_left,msw_right,msw_right]
-            mt = ax.fill(x,y,'#2ca02c',alpha=0.7,label='mutant selection')
+            for key in chunks:
+                # label = key
+                if key == 'net loss':
+                    color = '#e41a1c'
+                    label = 'net loss'
+                elif key == 'reference':
+                    color = '#ff7f00'
+                    label = 'wt selection'
+                else:
+                    color = '#2ca02c'
+                    label = 'mutant selection'
 
-            # no selection
-            x = [msw_right,msw_right,max(conc),max(conc)]
-            ns = ax.fill(x,y,'#e41a1c',alpha=0.7,label='net loss')
+                for c in chunks[key]:
+                    x = [conc[c[0]],conc[c[0]],conc[c[1]-1],conc[c[1]-1]]
+                    ax.fill(x,y,color,alpha=0.7,label=label)
+
+            # # wt selection window
+            # x = [min(conc),min(conc),msw_left,msw_left]
+            # y = [ylevel-h,ylevel,ylevel,ylevel-h]
+            # wt = ax.fill(x,y,'#ff7f00',alpha=0.7,label='wt selection')
+
+            # # mutant selection window
+            # # print(msw_right)
+            # x = [msw_left,msw_left,msw_right,msw_right]
+            # mt = ax.fill(x,y,'#2ca02c',alpha=0.7,label='mutant selection')
+
+            # # no selection
+            # x = [msw_right,msw_right,max(conc),max(conc)]
+            # ns = ax.fill(x,y,'#e41a1c',alpha=0.7,label='net loss')
 
             y = np.ones(len(conc))*ylevel
             ax.plot(conc,y,color='black',linewidth=0.5)
