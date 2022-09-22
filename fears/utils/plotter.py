@@ -312,6 +312,39 @@ def plot_fitness_curves(pop,
     
     return fig,ax
 
+def plot_msw_to_ax(ax,conc,wt_fitness_curve,mut_fitness_curve,wtlabel,mutlabel):
+    
+    ax.plot(conc,wt_fitness_curve,color='black',
+                        label=wtlabel,linewidth=3)
+                
+    ax.plot(conc,mut_fitness_curve,color='white',
+            label=mutlabel,linewidth=3)
+
+    chunks = get_msw(wt_fitness_curve,mut_fitness_curve)
+
+    for key in chunks:
+        # label = key
+        if key == 'net loss':
+            color = '#e41a1c'
+        elif key == 'reference':
+            color = '#ff7f00'
+        else:
+            color = '#2ca02c'
+
+        for c in chunks[key]:
+            ax.axvspan(conc[c[0]],conc[c[1]-1],facecolor=color,alpha=0.7)
+
+    # ax.axvspan(msw_left, msw_right, 
+    #         facecolor='#2ca02c',alpha=0.7)
+    #         # label='MSW')
+    # ax.axvspan(min(conc),msw_left, 
+    #         facecolor='#ff7f00',alpha=0.7)
+    #         # label='MSW')
+    # ax.axvspan(msw_right,max(conc), 
+    #         facecolor='#e41a1c',alpha=0.7)
+    #         # label='MSW')
+    return ax
+
 def plot_msw(pop,wt,conc=None,fc=None,ncols=2,figsize=(2.5,8)):
     """Plot mutant selection window figures
 
@@ -349,23 +382,10 @@ def plot_msw(pop,wt,conc=None,fc=None,ncols=2,figsize=(2.5,8)):
             # for col in range(ncols):
                 n = neighbors[i]
                 wtlabel = pop.int_to_binary(wt) + ' (ref)'
-                ax[r].plot(conc,wt_fitness_curve,color='black',
-                        label=wtlabel,linewidth=3)
+                mutlabel = pop.int_to_binary(n)
                 
-                bitstring = pop.int_to_binary(n)    
-                ax[r].plot(conc,fc[n],color='white',
-                        label=bitstring,linewidth=3)
+                ax[r] = plot_msw_to_ax(ax[r],conc,wt_fitness_curve,fc[n],wtlabel,mutlabel)
 
-                msw_left,msw_right = get_msw(wt_fitness_curve,fc[n],conc)
-                ax[r].axvspan(msw_left, msw_right, 
-                        facecolor='#2ca02c',alpha=0.7)
-                        # label='MSW')
-                ax[r].axvspan(min(conc),msw_left, 
-                        facecolor='#ff7f00',alpha=0.7)
-                        # label='MSW')
-                ax[r].axvspan(msw_right,max(conc), 
-                        facecolor='#e41a1c',alpha=0.7)
-                        # label='MSW')
                 ax[r].set_xscale('log')
                 ax[r].set_xlim([10**pop.drug_conc_range[0],10**pop.drug_conc_range[1]])
                 ax[r].legend(fontsize=10,frameon=False,loc='best')
@@ -383,23 +403,10 @@ def plot_msw(pop,wt,conc=None,fc=None,ncols=2,figsize=(2.5,8)):
             for c in range(ncols):
                 n = neighbors[i]
                 wtlabel = pop.int_to_binary(wt)
-                ax[c].plot(conc,wt_fitness_curve,color='black',
-                        label=wtlabel,linewidth=3)
-                
-                bitstring = pop.int_to_binary(n)    
-                ax[c].plot(conc,fc[n],color='white',
-                        label=bitstring,linewidth=3)
+                mutlabel = pop.int_to_binary(n)
 
-                msw_left,msw_right = get_msw(wt_fitness_curve,fc[n],conc)
-                ax[c].axvspan(msw_left, msw_right, 
-                        facecolor='#2ca02c',alpha=0.7)
-                        # label='MSW')
-                ax[c].axvspan(min(conc),msw_left, 
-                        facecolor='#ff7f00',alpha=0.7)
-                        # label='MSW')
-                ax[c].axvspan(msw_right,max(conc), 
-                        facecolor='#e41a1c',alpha=0.7)
-                        # label='MSW')
+                ax[c] = plot_msw_to_ax(ax[c],conc,wt_fitness_curve,fc[n],wtlabel,mutlabel)
+
                 ax[c].set_xscale('log')
                 ax[c].set_xlim([10**pop.drug_conc_range[0],10**pop.drug_conc_range[1]])
                 ax[c].legend(fontsize=12,frameon=False,loc='best')
@@ -417,23 +424,10 @@ def plot_msw(pop,wt,conc=None,fc=None,ncols=2,figsize=(2.5,8)):
             for col in range(ncols):
                 n = neighbors[i]
                 wtlabel = pop.int_to_binary(wt) + ' (ref)'
-                ax[r,col].plot(conc,wt_fitness_curve,color='black',
-                               label=wtlabel,linewidth=3)
-                
-                bitstring = pop.int_to_binary(n)    
-                ax[r,col].plot(conc,fc[n],color='w',
-                               label=bitstring,linewidth=3)
+                mutlabel = pop.int_to_binary(n)   
 
-                msw_left,msw_right = get_msw(wt_fitness_curve,fc[n],conc)
-                ax[r,col].axvspan(msw_left, msw_right, 
-                        facecolor='#2ca02c',alpha=0.7)
-                        # label='MSW')
-                ax[r,col].axvspan(min(conc),msw_left, 
-                        facecolor='#ff7f00',alpha=0.7)
-                        # label='MSW')
-                ax[r,col].axvspan(msw_right,max(conc), 
-                        facecolor='#e41a1c',alpha=0.7)
-                        # label='MSW')
+                ax[r,col] = plot_msw_to_ax(ax[r,col],conc,wt_fitness_curve,fc[n],wtlabel,mutlabel)
+
                 ax[r,col].set_xscale('log')
                 ax[r,col].set_xlim([10**pop.drug_conc_range[0],10**pop.drug_conc_range[1]])
                 ax[r,col].legend(fontsize=10,frameon=False,loc='best')
@@ -448,8 +442,6 @@ def plot_msw(pop,wt,conc=None,fc=None,ncols=2,figsize=(2.5,8)):
         for col in range(ncols):
             ax[-1,col].set_xlabel('Drug concentration \n($\mathrm{\mu}$g/mL)',
                                     fontsize=20)
-
-
 
     return fig, ax
 
@@ -1008,22 +1000,96 @@ def plot_kaplan_meier(pop,
     ax.set_xlabel('Days')
     return ax
 
-def get_msw(wt_fitness_curve,cur_fitness_curve,conc):
+# def get_msw(wt_fitness_curve,cur_fitness_curve,conc):
 
-    msw_left = np.argwhere(wt_fitness_curve<cur_fitness_curve)
-    msw_right = \
-        np.intersect1d(np.argwhere(wt_fitness_curve<0),np.argwhere(cur_fitness_curve<0))
+#     msw_left = np.argwhere(wt_fitness_curve<cur_fitness_curve)
+#     msw_right = \
+#         np.intersect1d(np.argwhere(wt_fitness_curve<0),np.argwhere(cur_fitness_curve<0))
     
-    if msw_right.shape[0] == 0:
-        msw_right = max(conc)
-    else:
-        msw_right = conc[min(msw_right)]
+#     if msw_right.shape[0] == 0:
+#         msw_right = max(conc)
+#     else:
+#         msw_right = conc[min(msw_right)]
 
-    if msw_left.shape[0] == 0:
-        msw_left = msw_right
+#     if msw_left.shape[0] == 0:
+#         msw_left = msw_right
+#     else:
+#         msw_left = conc[min(msw_left[0])]
+#     return msw_left, msw_right
+
+def get_msw(ref_fitness_curve,cur_fitness_curve):
+
+    chunks = {}
+
+    left_indx = 0
+
+    right_indx = len(ref_fitness_curve)
+
+    ref_fitness_curve = np.array(ref_fitness_curve)
+    cur_fitness_curve = np.array(cur_fitness_curve)
+
+    # find the death window
+
+    if any(ref_fitness_curve<0):
+        ref_death = np.argwhere(ref_fitness_curve<0)
+        ref_death = ref_death[0][0]
+        if any(cur_fitness_curve<0):
+            cur_death = np.argwhere(cur_fitness_curve<0)
+            cur_death = cur_death[0][0]
+
+            left_death_window_indx = np.max([cur_death,ref_death])
+            right_death_window_indx = len(ref_fitness_curve)
+            chunks['net loss'] = [(left_death_window_indx,right_death_window_indx)]
+        else:
+            # left_death_window = max(conc)+1
+            left_death_window_indx = len(ref_fitness_curve)
     else:
-        msw_left = conc[min(msw_left[0])]
-    return msw_left, msw_right
+        # left_death_window = max(conc)+1
+        left_death_window_indx = len(ref_fitness_curve)
+
+    while left_indx < len(ref_fitness_curve):
+
+        rfc_t = ref_fitness_curve[left_indx:]
+        cfc_t = cur_fitness_curve[left_indx:]
+
+        if any(rfc_t-cfc_t == 0): # this means there is a crossing
+            right_indx = np.argwhere(rfc_t-cfc_t == 0)
+            right_indx = right_indx[0][0]
+        else:
+            # this must be the last chunk before net loss
+            right_indx = left_death_window_indx - left_indx -1
+
+            if rfc_t[right_indx-1] > cfc_t[right_indx-1]:
+                label = 'reference'
+            else:
+                label = 'mutant'
+            
+            if label not in chunks.keys():
+                chunks[label] = []
+            # right_conc = conc[right_indx+left_indx]
+            # left_conc = conc[left_indx]
+            chunks[label].append((left_indx,right_indx+left_indx))
+            left_indx = right_indx + left_indx + 1
+
+            break
+
+        # check to make shure this crossing is before there is net death
+        if right_indx+left_indx > left_death_window_indx:
+            break
+        else: # figure out if ref selection or mutant selection
+            if rfc_t[right_indx-1] > cfc_t[right_indx-1]:
+                label = 'reference'
+            else:
+                label = 'mutant'
+            
+            if label not in chunks.keys():
+                chunks[label] = []
+            # right_conc = conc[right_indx+left_indx]
+            # left_conc = conc[left_indx]
+            chunks[label].append((left_indx,right_indx+left_indx))
+            left_indx = right_indx + left_indx + 1
+
+    return chunks
 
 def msw_grid(pop,genotypes,
             ax=None,

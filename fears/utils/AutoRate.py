@@ -773,7 +773,7 @@ class Plate():
                 # ax.set_title(k)
                 growth_rates[k] = self.est_growth_rate(gr,t=time)
         
-        else:
+        # else:
             
 
         return growth_rates
