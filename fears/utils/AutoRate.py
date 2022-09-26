@@ -461,7 +461,8 @@ class Plate():
                  exp_layout_path=None,
                  ref_genotypes='0',
                  ref_keys='B2',
-                 t_obs=None):
+                 t_obs=None,
+                 tmax=None):
         """Initializer
 
         Args:
@@ -475,6 +476,7 @@ class Plate():
         self.data_path = data_path
         self.mode = mode
         self.data_cols = data_cols
+        self.tmax = tmax
 
         self.exp_layout_path = exp_layout_path
         if exp_layout_path is not None:
@@ -712,7 +714,7 @@ class Plate():
 
         p0 = [10**-6,0.05,1] # starting parameters
 
-        popt, pcov = sciopt.curve_fit(self.logistic_growth_curve,
+        popt, pcov = sciopt.curve_fit(self.logistic_growth_with_lag,
                                             t,growth_curve,p0=p0,
                                             bounds=(0,1))
         
@@ -787,6 +789,28 @@ class Plate():
         growth_rates = self.get_growth_rates_from_df()
         replicate_num = 0
         growth_rate_lib = {}
+
+        if self.genotype_dict is not None:
+            time = np.array(self.data['Time [s]'])
+            for key in self.genotype_dict.keys():
+                rate_est = []
+                for well in self.genotype_dict[key]:
+                    # print(well)
+                    ts = np.array(self.data[well])
+
+                    if self.tmax is not None:
+                        indx = np.argwhere(time>=self.tmax)
+                        indx = indx[0][0]
+                        ts = ts[:indx]
+                        time_t = time[:indx]
+
+                    d,pcov = self.est_logistic_params(ts,time_t,self.debug,normalize=False)
+                    rate_est.append(d['gr']*3600)
+                grl_t = {'avg':np.mean(rate_est),
+                         'std':np.std(rate_est)}
+                growth_rate_lib[key] = grl_t
+            return growth_rate_lib
+
         
         if self.replicate_arrangement == 'rows': # letters represent individual replicates
             # get all the letters in the data keys
@@ -1013,18 +1037,22 @@ class Plate():
             # transform l into wells (i.e. A1, etc)
             gen_locs = []
             for l in indx:
+                # print(l)
                 row = l[0]
                 col = l[1]
 
-                if col.isnumeric(): # rows of the dataframe are letters
-                    key0 = df['row'][row]
-                    key1 = col
+                if not(row == 'row' or col == 'row'):
 
-                else: # rows of the dataframe are numbers
-                    key0 = col
-                    key1 = df['row'][row]
-                key = key0+str(int(key1))
-                gen_locs.append(key)
+                    if col.isnumeric(): # rows of the dataframe are letters
+                        key0 = df['row'][row]
+                        key1 = col
+
+                    else: # rows of the dataframe are numbers
+                        key0 = col
+                        key1 = df['row'][row]
+                    key = key0+str(int(key1))
+                    # print(key)
+                    gen_locs.append(key)
             genotype_dict[str(g)] = gen_locs
         
         # Get the location of control wells
@@ -1129,29 +1157,6 @@ class Plate():
 
         return d
 
-    
-    # def est_gr_from_single_od(self,data_dict,genotype_dict):
-
-    #     result = {}
-
-    #     for key in genotype_dict.keys():
-    #         wells = genotype_dict[key]
-    #         result_t = []
-    #         for well in wells:
-    #             od = data_dict[well]
-    #             r = self.OD_rate_eqn(od)
-    #             result_t.append(r)
-            
-    #         r_avg = np.mean(result_t)
-    #         std = np.std(result_t)
-
-    #         dict_t = {'avg':r_avg,
-    #                   'std':std}
-    #         result[key] = dict_t
-            
-
-    #     return
-
     def get_reference_params(self,genotypes=None,keys=None,df=None):
         """Gets the growth rates for one or more wells
 
@@ -1195,7 +1200,8 @@ class Plate():
 
         return ref_params
 
-    def est_logistic_params(self,growth_curve,t=None,carrying_cap=1):
+    def est_logistic_params(self,growth_curve,t,debug=False,sigma=None,mode='logistic',
+                        normalize=False):
         """Estimates growth rate from OD growth curve
 
         Args:
@@ -1205,27 +1211,55 @@ class Plate():
         Returns:
             dict: Dict of logistic growth curve paramters
         """
+        # interpolate negative time
+
+        # t_ext = t[0]
+
+        # t = [tt+t[1] for tt in t]
+
+        # t_ext = [t_ext] + t
+
+        # t = t_ext
+
+        # growth_curve = [growth_curve[0]] + growth_curve
+
+        # normalize
+        if normalize:
+            norm_factor = max(growth_curve)
+            growth_curve = [g/norm_factor for g in growth_curve]
+        else:
+            norm_factor = 1
+
+        # estimate cc
+
+        cc_est = np.mean(growth_curve[-2:])
+
+        gr_est = self.rolling_regression(t,growth_curve)
         
-        if t is None:
-            t = np.arange(len(growth_curve))
+        bounds = ([gr_est-0.2*gr_est,growth_curve[0]-0.1,cc_est-cc_est*0.05,0],
+                [gr_est+0.2*gr_est,growth_curve[0]+0.1,cc_est+cc_est*0.05,max(t)])
 
-        growth_curve = growth_curve/carrying_cap
+        # p0 = [10**-3,growth_curve[0],cc_est] # starting parameters
 
-        p0 = [10**-6,0.1,1.5] # starting parameters
+        # popt, pcov = sciopt.curve_fit(logistic_growth_curve,
+        #                                     t,growth_curve,p0=p0,sigma=sigma,
+        #                                     bounds=bounds)
+        p0 = [gr_est,growth_curve[0],cc_est,1000]
 
-        popt, pcov = sciopt.curve_fit(self.logistic_growth_curve,
-                                            t,growth_curve,p0=p0,
-                                            bounds=(0,2))
+        popt,pcov = sciopt.curve_fit(self.logistic_growth_with_lag,t,growth_curve,p0=p0,
+                                    bounds=bounds)
         
         rate_indx = 0 # index of the optimized data points referring to the growth rate
         p0_indx = 1 # index of the optimized data points referring to initial population size
         carrying_cap_indx = 2 # index of the optmized data points referring to carrying capacity
+        lamba_indx = 3
 
         r = popt[rate_indx]
-        p0 = popt[p0_indx]
-        cc = popt[carrying_cap_indx]
+        p0 = popt[p0_indx]*norm_factor
+        cc = popt[carrying_cap_indx]*norm_factor
+        l = popt[lamba_indx]
 
-        min_carrying_cap = 0.1
+        min_carrying_cap = 0.4
 
         if r < 0: # if the growth rate is negative
             r = 0
@@ -1233,27 +1267,60 @@ class Plate():
             r = 0
         if cc < min_carrying_cap: # if the carrying cap is less the minimum threshold
             r = 0
-
+        if norm_factor < 0.4:
+            r = 0
+                
         d = {'gr':r,
-             'OD_0':p0,
-             'OD_max':cc}   
+            'OD_0':p0,
+            'OD_max':cc}   
 
-        if self.debug:
+        if debug:
+            # if r > 0:
             fig,ax = plt.subplots()
+            t_plot = np.array(t)/3600
+            ax.scatter(t_plot,growth_curve)
 
-            ax.plot(t,growth_curve)
-
-            est = self.logistic_growth_curve(t,popt[0],popt[1],popt[2])
+            est = [self.logistic_growth_with_lag(tt,popt[0],popt[1],popt[2],popt[3]) for tt in t]
             
-            ax.plot(t,est)
-            # print(popt[0])
+            ax.plot(t_plot,est,color='red')
+
             p0 = round(popt[1]*10**5)/10**5
             k = round(popt[2]*10**5)/10**5
-            r = round(r*10**5)/10**5
-            title = 'rate = ' + str(r*(60**2)) + ' cc = ' + str(k)
-            ax.set_title(title)   
+            r_t = round(popt[0]*3600,2)
+            title = 'rate = ' + str(round(3600*r,2)) + ' K = ' + str(k) + ' p0 = ' + str(round(p0,2))
 
-        return d
+            ax.set_title(title)
+            ax.set_xlabel('Time (hr)')
+            if normalize:
+                ax.set_ylabel('Normalized OD')
+            else:
+                ax.set_ylabel('OD')
+                # ax.set_ylim(0,1)   
+
+        return d,pcov
+    
+    def logistic_growth_with_lag(self,t,r,p0,k,l):
+
+        p = p0 + k/(1+ np.exp((4*r*(l-t)/k) + 2))
+
+        return p
+    
+    def rolling_regression(self,xdata,ydata):
+
+        # compute diff
+
+        r = []
+        for i in range(len(ydata)-1):
+            dy = ydata[i+1] - ydata[i]
+            dx = xdata[i+1] - xdata[i]
+            r.append(dy/dx)
+
+        cc_est = np.mean(ydata[-2:])
+
+        if cc_est < 0.3:
+            return 10**-6
+        else:
+            return np.max(r)
 
 # Misc helper functions
 
