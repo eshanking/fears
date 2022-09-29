@@ -3,13 +3,34 @@ import numpy as np
 from fears.utils import results_manager
 import pickle
 import lifelines
-import matplotlib.pyplot as plt
+
+def survival_proportion(pop,data):
+    """Computes survival fraction of populations in an experiment for lhs analysis 
+
+    Args:
+        pop (population): Population class object
+        data (list): list of population size counts over time
+
+    Returns:
+        float: proportion of simulations that survived
+    """
+    n_survived = 0
+    for c in data:
+        obs,time = extinction_time(pop,c,thresh=1)
+        if obs == 0:
+            n_survived += 1
+    
+    p_survived = n_survived/len(data)
+
+    return p_survived
 
 def km_curve(exp=None,exp_info_path=None,resistance_outcome=[14,15]):
-    """Returns a dictionary of dictionaries of K-M curves from the 
-       given experiment. Each experimental condition has two 
-       resistance curves (defined by resistance_outcome) and a
-       survival curve.
+    """Computes Kaplan-Meier data for km curve plotting
+    
+    Returns a dictionary of dictionaries of K-M curves from the 
+    given experiment. Each experimental condition has two 
+    resistance curves (defined by resistance_outcome) and a
+    survival curve.
 
     Args:
         exp (fears Experiment object, optional): Experiment to analyze. Defaults to None.

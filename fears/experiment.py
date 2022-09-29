@@ -1,5 +1,5 @@
 from fears.population import Population
-from fears.utils import plotter, dir_manager, fitness
+from fears.utils import plotter, dir_manager, stats
 import numpy as np
 import pandas as pd
 import os
@@ -51,7 +51,8 @@ class Experiment():
                                'dose-entropy',
                                'rate-survival',
                                'bottleneck',
-                               'ramp_up_down']
+                               'ramp_up_down',
+                               'rate_survival_lhs']
         
         if not type(curve_types) == list:
             curve_types = [curve_types]
@@ -145,13 +146,7 @@ class Experiment():
             self.set_ramp_ud(self.p_landscape)
             self.set_ramp_ud(self.p_seascape)
         
-        
-        if self.experiment_type == 'bottleneck':
-            for dc in self.duty_cycles:
-                self.populations.append(Population(curve_type='on_off',
-                                                   duty_cycle=dc,
-                                                   n_sims = self.n_sims,
-                                                   **self.population_options))
+    
             # p_bottleneck = Population(max_dose = max_doses,
             #                              n_sims = self.n_sims,
             #                              curve_type = 'bottleneck'
@@ -219,7 +214,8 @@ class Experiment():
                                                    curve_type=self.curve_types[0]))
             self.entropy_results = pd.DataFrame(columns=[]) # will become a dataframe later
             
-        elif self.experiment_type == 'rate-survival':
+        elif self.experiment_type == 'rate-survival' \
+            or self.experiment_type == 'rate_survival_lhs':
             # if the curve type is 'pharm' then slope will be interpreted as k_abs
 
             # initialize one population object
@@ -251,7 +247,7 @@ class Experiment():
         
         self.debug=debug
         
-        if not debug:
+        if not debug and not (self.experiment_type == 'rate_survival_lhs'):
             
             num = 0
             num_str = str(num).zfill(4)
@@ -344,6 +340,26 @@ class Experiment():
                     # pbar.update()           
             self.perc_survive = 100*self.n_survive/self.n_sims
             
+        elif self.experiment_type == 'rate_survival_lhs':
+            
+            p_survived_list = []
+
+            for p in self.populations:
+                
+                counts_list = []
+                for n in range(self.n_sims):
+                    counts,n_survive = p.simulate()
+                    c = np.sum(counts,axis=1)
+                    counts_list.append(c)
+                
+                p_survived = stats.survival_proportion(p,counts_list)
+                p_survived_list.append(p_survived)
+            
+            # res = max(p_survived_list) - min(p_survived_list)
+            
+            return p_survived
+                    
+
         elif self.experiment_type == 'drug-regimen':
             # pbar = tqdm(total=len(self.populations))
             # kk=0
@@ -359,12 +375,6 @@ class Experiment():
                     drug = p.drug_curve
                     drug = np.array([drug])
                     drug = np.transpose(drug)
-                    
-                    # regimen = self.compute_regimen(p, u)
-                    # regimen = np.array([regimen])
-                    # regimen = np.transpose(regimen)
-                    # regimen_t = np.zeros(drug.shape)
-                    # regimen_t[0:len(regimen)] = regimen
                     
                     u = np.array([u,])
                     u = u.transpose()
