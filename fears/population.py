@@ -687,6 +687,7 @@ class Population(PopParams):
         """
         dc = self.gen_curves()
         self.drug_curve = dc[0]
+        self.impulses = dc[1]
 
     ###########################################################################
     # Misc helper methods
