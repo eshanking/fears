@@ -190,6 +190,10 @@ class PopParams:
         # self.landscape_type = 'natural'
         self.digital_seascape = False
 
+        self.null_seascape = False
+        self.null_seascape_dose= 0
+        self.null_seascape_method = 'curve_fit'
+
 
         for paramkey in self.__dict__.keys():
             for optkey in kwargs.keys():
@@ -388,6 +392,9 @@ class Population(PopParams):
                 self.ic50[i] = self.seascape_lib[key]['ic50']
                 self.drugless_rates[i] = self.seascape_lib[key]['g_drugless']
                 i+=1
+        
+        if self.null_seascape:
+            self.set_null_seascape(self.null_seascape_dose,self.null_seascape_method)
             
     def initialize_drug_curve(self):
         curve,u = pharm.gen_curves(self)
@@ -705,6 +712,10 @@ class Population(PopParams):
                     self.__dict__.update(td)
         
         self.set_drug_curve()
+    
+    def set_null_seascape(self,conc,method='curve_fit'):
+
+        self.drugless_rates,self.ic50 = fitness.gen_null_seascape(self,conc,method=method)
     
     ###########################################################################
     # Set wrapper method docs
