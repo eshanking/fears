@@ -185,7 +185,8 @@ def plot_fitness_curves(pop,
                         legend_cols=1,
                         show_axes_labels=True,
                         raw_data = False,
-                        color_kwargs={}):
+                        color_kwargs={},
+                        xdata=None):
     """Plots genotype-specific dose reponse curves (fitness seascape)
 
     Args:
@@ -211,7 +212,8 @@ def plot_fitness_curves(pop,
     """
     if pop.seascape_lib is not None:
         
-        xdata = np.logspace(pop.drug_conc_range[0],pop.drug_conc_range[1],
+        if xdata is None:
+            xdata = np.logspace(pop.drug_conc_range[0],pop.drug_conc_range[1],
                             num=100)
 
         if ax is None:
@@ -265,7 +267,7 @@ def plot_fitness_curves(pop,
         ax.set_xlabel('Drug concentration (ug/ml)',fontsize=labelsize)
 
         if show_legend:
-            ax.legend(fontsize=labelsize,frameon=False,loc=(1.08,0),ncol=2)
+            ax.legend(fontsize=labelsize,frameon=False,loc=(1.05,0),ncol=2)
 
     else:
         if ax is None:
@@ -273,8 +275,12 @@ def plot_fitness_curves(pop,
         
         min_conc = pop.drug_conc_range[0]
         max_conc = pop.drug_conc_range[1]
-        conc = np.logspace(min_conc,max_conc,1000)
-        
+        if xdata is None:
+
+            conc = np.logspace(min_conc,max_conc,1000)
+        else:
+            conc = xdata
+
         cc = gen_color_cycler(**color_kwargs)
         
         ax.set_prop_cycle(cc) 
