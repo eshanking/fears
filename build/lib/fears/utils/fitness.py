@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.optimize import curve_fit
+import matplotlib.pyplot as plt
 # from fears.population import Population
 
 
@@ -75,7 +76,7 @@ def gen_fitness(pop,genotype,conc,drugless_rate=None,ic50=None,hc=None):
 
     return fitness
 
-def logistic_equation(conc,drugless_rate,ic50):
+def logistic_equation(conc,drugless_rate,ic50,hc=-0.6824968):
     """
     Logistic equation from ogbunugafor et al, PLOS CB, 2016
 
@@ -87,7 +88,7 @@ def logistic_equation(conc,drugless_rate,ic50):
         ic50 of genotype.
     conc : float
         Drug concentration (in Molarity (M)).
-    c : float, optional
+    hc : float, optional
         Logistic curve steepness parameter. The default is -0.6824968.
 
     Returns
@@ -96,9 +97,9 @@ def logistic_equation(conc,drugless_rate,ic50):
         Replication rate.
 
     """
-    c=-0.6824968
-    conc = conc/10**6
-    f = drugless_rate/(1+np.exp((ic50-np.log10(conc))/c))
+    
+    # conc = conc/10**6
+    f = drugless_rate/(1+np.exp((ic50-np.log10(conc))/hc))
     
     return f
 
@@ -319,6 +320,7 @@ def gen_null_seascape(pop,conc,method='curve_fit'):
             final_rates = gen_fit_land(pop,10**5)
         # mid_rates = gen_fit_land(pop,10**1)
         
+        # print(landscape)
         start_points = scale_and_ignore_zeros(landscape,start_rates)
         end_points = scale_and_ignore_zeros(landscape,final_rates)
         # mid_points = scale_and_ignore_zeros(landscape,mid_rates)
@@ -328,16 +330,23 @@ def gen_null_seascape(pop,conc,method='curve_fit'):
         
         ic50_new = []
         drugless_rates_new = []
+
+        # fig,ax = plt.subplots()
         
         for genotype in range(len(landscape)):
+
             ydata = [start_points[genotype],
                     mid_points[genotype],
                     end_points[genotype]]
+            
+            # ax.scatter(xdata,ydata,label=str(genotype))
+
             params = fit_logistic_curve(xdata,ydata)
             ic50_new.append(params[1])
             drugless_rates_new.append(params[0])
         # find the null landscape drugless rates
-        
+        # ax.set_xscale('log')
+        # ax.legend()
         drugless_rates_new = scale_and_ignore_zeros(drugless_rates_new,
                                                     pop.drugless_rates)
 

@@ -313,6 +313,8 @@ class Experiment():
             counts_seascape, ft = self.p_seascape.simulate()
             
             if not self.debug:
+                
+                pickle.dump(self, open(self.experiment_info_path,"wb"))
                 data_dict_landscape = {'counts':counts_landscape,
                                 'drug_curve':drug_curve}
                 self.save_dict(data_dict_landscape,save_folder='null_seascape')
@@ -476,11 +478,13 @@ class Experiment():
         # self.savename = savename
         return
     
-    def save_dict(self,data_dict,num,save_folder,prefix='sim_'):
+    def save_dict(self,data_dict,save_folder,num=None,prefix='sim_'):
         # check if the desired save folder exists. If not, create it
         if save_folder is None:
             save_folder = ''
+        
         folder_path = self.results_path + os.sep + save_folder
+
         if os.path.exists(folder_path) != True:
             os.mkdir(folder_path)
         
@@ -491,8 +495,9 @@ class Experiment():
         
         if folder_path not in self.exp_folders:
             self.exp_folders.append(folder_path)
-            
+        
         savename = self.results_path + os.sep + save_folder + os.sep + prefix + num + '.p'
+        
         pickle.dump(data_dict, open(savename,"wb"))
         # np.savetxt(savename, counts, delimiter=",")
         return

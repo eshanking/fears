@@ -194,6 +194,9 @@ class PopParams:
         self.null_seascape_dose= 0
         self.null_seascape_method = 'curve_fit'
 
+        self.ic50 = None
+        self.drugless_rates = None
+
 
         for paramkey in self.__dict__.keys():
             for optkey in kwargs.keys():
@@ -333,66 +336,69 @@ class Population(PopParams):
             self.init_counts[0] = 10**6
         
     def initialize_fitness(self):
-        if self.fitness_data == 'two-point':
-            self.drugless_rates = \
-                dir_manager.load_fitness(self.drugless_data_path)
-            self.ic50 = dir_manager.load_fitness(self.ic50_data_path)
-        elif self.fitness_data == 'estimate':
-            
-            # self.growth_rate_library = fitness.gen_growth_rate_library()
-            # self.seascape_library = fitness.gen_seascape_library()
 
-            f = str(files('fears.data').joinpath('plates'))
-            e = AutoRate.Experiment(f,drug_conc=self.seascape_drug_conc,
-                                    moat=self.moat,
-                                    replicate_arrangement=\
-                                        self.replicate_arrangement,
-                                    data_cols=self.data_cols,
-                                    hc_estimate=self.hc_estimate)
-            e.execute()
-            self.growth_rate_lib = e.growth_rate_lib
-            self.seascape_lib = e.seascape_lib
+        if self.ic50 is None and self.drugless_rates is None:
 
-            self.n_genotype = len(self.seascape_lib.keys())
-
-            self.ic50 = np.zeros(self.n_genotype)
-            self.drugless_rates = np.zeros(self.n_genotype)
-
-            i = 0
-
-            for key in self.seascape_lib.keys():
-                self.ic50[i] = self.seascape_lib[key]['ic50']
-                self.drugless_rates[i] = self.seascape_lib[key]['g_drugless']
-                i+=1
+            if self.fitness_data == 'two-point':
+                self.drugless_rates = \
+                    dir_manager.load_fitness(self.drugless_data_path)
+                self.ic50 = dir_manager.load_fitness(self.ic50_data_path)
+            elif self.fitness_data == 'estimate':
                 
-            self.growth_rate_lib['drug_conc'] = self.seascape_drug_conc
-            self.seascape_lib['drug_conc'] = self.seascape_drug_conc
-            self.autorate_exp = e
-        
-        elif self.fitness_data == 'random':
+                # self.growth_rate_library = fitness.gen_growth_rate_library()
+                # self.seascape_library = fitness.gen_seascape_library()
 
-            if self.n_allele is None:
-                self.n_allele = 2
-            self.drugless_rates,self.ic50, = \
-                fitness.gen_random_seascape(self)
-            self.n_genotype = 2**self.n_allele
+                f = str(files('fears.data').joinpath('plates'))
+                e = AutoRate.Experiment(f,drug_conc=self.seascape_drug_conc,
+                                        moat=self.moat,
+                                        replicate_arrangement=\
+                                            self.replicate_arrangement,
+                                        data_cols=self.data_cols,
+                                        hc_estimate=self.hc_estimate)
+                e.execute()
+                self.growth_rate_lib = e.growth_rate_lib
+                self.seascape_lib = e.seascape_lib
 
-        elif self.fitness_data == 'from_file':
-            if self.seascape_path is not None:
-                self.seascape_lib = pd.read_excel(self.seascape_path,index_col=0)
+                self.n_genotype = len(self.seascape_lib.keys())
+
+                self.ic50 = np.zeros(self.n_genotype)
+                self.drugless_rates = np.zeros(self.n_genotype)
+
+                i = 0
+
+                for key in self.seascape_lib.keys():
+                    self.ic50[i] = self.seascape_lib[key]['ic50']
+                    self.drugless_rates[i] = self.seascape_lib[key]['g_drugless']
+                    i+=1
+                    
+                self.growth_rate_lib['drug_conc'] = self.seascape_drug_conc
+                self.seascape_lib['drug_conc'] = self.seascape_drug_conc
+                self.autorate_exp = e
             
-            self.n_genotype = len(self.seascape_lib.keys())
+            elif self.fitness_data == 'random':
 
-            self.ic50 = np.zeros(self.n_genotype)
-            self.drugless_rates = np.zeros(self.n_genotype)
+                if self.n_allele is None:
+                    self.n_allele = 2
+                self.drugless_rates,self.ic50, = \
+                    fitness.gen_random_seascape(self)
+                self.n_genotype = 2**self.n_allele
 
-            i = 0
+            elif self.fitness_data == 'from_file':
+                if self.seascape_path is not None:
+                    self.seascape_lib = pd.read_excel(self.seascape_path,index_col=0)
+                
+                self.n_genotype = len(self.seascape_lib.keys())
 
-            for key in self.seascape_lib.keys():
-                self.ic50[i] = self.seascape_lib[key]['ic50']
-                self.drugless_rates[i] = self.seascape_lib[key]['g_drugless']
+                self.ic50 = np.zeros(self.n_genotype)
+                self.drugless_rates = np.zeros(self.n_genotype)
+
+                i = 0
+
+                for key in self.seascape_lib.keys():
+                    self.ic50[i] = self.seascape_lib[key]['ic50']
+                    self.drugless_rates[i] = self.seascape_lib[key]['g_drugless']
                 i+=1
-        
+
         if self.null_seascape:
             self.set_null_seascape(self.null_seascape_dose,self.null_seascape_method)
             
