@@ -853,6 +853,8 @@ def add_landscape_to_fitness_curve(c,ax,pop,
     if height is None:
         height = width
 
+    ax.set_clip_on(False)
+
     x = get_pos_in_log_space(c, width)
     lax = ax.inset_axes([x[0],ypos,x[1]-x[0],height],transform=ax.transData)
     lax = plot_landscape(pop,c,ax=lax,

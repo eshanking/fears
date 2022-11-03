@@ -357,25 +357,38 @@ def gen_null_seascape(pop,conc,method='curve_fit'):
                 drugless_rates_new[3] = 0
     
     elif method == 'sort':
+        
+        landscape = gen_fit_land(pop,conc)
+        
         dr =  np.array(pop.drugless_rates)
         ic50 = np.array(pop.ic50)
-        dr_t = dr.argsort()
-        dr_ranks = np.empty_like(dr_t)
-        dr_ranks[dr_t] = np.arange(len(dr))
+        
+        landscape_t = landscape.argsort()
+        landscape_ranks = np.empty_like(landscape_t)
+        landscape_ranks[landscape_t] = np.arange(len(landscape))
 
         ic50_t = ic50.argsort()
         ic50_ranks = np.empty_like(ic50_t)
         ic50_ranks[ic50_t] = np.arange(len(ic50))
 
-        ic50_new = np.zeros(len(dr))
+        dr_t = dr.argsort()
+        dr_ranks = np.empty_like(dr_t)
+        dr_ranks[dr_t] = np.arange(len(dr))
+
+        ic50_new = np.zeros(len(landscape))
+        drugless_rates_new = np.zeros(len(landscape))
         k = 0
-        for g in dr_ranks:
+        for g in landscape_ranks:
             indx = np.argwhere(ic50_ranks==g)
             indx = indx[0][0]
             ic50_new[k] = ic50[indx]
+
+            indx = np.argwhere(dr_ranks==g)
+            indx = indx[0][0]
+            drugless_rates_new[k] = dr[indx]
             k+=1
 
-        drugless_rates_new = dr
+        # drugless_rates_new = pop.drugless_rates
 
     if pop.fitness_data == 'estimate':
         i = 0

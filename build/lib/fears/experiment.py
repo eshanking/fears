@@ -27,6 +27,7 @@ class Experiment():
                  experiment_type = None,
                  prob_drops = None,
                  n_impulse=1,
+                 null_seascape_method='sort',
                  population_options = {},
                  results_folder = None,
                  slopes=None,
@@ -122,8 +123,10 @@ class Experiment():
             if fitness_data=='random':
                 self.p_seascape.ic50 = self.p_landscape.ic50
                 self.p_seascape.drugless_rates = self.p_landscape.drugless_rates
-                self.p_landscape.set_null_seascape(null_seascape_dose)
+            
+            self.p_landscape.set_null_seascape(null_seascape_dose,method=null_seascape_method)
             self.null_seascape_dose = null_seascape_dose
+            self.null_seascape_method = null_seascape_method
             
             if second_dose is None:
                 self.second_dose = 10**5

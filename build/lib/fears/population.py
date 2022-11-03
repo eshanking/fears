@@ -721,7 +721,9 @@ class Population(PopParams):
     
     def set_null_seascape(self,conc,method='curve_fit'):
 
-        self.drugless_rates,self.ic50 = fitness.gen_null_seascape(self,conc,method=method)
+        dr,ic50 = fitness.gen_null_seascape(self,conc,method=method)
+        # print(ic50)
+        self.drugless_rates,self.ic50 = dr,ic50
     
     ###########################################################################
     # Set wrapper method docs
