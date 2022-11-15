@@ -303,7 +303,7 @@ def plot_fitness_curves(pop,
             ax.plot(conc,fit[gen,:],linewidth=linewidth,label=str(pop.int_to_binary(gen)))
         
         if show_legend:
-            ax.legend(fontsize=labelsize,frameon=False,loc=(1,-.10),ncol=legend_cols)
+            ax.legend(fontsize=labelsize,frameon=False,loc=(1,-.10),ncols=1)
         
         ax.set_xscale('log')
         
