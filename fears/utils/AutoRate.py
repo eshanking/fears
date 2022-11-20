@@ -696,7 +696,7 @@ class Plate():
 
         return isKey
     
-    def est_growth_rate(self,growth_curve,t=None,carrying_cap=4):
+    def est_growth_rate(self,growth_curve,t=None):
         """Estimates growth rate from OD growth curve
 
         Args:
@@ -710,8 +710,14 @@ class Plate():
         if t is None:
             t = np.arange(len(growth_curve))
 
-        growth_curve = growth_curve/carrying_cap
+        if normalize:
+            norm_factor = max(growth_curve)
+            growth_curve = [g/norm_factor for g in growth_curve]
+        else:
+            norm_factor = 1
 
+        cc_est = np.mean(growth_curve[-2:])
+        gr_est = rolling_regression(t,growth_curve)
         p0 = [10**-6,0.05,1] # starting parameters
 
         popt, pcov = sciopt.curve_fit(self.logistic_growth_with_lag,
@@ -1042,6 +1048,9 @@ class Plate():
                 col = l[1]
 
                 if not(row == 'row' or col == 'row'):
+                    if type(col) == int:
+                        key0 = df['row'][row]
+                        key1 = col
 
                     if col.isnumeric(): # rows of the dataframe are letters
                         key0 = df['row'][row]
@@ -1236,7 +1245,7 @@ class Plate():
 
         gr_est = self.rolling_regression(t,growth_curve)
         
-        bounds = ([gr_est-0.2*gr_est,growth_curve[0]-0.1,cc_est-cc_est*0.05,0],
+        bounds = ([gr_est-0.2*gr_est,growth_curve[0]-0.1,cc_est-cc_est*0.05,-1000],
                 [gr_est+0.2*gr_est,growth_curve[0]+0.1,cc_est+cc_est*0.05,max(t)])
 
         # p0 = [10**-3,growth_curve[0],cc_est] # starting parameters
