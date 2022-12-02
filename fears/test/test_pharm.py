@@ -46,8 +46,8 @@ def test_get_impulses2(pop):
 def test_gen_curves(pop):
     c = gen_curves(pop)
     curve = c[0]
-    assert len(curve) == pop.n_timestamp
+    assert len(curve) == pop.n_timestep
 
 def test_gen_passage_drug(pop):
     p = gen_passage_drug_protocol(pop)
-    assert len(p) == pop.n_timestamp
+    assert len(p) == pop.n_timestep
