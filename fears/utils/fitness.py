@@ -192,7 +192,7 @@ def gen_fit_land(pop,conc,mode=None,**kwargs):
     fit_land = np.zeros(pop.n_genotype)
             
     if pop.fitness_data == 'manual' or mode=='manual':
-        fit_land = pop.landscape_data/pop.doubling_time
+        fit_land = pop.landscape_data/pop.growth_rate_norm
 
     else:
             
@@ -203,7 +203,7 @@ def gen_fit_land(pop,conc,mode=None,**kwargs):
         else:
             for kk in range(pop.n_genotype):
                 fit_land[kk] = gen_fitness(pop,kk,
-                                           conc,**kwargs)/pop.doubling_time
+                                           conc,**kwargs)/pop.growth_rate_norm
     
     return fit_land
 

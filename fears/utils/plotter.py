@@ -267,7 +267,7 @@ def plot_fitness_curves(pop,
         ax.set_xlabel('Drug concentration (ug/ml)',fontsize=labelsize)
 
         if show_legend:
-            ax.legend(fontsize=labelsize,frameon=False,loc=(1.05,0),ncol=2)
+            ax.legend(fontsize=labelsize,frameon=False,loc=(1.05,0),ncol=legend_cols)
 
     else:
         if ax is None:
@@ -297,13 +297,13 @@ def plot_fitness_curves(pop,
             ax.plot(conc,thresh,linestyle='dashdot',color='black',linewidth=linewidth)
         
         else:
-            ylabel = 'Growth Rate'
+            ylabel = 'Growth rate (hr$^{-1}$'
         
         for gen in range(pop.n_genotype):
             ax.plot(conc,fit[gen,:],linewidth=linewidth,label=str(pop.int_to_binary(gen)))
         
         if show_legend:
-            ax.legend(fontsize=labelsize,frameon=False,loc=(1,-.10),ncols=1)
+            ax.legend(fontsize=labelsize,frameon=False,loc=(1,-.10),ncol=legend_cols)
         
         ax.set_xscale('log')
         
@@ -312,7 +312,9 @@ def plot_fitness_curves(pop,
         ax.tick_params(labelsize=labelsize)
         
         if show_axes_labels:
-            ax.set_xlabel('Drug concentration ($\mathrm{\mu}$g/mL)',fontsize=labelsize)
+            unit = pop.drug_units
+            xl = 'Drug concentration (' + unit + ')'
+            ax.set_xlabel(xl,fontsize=labelsize)
             ax.set_ylabel(ylabel,fontsize=labelsize)
         # ax.set_frame_on(False)
     

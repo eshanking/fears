@@ -144,14 +144,14 @@ class PopParams:
 
         self.constant_pop, self.use_carrying_cap = False, True
         self.carrying_cap = 10**10
-        self.doubling_time = 1
+        self.growth_rate_norm = 1
         self.init_counts = None
         self.n_allele, self.n_genotype = None, None
         self.fitness_data = 'two-point' 
         self.moat = True
         self.hc_estimate = 'per_genotype'
         self.seascape_type = 'natural'
-        self.drug_units = '$\u03BC$M'
+        self.drug_units = '$\mathrm{\mu}$g/mL'
         self.fig_title = None
         self.plot_entropy = False
         self.plot_drug_curve = True
@@ -343,6 +343,8 @@ class Population(PopParams):
                 self.drugless_rates = \
                     dir_manager.load_fitness(self.drugless_data_path)
                 self.ic50 = dir_manager.load_fitness(self.ic50_data_path)
+                self.data_source = 'default data'
+            
             elif self.fitness_data == 'estimate':
                 
                 # self.growth_rate_library = fitness.gen_growth_rate_library()
@@ -382,9 +384,16 @@ class Population(PopParams):
                 self.drugless_rates,self.ic50, = \
                     fitness.gen_random_seascape(self)
                 self.n_genotype = 2**self.n_allele
+                self.data_source = 'random'
 
             elif self.fitness_data == 'from_file':
                 if self.seascape_path is not None:
+                    self.seascape_lib = pd.read_excel(self.seascape_path,index_col=0)
+                    self.data_source = self.seascape_path
+                else: # default data
+                    self.data_source = 'example data'
+                    self.seascape_path = \
+                        files('fears.data').joinpath('seascape_library.xlsx')
                     self.seascape_lib = pd.read_excel(self.seascape_path,index_col=0)
                 
                 self.n_genotype = len(self.seascape_lib.keys())
@@ -397,7 +406,10 @@ class Population(PopParams):
                 for key in self.seascape_lib.keys():
                     self.ic50[i] = self.seascape_lib[key]['ic50']
                     self.drugless_rates[i] = self.seascape_lib[key]['g_drugless']
-                i+=1
+                    i+=1 
+
+        else:
+            self.data_source = 'user-defined'
 
         if self.null_seascape:
             self.set_null_seascape(self.null_seascape_dose,self.null_seascape_method)
@@ -724,6 +736,43 @@ class Population(PopParams):
         dr,ic50 = fitness.gen_null_seascape(self,conc,method=method)
         # print(ic50)
         self.drugless_rates,self.ic50 = dr,ic50
+
+    def print_params(self):
+
+        print('Biological parameters:',end='\n')
+        print(' * Mutation rate: ',self.mut_rate,end='\n')
+        print(' * Death rate: ',self.death_rate,end='\n')
+
+        ic50 = [round(i,3) for i in self.ic50]
+
+        print(' * IC50: ',end='\n')
+        for g in range(len(ic50)):
+            print('    ',g,': ',ic50[g],end='\n')
+
+        print(' * Drugless growth rates: ',end='\n')
+        dr = self.drugless_rates
+        for g in range(len(dr)):
+            print('    ',g,': ',dr[g],end='\n')
+
+        print('Pharmacoligical parameters:',end='\n')
+        print(' * Curve type: ',self.curve_type,end='\n')
+        print(' * Max concentration: ',self.max_dose,end='\n')
+        
+        if self.curve_type == 'pharm' or self.curve_type == 'pulsed':
+            print(' * k_elim: ',self.k_elim,end='\n')
+            print(' * k_abs: ',self.k_abs,end='\n')
+
+        print('Experimental parameters:',end='\n')
+        print(' * N simulations: ',self.n_sims,end='\n')
+        print(' * Use carrying capacity? ',self.use_carrying_cap,end='\n')
+        if self.use_carrying_cap:
+            print(' * Carrying capacity: ',self.carrying_cap,end='\n')
+
+        print('Data information:',end='\n')
+        print(' * Fitness data: ',self.fitness_data,end='\n')
+        print(' * Data source: ',self.data_source,end='\n')
+
+        
     
     ###########################################################################
     # Set wrapper method docs

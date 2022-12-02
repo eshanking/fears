@@ -14,6 +14,7 @@ fears/data/cycloguanil_ic50.csv
 fears/data/ogbunugafor_drugless.csv
 fears/data/plate_layout.csv
 fears/data/pyrimethamine_ic50.csv
+fears/data/seascape_library.xlsx
 fears/data/plates/20210929_plate1.csv
 fears/data/plates/20210929_plate2.csv
 fears/data/plates/20210929_plate3.csv
