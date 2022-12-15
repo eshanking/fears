@@ -771,8 +771,6 @@ class Population(PopParams):
         print('Data information:',end='\n')
         print(' * Fitness data: ',self.fitness_data,end='\n')
         print(' * Data source: ',self.data_source,end='\n')
-
-        
     
     ###########################################################################
     # Set wrapper method docs

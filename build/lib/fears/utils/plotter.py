@@ -1128,6 +1128,8 @@ def msw_grid(pop,genotypes,
     width = 6 # inches
     row_height = 0.2 # inches
 
+    r_d = pop.death_rate + 0.1
+
     if ax is None:
         fig,ax = plt.subplots(figsize=(width,row_height*n_rows))
 
@@ -1162,8 +1164,26 @@ def msw_grid(pop,genotypes,
                     label = 'mutant selection'
 
                 for c in chunks[key]:
-                    x = [conc[c[0]],conc[c[0]],conc[c[1]-1],conc[c[1]-1]]
-                    ax.fill(x,y,color,alpha=0.7,label=label)
+                    # x = [conc[c[0]],conc[c[0]],conc[c[1]-1],conc[c[1]-1]]
+                    start_x = c[0]
+                    end_x = c[1]-1
+                    
+                    # get the max selection coefficient for normalization
+                    s_max = 0
+                    s_min = 1
+                    for x_t in range(len(fc[g])):
+                        s = np.abs((fc[n][x_t]+r_d)/(fc[g][x_t]+r_d))
+                        if s > s_max:
+                            s_max = s
+                        if s < s_min:
+                            s_min = s
+
+                    for x in range(start_x,end_x):
+                        x_rect = [conc[x],conc[x],conc[x+1],conc[x+1]]
+                        s = np.abs((fc[n][x]+r_d)/(fc[g][x]+r_d)) # selection coefficient
+                        s = s-s_min
+                        s = s/(s_max-s_min)
+                        ax.fill(x_rect,y,color,alpha=s,label=label)
 
             # # wt selection window
             # x = [min(conc),min(conc),msw_left,msw_left]
