@@ -8,6 +8,7 @@ import math
 import scipy.stats
 from fears.utils import fitness
 from matplotlib.collections import LineCollection
+from matplotlib.patches import Polygon
 import networkx as nx
 from labellines import labelLine
 
@@ -35,7 +36,11 @@ def gen_color_cycler(style=None,palette='bright',n_colors=16):
             cycler(linestyle=['-', '-','-','-','-','-','-','-','-',
                                 '--','--','--','--','--','--','--']))
     elif style == 'solid':
-        colors = sns.color_palette(palette,n_colors)
+        colors = sns.color_palette(palette,n_colors+1)
+        # reshuffle
+        colors_t = colors
+        colors[3] = colors_t[4]
+        colors = colors[:4]
         cc = cycler(color=colors)
     return cc
 
@@ -1090,7 +1095,8 @@ def plot_msw_to_ax(ax,conc,wt_fitness_curve,mut_fitness_curve,wtlabel,mutlabel):
         elif key == 'reference':
             color = '#ff7f00'
         else:
-            color = '#2ca02c'
+            # color = '#2ca02c'
+            color = 'tab:blue'
 
         for c in chunks[key]:
             ax.axvspan(conc[c[0]],conc[c[1]-1],facecolor=color,alpha=0.7)
@@ -1140,7 +1146,7 @@ def msw_grid(pop,genotypes,
         # add a line for the reference label
         label = 'Reference = ' + pop.int_to_binary(g)
 
-        pos = (10**-3,ylevel-(0.8*h))
+        pos = (10**3,ylevel-(0.8*h))
         ax.annotate(label,pos,xycoords='data',annotation_clip=True,fontsize=labelsize)
 
         ylevel += -h
@@ -1151,6 +1157,7 @@ def msw_grid(pop,genotypes,
 
             y = [ylevel-h,ylevel,ylevel,ylevel-h]
 
+
             for key in chunks:
                 # label = key
                 if key == 'net loss':
@@ -1160,47 +1167,45 @@ def msw_grid(pop,genotypes,
                     color = '#ff7f00'
                     label = 'wt selection'
                 else:
-                    color = '#2ca02c'
+                    color = 'tab:blue'
                     label = 'mutant selection'
 
                 for c in chunks[key]:
-                    # x = [conc[c[0]],conc[c[0]],conc[c[1]-1],conc[c[1]-1]]
                     start_x = c[0]
                     end_x = c[1]-1
-                    
-                    # get the max selection coefficient for normalization
-                    s_max = 0
-                    s_min = 1
-                    for x_t in range(len(fc[g])):
-                        s = np.abs((fc[n][x_t]+r_d)/(fc[g][x_t]+r_d))
-                        if s > s_max:
-                            s_max = s
-                        if s < s_min:
-                            s_min = s
+
+                    if label == 'mutant selection':
+                        s = np.array((fc[n]+r_d)/(fc[g]+r_d))
+                        s = s[start_x:end_x]
+                        s = s-np.min(s)
+                        s = s/np.max(s)
+                    elif label == 'wt selection':
+                        s = np.array((fc[g]+r_d)/(fc[n]+r_d))
+                        s = s[start_x:end_x]
+                        s = s-np.min(s)
+                        s = s/np.max(s)
+                    elif label == 'net loss':
+                        s = np.ones(end_x-start_x)
+
+                    indx = 0
 
                     for x in range(start_x,end_x):
                         x_rect = [conc[x],conc[x],conc[x+1],conc[x+1]]
-                        s = np.abs((fc[n][x]+r_d)/(fc[g][x]+r_d)) # selection coefficient
-                        s = s-s_min
-                        s = s/(s_max-s_min)
-                        ax.fill(x_rect,y,color,alpha=s,label=label)
+                        # if s[indx] == 1 and g == 0 and n == 1:
+                        #     ax.fill(x_rect,y,color,alpha=s[indx],label=label)
+                        # else:
+                        ax.fill(x_rect,y,color,alpha=s[indx])
+                        indx += 1
 
-            # # wt selection window
-            # x = [min(conc),min(conc),msw_left,msw_left]
-            # y = [ylevel-h,ylevel,ylevel,ylevel-h]
-            # wt = ax.fill(x,y,'#ff7f00',alpha=0.7,label='wt selection')
+                    # draw a box
 
-            # # mutant selection window
-            # # print(msw_right)
-            # x = [msw_left,msw_left,msw_right,msw_right]
-            # mt = ax.fill(x,y,'#2ca02c',alpha=0.7,label='mutant selection')
+                    poly_coords = [(conc[start_x],y[0]),(conc[end_x],y[0]),
+                                (conc[end_x],y[1]),(conc[start_x],y[1])]
 
-            # # no selection
-            # x = [msw_right,msw_right,max(conc),max(conc)]
-            # ns = ax.fill(x,y,'#e41a1c',alpha=0.7,label='net loss')
+                    ax.add_patch( Polygon(poly_coords,edgecolor='black',
+                                        facecolor=None, closed=True, 
+                                        clip_on=False,fill=False) )
 
-            y = np.ones(len(conc))*ylevel
-            ax.plot(conc,y,color='black',linewidth=0.5)
 
             label = pop.int_to_binary(n)
             pos = (comp_annotate_pos,ylevel-(0.8*h))
@@ -1214,10 +1219,15 @@ def msw_grid(pop,genotypes,
     ax.tick_params(axis='x', which='major', labelsize=ticklabelsize)
     ax.set_yticks([])
     if legend:
-        ax.legend()
-        h, l = ax.get_legend_handles_labels()
-        ax.legend(h[0:3],l[0:3],frameon=False,ncol=3,loc=legendloc)
+        p1 = ax.plot([1,1], color = '#ff7f00',label = 'wt selection',linewidth=3)
+        p2 = ax.plot([1,1], color = 'tab:blue',label = 'mutant selection',linewidth=3)
+        p0 = ax.plot([1,1], color = '#e41a1c',label = 'net loss',linewidth=3)
+        ax.legend(frameon=False,ncol=3,loc=legendloc)
 
+        lines = ax.get_lines()
+        lines[-1].remove()
+        lines[-2].remove()
+        lines[-3].remove()
     return ax
 
 
