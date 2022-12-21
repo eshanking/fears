@@ -117,6 +117,7 @@ def plot_timecourse(pop,counts_t=None,title_t=None,**kwargs):
 
             
         ax2.tick_params(labelsize=15)
+        ax2.axes.ticklabel_format(axis='y',style='sci',scilimits=(1,10))
         ax2.set_title(title,fontsize=20)
         
     for allele in range(counts.shape[1]):
@@ -174,8 +175,14 @@ def plot_timecourse(pop,counts_t=None,title_t=None,**kwargs):
     xlabels = xlabels*pop.timestep_scale
     xlabels = xlabels/24
     xlabels = np.array(xlabels).astype('int')
+    xt = ax1.get_xticks()
+    ax1.set_xticks(xt)
     ax1.set_xticklabels(xlabels)
     ax1.set_xlabel('Days',fontsize=20)
+
+    # get the length of the simulation
+    n_timestep = len(counts[:,0])
+    ax1.set_xlim(0,n_timestep)
 
     return fig
 
@@ -584,7 +591,6 @@ def plot_timecourse_to_axes(pop,
                     **label_kwargs)
     
     return counts_ax, drug_ax
-
 
 def plot_landscape(p,conc=10**0,
                 fit_land=None,

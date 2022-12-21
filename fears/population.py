@@ -306,13 +306,6 @@ class Population(PopParams):
     def __init__(self,**kwargs):
         super().__init__(**kwargs)
 
-        # initialize constant population condition
-        if self.constant_pop:
-            self.init_counts = \
-                self.init_counts*self.max_cells/sum(self.init_counts)
-            self.init_counts = np.floor(self.init_counts)
-            self.use_carrying_cap = False
-
         # initialize drug curve
         self.drug_curve = None
         self.impulses = None
@@ -334,6 +327,13 @@ class Population(PopParams):
         if self.init_counts is None:
             self.init_counts = np.zeros(self.n_genotype)
             self.init_counts[0] = 10**6
+
+        # initialize constant population condition
+        if self.constant_pop:
+            self.init_counts = \
+                self.init_counts*self.max_cells/sum(self.init_counts)
+            self.init_counts = np.floor(self.init_counts)
+            self.use_carrying_cap = False
         
     def initialize_fitness(self):
 
