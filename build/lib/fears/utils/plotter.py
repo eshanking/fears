@@ -279,7 +279,7 @@ def plot_fitness_curves(pop,
         ax.set_xlabel('Drug concentration (ug/ml)',fontsize=labelsize)
 
         if show_legend:
-            ax.legend(fontsize=labelsize,frameon=False,loc=(1.05,0),ncol=legend_cols)
+            ax.legend(fontsize=labelsize,frameon=False,loc=(1.1,0),ncol=legend_cols)
 
     else:
         if ax is None:
@@ -309,7 +309,7 @@ def plot_fitness_curves(pop,
             ax.plot(conc,thresh,linestyle='dashdot',color='black',linewidth=linewidth)
         
         else:
-            ylabel = 'Growth rate (hr$^{-1}$'
+            ylabel = 'Growth rate (hr$^{-1})$'
         
         for gen in range(pop.n_genotype):
             ax.plot(conc,fit[gen,:],linewidth=linewidth,label=str(pop.int_to_binary(gen)))
@@ -371,7 +371,7 @@ def plot_msw(pop,wt,conc=None,fc=None,ncols=2,figsize=(2.5,8)):
                 wtlabel = pop.int_to_binary(wt) + ' (ref)'
                 mutlabel = pop.int_to_binary(n)
                 
-                ax[r] = plot_msw_to_ax(ax[r],conc,wt_fitness_curve,fc[n],wtlabel,mutlabel)
+                ax[r] = plot_msw_to_ax(pop,ax[r],conc,wt_fitness_curve,fc[n],wtlabel,mutlabel)
 
                 ax[r].set_xscale('log')
                 ax[r].set_xlim([10**pop.drug_conc_range[0],10**pop.drug_conc_range[1]])
@@ -392,7 +392,7 @@ def plot_msw(pop,wt,conc=None,fc=None,ncols=2,figsize=(2.5,8)):
                 wtlabel = pop.int_to_binary(wt)
                 mutlabel = pop.int_to_binary(n)
 
-                ax[c] = plot_msw_to_ax(ax[c],conc,wt_fitness_curve,fc[n],wtlabel,mutlabel)
+                ax[c] = plot_msw_to_ax(pop,ax[c],conc,wt_fitness_curve,fc[n],wtlabel,mutlabel)
 
                 ax[c].set_xscale('log')
                 ax[c].set_xlim([10**pop.drug_conc_range[0],10**pop.drug_conc_range[1]])
@@ -413,7 +413,7 @@ def plot_msw(pop,wt,conc=None,fc=None,ncols=2,figsize=(2.5,8)):
                 wtlabel = pop.int_to_binary(wt) + ' (ref)'
                 mutlabel = pop.int_to_binary(n)   
 
-                ax[r,col] = plot_msw_to_ax(ax[r,col],conc,wt_fitness_curve,fc[n],wtlabel,mutlabel)
+                ax[r,col] = plot_msw_to_ax(pop,ax[r,col],conc,wt_fitness_curve,fc[n],wtlabel,mutlabel)
 
                 ax[r,col].set_xscale('log')
                 ax[r,col].set_xlim([10**pop.drug_conc_range[0],10**pop.drug_conc_range[1]])
@@ -1084,7 +1084,7 @@ def get_msw(ref_fitness_curve,cur_fitness_curve):
 
     return chunks
 
-def plot_msw_to_ax(ax,conc,wt_fitness_curve,mut_fitness_curve,wtlabel,mutlabel):
+def plot_msw_to_ax(pop,ax,conc,wt_fitness_curve,mut_fitness_curve,wtlabel,mutlabel):
     
     ax.plot(conc,wt_fitness_curve,color='black',
                         label=wtlabel,linewidth=3)
@@ -1094,18 +1094,51 @@ def plot_msw_to_ax(ax,conc,wt_fitness_curve,mut_fitness_curve,wtlabel,mutlabel):
 
     chunks = get_msw(wt_fitness_curve,mut_fitness_curve)
 
+    
+    r_d = pop.death_rate + 0.1
+
     for key in chunks:
         # label = key
         if key == 'net loss':
             color = '#e41a1c'
+            label = 'net loss'
         elif key == 'reference':
             color = '#ff7f00'
+            label = 'wt selection'
         else:
-            # color = '#2ca02c'
             color = 'tab:blue'
+            label = 'mutant selection'
 
         for c in chunks[key]:
-            ax.axvspan(conc[c[0]],conc[c[1]-1],facecolor=color,alpha=0.7)
+            # ax.axvspan(conc[c[0]],conc[c[1]-1],facecolor=color,alpha=0.7)
+            start_x = c[0]
+            end_x = c[1]-1
+
+            if label == 'mutant selection':
+                s = np.array((mut_fitness_curve+r_d)/(wt_fitness_curve+r_d))
+                s = s[start_x:end_x]
+                s = s-np.min(s)
+                s = s/np.max(s)
+            elif label == 'wt selection':
+                s = np.array((wt_fitness_curve+r_d)/(mut_fitness_curve+r_d))
+                s = s[start_x:end_x]
+                s = s-np.min(s)
+                s = s/np.max(s)
+            else:
+                s = np.ones(end_x-start_x)
+
+            indx = 0
+
+            for x in range(start_x,end_x):
+                # x_rect = [conc[x],conc[x],conc[x+1],conc[x+1]]
+                # if s[indx] == 1 and g == 0 and n == 1:
+                #     ax.fill(x_rect,y,color,alpha=s[indx],label=label)
+                # else:
+
+                ax.axvspan(conc[x],conc[x+1],facecolor=color,alpha=s[indx])
+                indx += 1
+
+            # draw a box
 
     # ax.axvspan(msw_left, msw_right, 
     #         facecolor='#2ca02c',alpha=0.7)
