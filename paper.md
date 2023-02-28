@@ -45,6 +45,28 @@ agent-based model, even for very large population sizes. FEArS also contains
 powerful and flexible utilities for data analysis, plotting, and experimental
 fitness seascape estimation. 
 
+## A hybrid agent-based algorithm
+
+FEArS achieves fast runtimes while simulating large populations of evolving
+agents by employing what we term a 'hybrid agent-based' approach. When 
+possible, populations are stored as vectors of cell numbers $\hat n$, where each 
+position in the vector corresponds to a genotype and the number at that 
+position gives the number of cells of that type in the population. Then, 
+stochastic events such as cell division and cell death are simply drawn from 
+poission distributions:
+
+\begin{equation}\label{eq:cell_death}
+  \hat n_{d} ~ poisson(r_{d}*\hat n),
+\end{equation}
+
+where $\hat n_{d}$ refers to the vector of dead cells of each type, for example.
+However, in the mutation step, FEArS switches to a strictly agent-based process.
+Here, every mutating agent is enumerated in a vector, where each entry in the 
+vector represents the genotype of the agent. Then, mutating agents are randomly
+allocated to adjacent genotypes.
+
+![FEArS algorithm flow chart. The blue dashed box indicates the portion of the algorithm that is strictly agent-based.\label{fig:flowchart}](fears_flow_chart.png)
+
 # Statement of need
 
 FEArS enables stochastic simulations of clonally evolving systems 
@@ -53,8 +75,8 @@ algorithm, we are able to model mutation and selection, with evolution arising
 as an emergent phenomena. Furthermore, by allowing for arbitrary population 
 sizes, FEArS can model population extinction. Arbitrary population sizes allows
 us to simulate how a disease population within a patient may respond to 
-therapy. In addition, FEArS models specific genotypes, allowing for more fine-
-grained prediction of evolution.
+therapy. In addition, FEArS models genotype-sprecific dose-response curves, 
+allowing for more fine-grained prediction of evolution.
 
 
 

@@ -463,7 +463,8 @@ class Plate():
                  ref_genotypes='0',
                  ref_keys='B2',
                  t_obs=None,
-                 tmax=None):
+                 tmax=None,
+                 data_start = None):
         """Initializer
 
         Args:
@@ -478,6 +479,7 @@ class Plate():
         self.mode = mode
         self.data_cols = data_cols
         self.tmax = tmax
+        self.data_start = data_start
 
         self.exp_layout_path = exp_layout_path
         if exp_layout_path is not None:
@@ -591,7 +593,7 @@ class Plate():
 
         return dt
 
-    def parse_data_file(self,p):
+    def parse_data_file(self,p,data_start=None):
         """Strips metadata from raw data file to obtain timeseries OD data
 
         Args:
@@ -612,19 +614,30 @@ class Plate():
         time_col = df[df.keys()[0]]
         time_array = np.array(time_col)
             
-        # raw data starts after cycle nr.
-        if any(time_array == 'Cycle Nr.'):
-            data_start_indx = np.argwhere(time_array == 'Cycle Nr.')
-        elif any(time_array == 'Time [s]'):
-            data_start_indx = np.argwhere(time_array == 'Time [s]')
-        else:
-            raise Exception('Unknown file format. Expected either Cycle Nr. or Time [s] as column headings.')
+        if data_start == None:
+            # raw data starts after cycle nr.
+            if any(time_array == 'Cycle Nr.'):
+                data_start_indx = np.argwhere(time_array == 'Cycle Nr.')
+            elif any(time_array == 'Time [s]'):
+                data_start_indx = np.argwhere(time_array == 'Time [s]')
+            else:
+                raise Exception('Unknown file format. Expected either Cycle Nr. or Time [s] as column headings.')
 
-        #sometimes the data gets passed in very unraw
-        if len(data_start_indx) == 0:
-            return df
-        
-        data_start_indx = data_start_indx[0][0] # get scalar from numpy array
+            #sometimes the data gets passed in very unraw
+            if len(data_start_indx) == 0:
+                return df
+            
+            data_start_indx = data_start_indx[0][0] # get scalar from numpy array
+        else:
+
+            if any(time_array == data_start):
+                data_start_indx = np.argwhere(time_array == data_start)
+
+            else:
+                raise Exception('Specified data start string not found')
+            
+            data_start_indx = data_start_indx[0][0] + 1 # get scalar from numpy array
+    
 
         # filter header from raw data file
         df_filt = df.loc[data_start_indx:,:]

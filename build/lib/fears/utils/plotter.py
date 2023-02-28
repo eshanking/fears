@@ -606,7 +606,7 @@ def plot_landscape(p,conc=10**0,
                 square=False,
                 textcolor='black',
                 cbax=None,
-                cblabel='',
+                cblabel=None,
                 cbloc = [0.1,0.8,0.3,0.5],
                 network_only=False, # plots just the network without any fit_land data
                 edge_color='gray',
@@ -632,7 +632,8 @@ def plot_landscape(p,conc=10**0,
         
     if rank:
         fit_land = scipy.stats.rankdata(fit_land)
-        cblabel = 'Rank'
+        if cblabel is None:
+            cblabel = 'Rank'
     
     if ignore_zero:
         fit_land_t = [f==0 for f in fit_land]
@@ -817,7 +818,7 @@ def plot_landscape(p,conc=10**0,
                         location='right',
                         aspect=10)
         cb.outline.set_visible(False)
-        cb.set_label(cblabel,fontsize=10)
+        cb.set_label(cblabel,fontsize=12)
         
         if rank:
             ticks = [min(fit_land),max(fit_land)]
