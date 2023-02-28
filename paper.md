@@ -45,6 +45,14 @@ agent-based model, even for very large population sizes. FEArS also contains
 powerful and flexible utilities for data analysis, plotting, and experimental
 fitness seascape estimation. 
 
+The two core classes for simulating populations and running experiments are 
+Population and Experiment, respectively. The Population class includes all
+biological parameters relevant for the evolving population under study in 
+addition to methods for simulating evolution. The Experiment class includes
+parameters for running an experiment with multiple populations, including 
+varying pharmacokinetic parameters, number of simulations, and results saving
+methods.
+
 ## A hybrid agent-based algorithm
 
 FEArS achieves fast runtimes while simulating large populations of evolving
@@ -56,16 +64,40 @@ stochastic events such as cell division and cell death are simply drawn from
 poission distributions:
 
 \begin{equation}\label{eq:cell_death}
-  \hat n_{d} ~ poisson(r_{d}*\hat n),
+  \hat n_{d} \sim poisson(r_{d}*\hat n),
 \end{equation}
 
 where $\hat n_{d}$ refers to the vector of dead cells of each type, for example.
 However, in the mutation step, FEArS switches to a strictly agent-based process.
 Here, every mutating agent is enumerated in a vector, where each entry in the 
 vector represents the genotype of the agent. Then, mutating agents are randomly
-allocated to adjacent genotypes.
+allocated to adjacent genotypes (Fig. \autoref{fig:flowchart}). Since the number
+of mutating cells is much smaller than the total population size (i.e., with a 
+mutation rate on the order of $10^{-6}$ to $10^{-9}$ per base pair), this 
+agent-based step does not compromise computational efficiency.
 
-![FEArS algorithm flow chart. The blue dashed box indicates the portion of the algorithm that is strictly agent-based.\label{fig:flowchart}](fears_flow_chart.png)
+![FEArS algorithm flow chart. The blue dashed box indicates the portion of the algorithm that is strictly agent-based.\label{fig:flowchart}](fears_flow_chart.png){ width=70% }
+
+By modeling realistic population sizes, FEArS enables investigation of 
+population extinction and stochastic evolutionary rescue.
+
+## A suite of useful utilies
+
+In addition to the core population and experiment classes, FEArS includes a 
+wide suite of utilities to assist with computational experiments, empirical
+data analysis, and results visualization.
+
+- plotter: a broad and flexible plotting utility, including functions for plotting
+evolutionary dynamics timetraces, Kaplan-Meier curves, and fitness landscapes.
+
+- pharm: functions for pharmacokinetics, including generating arbitrary 
+pharmacokinetic curves and simulating patient nonadherence.
+
+- fitness: functions for pharmacodynamics, including computing fitness landscapes
+and fitness seascapes.
+
+- AutoRate: classes and methods for estimating fitness seascapes from 
+experimental data
 
 # Statement of need
 
@@ -77,26 +109,6 @@ sizes, FEArS can model population extinction. Arbitrary population sizes allows
 us to simulate how a disease population within a patient may respond to 
 therapy. In addition, FEArS models genotype-sprecific dose-response curves, 
 allowing for more fine-grained prediction of evolution.
-
-
-
-
-# Mathematics
-
-Single dollars ($) are required for inline mathematics e.g. $f(x) = e^{\pi/x}$
-
-Double dollars make self-standing equations:
-
-$$\Theta(x) = \left\{\begin{array}{l}
-0\textrm{ if } x < 0\cr
-1\textrm{ else}
-\end{array}\right.$$
-
-You can also use plain \LaTeX for equations
-\begin{equation}\label{eq:fourier}
-\hat f(\omega) = \int_{-\infty}^{\infty} f(x) e^{i\omega x} dx
-\end{equation}
-and refer to \autoref{eq:fourier} from text.
 
 # Citations
 
@@ -112,18 +124,9 @@ For a quick reference, the following citation commands can be used:
 - `[@author:2001]` -> "(Author et al., 2001)"
 - `[@author1:2001; @author2:2001]` -> "(Author1 et al., 2001; Author2 et al., 2002)"
 
-# Figures
-
-Figures can be included like this:
-![Caption for example figure.\label{fig:example}](figure.png)
-and referenced from text using \autoref{fig:example}.
-
-Figure sizes can be customized by adding an optional second parameter:
-![Caption for example figure.](figure.png){ width=20% }
-
 # Acknowledgements
 
-We acknowledge contributions from Brigitta Sipocz, Syrtis Major, and Semyeong
-Oh, and support from Kathryn Johnston during the genesis of this project.
+<!-- We acknowledge contributions from Brigitta Sipocz, Syrtis Major, and Semyeong
+Oh, and support from Kathryn Johnston during the genesis of this project. -->
 
 # References
