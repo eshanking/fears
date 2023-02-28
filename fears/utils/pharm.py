@@ -138,7 +138,7 @@ def gen_on_off_regimen(pop,duty_cycle=None):
 def gen_curves(pop):
     """General method for generating drug concentration curves for populations
 
-    Generates drug concentration curves based on paramters in population object
+    Generates drug concentration curves based on parameters in population object
 
     Args:
         pop (population): Population class object
