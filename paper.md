@@ -37,7 +37,7 @@ infectious disease, is governed by the same fundamental laws. Modeling
 evolution with genotype-specific dose response curves, collectively forming a
 'fitness seascape', enables simulations that include realistic pharmacokinetic 
 constraints, more closely resembling the environmental conditions within a 
-patient. FEArS (Fast Evolution on Arbitrary Seascapes) is a python package
+patient [@Merrell:1994, @Mustonen:2009, @King:2022,@Agarwala:2019]. FEArS (Fast Evolution on Arbitrary Seascapes) is a python package
 that enables simulating evolution with fitness seascapes. FEArS can simulate a 
 wide variety of experimental conditions with many arbitrary biological 
 parameters. FEArS remains computationally efficient despite being an 
@@ -71,7 +71,7 @@ where $\hat n_{d}$ refers to the vector of dead cells of each type, for example.
 However, in the mutation step, FEArS switches to a strictly agent-based process.
 Here, every mutating agent is enumerated in a vector, where each entry in the 
 vector represents the genotype of the agent. Then, mutating agents are randomly
-allocated to adjacent genotypes (Fig. \autoref{fig:flowchart}). Since the number
+allocated to adjacent genotypes (\autoref{fig:flowchart}). Since the number
 of mutating cells is much smaller than the total population size (i.e., with a 
 mutation rate on the order of $10^{-6}$ to $10^{-9}$ per base pair), this 
 agent-based step does not compromise computational efficiency.
@@ -83,9 +83,9 @@ population extinction and stochastic evolutionary rescue.
 
 ## A suite of useful utilies
 
-In addition to the core population and experiment classes, FEArS includes a 
-wide suite of utilities to assist with computational experiments, empirical
-data analysis, and results visualization.
+In addition to the core population and experiment classes, FEArS includes 
+utilities to assist with computational experiments, empirical data analysis, 
+and results visualization.
 
 - plotter: a broad and flexible plotting utility, including functions for plotting
 evolutionary dynamics timetraces, Kaplan-Meier curves, and fitness landscapes.
@@ -97,7 +97,7 @@ pharmacokinetic curves and simulating patient nonadherence.
 and fitness seascapes.
 
 - AutoRate: classes and methods for estimating fitness seascapes from 
-experimental data
+experimental data.
 
 # Statement of need
 
@@ -110,19 +110,14 @@ us to simulate how a disease population within a patient may respond to
 therapy. In addition, FEArS models genotype-sprecific dose-response curves, 
 allowing for more fine-grained prediction of evolution.
 
-# Citations
-
-Citations to entries in paper.bib should be in
-[rMarkdown](http://rmarkdown.rstudio.com/authoring_bibliographies_and_citations.html)
-format.
-
-If you want to cite a software repository URL (e.g. something on GitHub without a preferred
-citation) then you can do it with the example BibTeX entry below for @fidgit.
-
-For a quick reference, the following citation commands can be used:
-- `@author:2001`  ->  "Author et al. (2001)"
-- `[@author:2001]` -> "(Author et al., 2001)"
-- `[@author1:2001; @author2:2001]` -> "(Author1 et al., 2001; Author2 et al., 2002)"
+Other common evolutionary simulation approaches are Moran processes [@Moran:1958] 
+and Wright-Fisher models [@Wright:1931; @Fisher:1930]. However, both 
+approaches have limitations that preclude modeling evolutionary dynamics in a
+wide variety of settings, including with varying population size and varying drug concentration. 
+To our knowledge, there is no open-source software that permits stochastic 
+evolutionary simulations with empirical genotype-specific dose-response curves 
+and arbitrary drug pharmacokinetics. To date, FEArS has been used extensively 
+in one manuscript [@King:2022].
 
 # Acknowledgements
 
