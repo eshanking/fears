@@ -37,7 +37,7 @@ infectious disease, is governed by the same fundamental laws. Modeling
 evolution with genotype-specific dose response curves, collectively forming a
 'fitness seascape', enables simulations that include realistic pharmacokinetic 
 constraints, more closely resembling the environmental conditions within a 
-patient [@Merrell:1994, @Mustonen:2009, @King:2022,@Agarwala:2019]. FEArS (Fast Evolution on Arbitrary Seascapes) is a python package
+patient [@Merrell:1994,@Mustonen:2009,@King:2022,@Agarwala:2019]. FEArS (Fast Evolution on Arbitrary Seascapes) is a python package
 that enables simulating evolution with fitness seascapes. FEArS can simulate a 
 wide variety of experimental conditions with many arbitrary biological 
 parameters. FEArS remains computationally efficient despite being an 
@@ -113,15 +113,15 @@ allowing for more fine-grained prediction of evolution.
 Other common evolutionary simulation approaches are Moran processes [@Moran:1958] 
 and Wright-Fisher models [@Wright:1931; @Fisher:1930]. However, both 
 approaches have limitations that preclude modeling evolutionary dynamics in a
-wide variety of settings, including with varying population size and varying drug concentration. 
+wide variety of settings, including with varying population size and varying drug concentration.
+Other software for simulating evolution with fitness landcsapes utilize Markov
+chains, which achieve extremely high computational efficiency but cannot model
+arbitrary population sizes and time-varying selection [@Maltas:2021,@Nichol:2015].
 To our knowledge, there is no open-source software that permits stochastic 
 evolutionary simulations with empirical genotype-specific dose-response curves 
 and arbitrary drug pharmacokinetics. To date, FEArS has been used extensively 
 in one manuscript [@King:2022].
 
 # Acknowledgements
-
-<!-- We acknowledge contributions from Brigitta Sipocz, Syrtis Major, and Semyeong
-Oh, and support from Kathryn Johnston during the genesis of this project. -->
 
 # References
