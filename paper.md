@@ -117,9 +117,14 @@ wide variety of settings, including with varying population size and varying dru
 Other software for simulating evolution with fitness landcsapes utilize Markov
 chains, which achieve extremely high computational efficiency but cannot model
 arbitrary population sizes and time-varying selection [@Maltas:2021,@Nichol:2015].
-To our knowledge, there is no open-source software that permits stochastic 
-evolutionary simulations with empirical genotype-specific dose-response curves 
-and arbitrary drug pharmacokinetics. To date, FEArS has been used extensively 
+In addition, there exists a suite of software packages for simulating tumor evolution
+[@McDonald:2017,Irurzun-Arana:2020,Roney:2020,Angaroni:2022]. However, these packages
+either do not model drug pharmacokinetics and pharmacodynamics, do not model 
+genotype-specific dose-response curves, or are simply more suited for studying
+spatial tumor evolution (in contrast to well-mixed pathogen populations that FEArS
+is suited for). To our knowledge, there is no open-source software that permits 
+stochastic evolutionary simulations with empirical genotype-specific dose-response 
+curves and arbitrary drug pharmacokinetics. To date, FEArS has been used extensively 
 in one manuscript [@King:2022].
 
 # Acknowledgements
