@@ -8,6 +8,7 @@ import math
 import scipy.stats
 from fears.utils import fitness
 from matplotlib.collections import LineCollection
+from matplotlib.patches import Polygon
 import networkx as nx
 from labellines import labelLine
 
@@ -35,7 +36,11 @@ def gen_color_cycler(style=None,palette='bright',n_colors=16):
             cycler(linestyle=['-', '-','-','-','-','-','-','-','-',
                                 '--','--','--','--','--','--','--']))
     elif style == 'solid':
-        colors = sns.color_palette(palette,n_colors)
+        colors = sns.color_palette(palette,n_colors+1)
+        # reshuffle
+        colors_t = colors
+        colors[3] = colors_t[4]
+        colors = colors[:4]
         cc = cycler(color=colors)
     return cc
 
@@ -112,6 +117,7 @@ def plot_timecourse(pop,counts_t=None,title_t=None,**kwargs):
 
             
         ax2.tick_params(labelsize=15)
+        ax2.axes.ticklabel_format(axis='y',style='sci',scilimits=(1,10))
         ax2.set_title(title,fontsize=20)
         
     for allele in range(counts.shape[1]):
@@ -169,8 +175,14 @@ def plot_timecourse(pop,counts_t=None,title_t=None,**kwargs):
     xlabels = xlabels*pop.timestep_scale
     xlabels = xlabels/24
     xlabels = np.array(xlabels).astype('int')
+    xt = ax1.get_xticks()
+    ax1.set_xticks(xt)
     ax1.set_xticklabels(xlabels)
     ax1.set_xlabel('Days',fontsize=20)
+
+    # get the length of the simulation
+    n_timestep = len(counts[:,0])
+    ax1.set_xlim(0,n_timestep)
 
     return fig
 
@@ -186,6 +198,7 @@ def plot_fitness_curves(pop,
                         show_axes_labels=True,
                         raw_data = False,
                         color_kwargs={},
+                        legend_loc = (1,-0.05),
                         xdata=None):
     """Plots genotype-specific dose reponse curves (fitness seascape)
 
@@ -267,7 +280,7 @@ def plot_fitness_curves(pop,
         ax.set_xlabel('Drug concentration (ug/ml)',fontsize=labelsize)
 
         if show_legend:
-            ax.legend(fontsize=labelsize,frameon=False,loc=(1.05,0),ncol=2)
+            ax.legend(fontsize=labelsize,frameon=False,loc=(1.1,0),ncol=legend_cols)
 
     else:
         if ax is None:
@@ -297,13 +310,13 @@ def plot_fitness_curves(pop,
             ax.plot(conc,thresh,linestyle='dashdot',color='black',linewidth=linewidth)
         
         else:
-            ylabel = 'Growth Rate'
+            ylabel = 'Growth rate (hr$^{-1})$'
         
         for gen in range(pop.n_genotype):
             ax.plot(conc,fit[gen,:],linewidth=linewidth,label=str(pop.int_to_binary(gen)))
         
         if show_legend:
-            ax.legend(fontsize=labelsize,frameon=False,loc=(1,-.10),ncols=1)
+            ax.legend(fontsize=labelsize,frameon=False,loc=legend_loc,ncol=legend_cols)
         
         ax.set_xscale('log')
         
@@ -312,7 +325,9 @@ def plot_fitness_curves(pop,
         ax.tick_params(labelsize=labelsize)
         
         if show_axes_labels:
-            ax.set_xlabel('Drug concentration ($\mathrm{\mu}$g/mL)',fontsize=labelsize)
+            unit = pop.drug_units
+            xl = 'Drug concentration (' + unit + ')'
+            ax.set_xlabel(xl,fontsize=labelsize)
             ax.set_ylabel(ylabel,fontsize=labelsize)
         # ax.set_frame_on(False)
     
@@ -357,7 +372,7 @@ def plot_msw(pop,wt,conc=None,fc=None,ncols=2,figsize=(2.5,8)):
                 wtlabel = pop.int_to_binary(wt) + ' (ref)'
                 mutlabel = pop.int_to_binary(n)
                 
-                ax[r] = plot_msw_to_ax(ax[r],conc,wt_fitness_curve,fc[n],wtlabel,mutlabel)
+                ax[r] = plot_msw_to_ax(pop,ax[r],conc,wt_fitness_curve,fc[n],wtlabel,mutlabel)
 
                 ax[r].set_xscale('log')
                 ax[r].set_xlim([10**pop.drug_conc_range[0],10**pop.drug_conc_range[1]])
@@ -378,7 +393,7 @@ def plot_msw(pop,wt,conc=None,fc=None,ncols=2,figsize=(2.5,8)):
                 wtlabel = pop.int_to_binary(wt)
                 mutlabel = pop.int_to_binary(n)
 
-                ax[c] = plot_msw_to_ax(ax[c],conc,wt_fitness_curve,fc[n],wtlabel,mutlabel)
+                ax[c] = plot_msw_to_ax(pop,ax[c],conc,wt_fitness_curve,fc[n],wtlabel,mutlabel)
 
                 ax[c].set_xscale('log')
                 ax[c].set_xlim([10**pop.drug_conc_range[0],10**pop.drug_conc_range[1]])
@@ -399,7 +414,7 @@ def plot_msw(pop,wt,conc=None,fc=None,ncols=2,figsize=(2.5,8)):
                 wtlabel = pop.int_to_binary(wt) + ' (ref)'
                 mutlabel = pop.int_to_binary(n)   
 
-                ax[r,col] = plot_msw_to_ax(ax[r,col],conc,wt_fitness_curve,fc[n],wtlabel,mutlabel)
+                ax[r,col] = plot_msw_to_ax(pop,ax[r,col],conc,wt_fitness_curve,fc[n],wtlabel,mutlabel)
 
                 ax[r,col].set_xscale('log')
                 ax[r,col].set_xlim([10**pop.drug_conc_range[0],10**pop.drug_conc_range[1]])
@@ -578,7 +593,6 @@ def plot_timecourse_to_axes(pop,
     
     return counts_ax, drug_ax
 
-
 def plot_landscape(p,conc=10**0,
                 fit_land=None,
                 relative=True,
@@ -593,7 +607,7 @@ def plot_landscape(p,conc=10**0,
                 square=False,
                 textcolor='black',
                 cbax=None,
-                cblabel='',
+                cblabel=None,
                 cbloc = [0.1,0.8,0.3,0.5],
                 network_only=False, # plots just the network without any fit_land data
                 edge_color='gray',
@@ -619,7 +633,8 @@ def plot_landscape(p,conc=10**0,
         
     if rank:
         fit_land = scipy.stats.rankdata(fit_land)
-        cblabel = 'Rank'
+        if cblabel is None:
+            cblabel = 'Rank'
     
     if ignore_zero:
         fit_land_t = [f==0 for f in fit_land]
@@ -804,7 +819,7 @@ def plot_landscape(p,conc=10**0,
                         location='right',
                         aspect=10)
         cb.outline.set_visible(False)
-        cb.set_label(cblabel,fontsize=10)
+        cb.set_label(cblabel,fontsize=12)
         
         if rank:
             ticks = [min(fit_land),max(fit_land)]
@@ -1071,7 +1086,7 @@ def get_msw(ref_fitness_curve,cur_fitness_curve):
 
     return chunks
 
-def plot_msw_to_ax(ax,conc,wt_fitness_curve,mut_fitness_curve,wtlabel,mutlabel):
+def plot_msw_to_ax(pop,ax,conc,wt_fitness_curve,mut_fitness_curve,wtlabel,mutlabel):
     
     ax.plot(conc,wt_fitness_curve,color='black',
                         label=wtlabel,linewidth=3)
@@ -1081,17 +1096,51 @@ def plot_msw_to_ax(ax,conc,wt_fitness_curve,mut_fitness_curve,wtlabel,mutlabel):
 
     chunks = get_msw(wt_fitness_curve,mut_fitness_curve)
 
+    
+    r_d = pop.death_rate + 0.1
+
     for key in chunks:
         # label = key
         if key == 'net loss':
             color = '#e41a1c'
+            label = 'net loss'
         elif key == 'reference':
             color = '#ff7f00'
+            label = 'wt selection'
         else:
-            color = '#2ca02c'
+            color = 'tab:blue'
+            label = 'mutant selection'
 
         for c in chunks[key]:
-            ax.axvspan(conc[c[0]],conc[c[1]-1],facecolor=color,alpha=0.7)
+            # ax.axvspan(conc[c[0]],conc[c[1]-1],facecolor=color,alpha=0.7)
+            start_x = c[0]
+            end_x = c[1]-1
+
+            if label == 'mutant selection':
+                s = np.array((mut_fitness_curve+r_d)/(wt_fitness_curve+r_d))
+                s = s[start_x:end_x]
+                s = s-np.min(s)
+                s = s/np.max(s)
+            elif label == 'wt selection':
+                s = np.array((wt_fitness_curve+r_d)/(mut_fitness_curve+r_d))
+                s = s[start_x:end_x]
+                s = s-np.min(s)
+                s = s/np.max(s)
+            else:
+                s = np.ones(end_x-start_x)
+
+            indx = 0
+
+            for x in range(start_x,end_x):
+                # x_rect = [conc[x],conc[x],conc[x+1],conc[x+1]]
+                # if s[indx] == 1 and g == 0 and n == 1:
+                #     ax.fill(x_rect,y,color,alpha=s[indx],label=label)
+                # else:
+
+                ax.axvspan(conc[x],conc[x+1],facecolor=color,alpha=s[indx])
+                indx += 1
+
+            # draw a box
 
     # ax.axvspan(msw_left, msw_right, 
     #         facecolor='#2ca02c',alpha=0.7)
@@ -1126,6 +1175,8 @@ def msw_grid(pop,genotypes,
     width = 6 # inches
     row_height = 0.2 # inches
 
+    r_d = pop.death_rate + 0.1
+
     if ax is None:
         fig,ax = plt.subplots(figsize=(width,row_height*n_rows))
 
@@ -1136,7 +1187,7 @@ def msw_grid(pop,genotypes,
         # add a line for the reference label
         label = 'Reference = ' + pop.int_to_binary(g)
 
-        pos = (10**-3,ylevel-(0.8*h))
+        pos = (10**3,ylevel-(0.8*h))
         ax.annotate(label,pos,xycoords='data',annotation_clip=True,fontsize=labelsize)
 
         ylevel += -h
@@ -1147,6 +1198,7 @@ def msw_grid(pop,genotypes,
 
             y = [ylevel-h,ylevel,ylevel,ylevel-h]
 
+
             for key in chunks:
                 # label = key
                 if key == 'net loss':
@@ -1156,29 +1208,45 @@ def msw_grid(pop,genotypes,
                     color = '#ff7f00'
                     label = 'wt selection'
                 else:
-                    color = '#2ca02c'
+                    color = 'tab:blue'
                     label = 'mutant selection'
 
                 for c in chunks[key]:
-                    x = [conc[c[0]],conc[c[0]],conc[c[1]-1],conc[c[1]-1]]
-                    ax.fill(x,y,color,alpha=0.7,label=label)
+                    start_x = c[0]
+                    end_x = c[1]-1
 
-            # # wt selection window
-            # x = [min(conc),min(conc),msw_left,msw_left]
-            # y = [ylevel-h,ylevel,ylevel,ylevel-h]
-            # wt = ax.fill(x,y,'#ff7f00',alpha=0.7,label='wt selection')
+                    if label == 'mutant selection':
+                        s = np.array((fc[n]+r_d)/(fc[g]+r_d))
+                        s = s[start_x:end_x]
+                        s = s-np.min(s)
+                        s = s/np.max(s)
+                    elif label == 'wt selection':
+                        s = np.array((fc[g]+r_d)/(fc[n]+r_d))
+                        s = s[start_x:end_x]
+                        s = s-np.min(s)
+                        s = s/np.max(s)
+                    elif label == 'net loss':
+                        s = np.ones(end_x-start_x)
 
-            # # mutant selection window
-            # # print(msw_right)
-            # x = [msw_left,msw_left,msw_right,msw_right]
-            # mt = ax.fill(x,y,'#2ca02c',alpha=0.7,label='mutant selection')
+                    indx = 0
 
-            # # no selection
-            # x = [msw_right,msw_right,max(conc),max(conc)]
-            # ns = ax.fill(x,y,'#e41a1c',alpha=0.7,label='net loss')
+                    for x in range(start_x,end_x):
+                        x_rect = [conc[x],conc[x],conc[x+1],conc[x+1]]
+                        # if s[indx] == 1 and g == 0 and n == 1:
+                        #     ax.fill(x_rect,y,color,alpha=s[indx],label=label)
+                        # else:
+                        ax.fill(x_rect,y,color,alpha=s[indx])
+                        indx += 1
 
-            y = np.ones(len(conc))*ylevel
-            ax.plot(conc,y,color='black',linewidth=0.5)
+                    # draw a box
+
+                    poly_coords = [(conc[start_x],y[0]),(conc[end_x],y[0]),
+                                (conc[end_x],y[1]),(conc[start_x],y[1])]
+
+                    ax.add_patch( Polygon(poly_coords,edgecolor='black',
+                                        facecolor=None, closed=True, 
+                                        clip_on=False,fill=False) )
+
 
             label = pop.int_to_binary(n)
             pos = (comp_annotate_pos,ylevel-(0.8*h))
@@ -1192,10 +1260,15 @@ def msw_grid(pop,genotypes,
     ax.tick_params(axis='x', which='major', labelsize=ticklabelsize)
     ax.set_yticks([])
     if legend:
-        ax.legend()
-        h, l = ax.get_legend_handles_labels()
-        ax.legend(h[0:3],l[0:3],frameon=False,ncol=3,loc=legendloc)
+        p1 = ax.plot([1,1], color = '#ff7f00',label = 'wt selection',linewidth=3)
+        p2 = ax.plot([1,1], color = 'tab:blue',label = 'mutant selection',linewidth=3)
+        p0 = ax.plot([1,1], color = '#e41a1c',label = 'net loss',linewidth=3)
+        ax.legend(frameon=False,ncol=3,loc=legendloc)
 
+        lines = ax.get_lines()
+        lines[-1].remove()
+        lines[-2].remove()
+        lines[-3].remove()
     return ax
 
 

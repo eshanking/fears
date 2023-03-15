@@ -35,9 +35,9 @@ bibliography: paper.bib
 The evolution of drug resistance across kingdoms, including in cancer and 
 infectious disease, is governed by the same fundamental laws. Modeling 
 evolution with genotype-specific dose response curves, collectively forming a
-'fitness seascape' enables simulations that include realistic pharmacokinetic 
+'fitness seascape', enables simulations that include realistic pharmacokinetic 
 constraints, more closely resembling the environmental conditions within a 
-patient. FEArS (Fast Evolution on Arbitrary Seascapes) is a python package
+patient [@Merrell:1994;@Mustonen:2009;@King:2022;@Agarwala:2019]. FEArS (Fast Evolution on Arbitrary Seascapes) is a python package
 that enables simulating evolution with fitness seascapes. FEArS can simulate a 
 wide variety of experimental conditions with many arbitrary biological 
 parameters. FEArS remains computationally efficient despite being an 
@@ -45,71 +45,88 @@ agent-based model, even for very large population sizes. FEArS also contains
 powerful and flexible utilities for data analysis, plotting, and experimental
 fitness seascape estimation. 
 
+The two core classes for simulating populations and running experiments are 
+Population and Experiment, respectively. The Population class includes all
+biological parameters relevant for the evolving population under study in 
+addition to methods for simulating evolution. The Experiment class includes
+parameters for running an experiment with multiple populations, including 
+varying pharmacokinetic parameters, number of simulations, and results saving
+methods.
+
+## A hybrid agent-based algorithm
+
+FEArS achieves fast runtimes while simulating large populations of evolving
+agents by employing what we term a 'hybrid agent-based' approach. When 
+possible, populations are stored as vectors of cell numbers $\hat n$, where each 
+position in the vector corresponds to a genotype and the number at that 
+position gives the number of cells of that type in the population. Then, 
+stochastic events such as cell division and cell death are simply drawn from 
+poission distributions:
+
+\begin{equation}\label{eq:cell_death}
+  \hat n_{d} \sim poisson(r_{d}*\hat n),
+\end{equation}
+
+where $\hat n_{d}$ refers to the vector of dead cells of each type, for example.
+However, in the mutation step, FEArS switches to a strictly agent-based process.
+Here, every mutating agent is enumerated in a vector, where each entry in the 
+vector represents the genotype of the agent. Then, mutating agents are randomly
+allocated to adjacent genotypes (\autoref{fig:flowchart}). Since the number
+of mutating cells is much smaller than the total population size (i.e., with a 
+mutation rate on the order of $10^{-6}$ to $10^{-9}$ per base pair), this 
+agent-based step does not compromise computational efficiency.
+
+![FEArS algorithm flow chart. The blue dashed box indicates the portion of the algorithm that is strictly agent-based.\label{fig:flowchart}](fears_flow_chart.png){ width=70% }
+
+By modeling realistic population sizes, FEArS enables investigation of 
+population extinction and stochastic evolutionary rescue.
+
+## A suite of useful utilies
+
+In addition to the core population and experiment classes, FEArS includes 
+utilities to assist with computational experiments, empirical data analysis, 
+and results visualization.
+
+- plotter: a broad and flexible plotting utility, including functions for plotting
+evolutionary dynamics timetraces, Kaplan-Meier curves, and fitness landscapes.
+
+- pharm: functions for pharmacokinetics, including generating arbitrary 
+pharmacokinetic curves and simulating patient nonadherence.
+
+- fitness: functions for pharmacodynamics, including computing fitness landscapes
+and fitness seascapes.
+
+- AutoRate: classes and methods for estimating fitness seascapes from 
+experimental data.
+
 # Statement of need
 
-`Gala` is an Astropy-affiliated Python package for galactic dynamics. Python
-enables wrapping low-level languages (e.g., C) for speed without losing
-flexibility or ease-of-use in the user-interface. The API for `Gala` was
-designed to provide a class-based and user-friendly interface to fast (C or
-Cython-optimized) implementations of common operations such as gravitational
-potential and force evaluation, orbit integration, dynamical transformations,
-and chaos indicators for nonlinear dynamics. `Gala` also relies heavily on and
-interfaces well with the implementations of physical units and astronomical
-coordinate systems in the `Astropy` package [@astropy] (`astropy.units` and
-`astropy.coordinates`).
+FEArS enables stochastic simulations of clonally evolving systems 
+subject to arbitrary drug concentrations over time. By using an agent-based
+algorithm, we are able to model mutation and selection, with evolution arising 
+as an emergent phenomena. Furthermore, by allowing for arbitrary population 
+sizes, FEArS can model population extinction. Arbitrary population sizes allows
+us to simulate how a disease population within a patient may respond to 
+therapy. In addition, FEArS models genotype-sprecific dose-response curves, 
+allowing for more fine-grained prediction of evolution.
 
-`Gala` was designed to be used by both astronomical researchers and by
-students in courses on gravitational dynamics or astronomy. It has already been
-used in a number of scientific publications [@Pearson:2017] and has also been
-used in graduate courses on Galactic dynamics to, e.g., provide interactive
-visualizations of textbook material [@Binney:2008]. The combination of speed,
-design, and support for Astropy functionality in `Gala` will enable exciting
-scientific explorations of forthcoming data releases from the *Gaia* mission
-[@gaia] by students and experts alike.
-
-# Mathematics
-
-Single dollars ($) are required for inline mathematics e.g. $f(x) = e^{\pi/x}$
-
-Double dollars make self-standing equations:
-
-$$\Theta(x) = \left\{\begin{array}{l}
-0\textrm{ if } x < 0\cr
-1\textrm{ else}
-\end{array}\right.$$
-
-You can also use plain \LaTeX for equations
-\begin{equation}\label{eq:fourier}
-\hat f(\omega) = \int_{-\infty}^{\infty} f(x) e^{i\omega x} dx
-\end{equation}
-and refer to \autoref{eq:fourier} from text.
-
-# Citations
-
-Citations to entries in paper.bib should be in
-[rMarkdown](http://rmarkdown.rstudio.com/authoring_bibliographies_and_citations.html)
-format.
-
-If you want to cite a software repository URL (e.g. something on GitHub without a preferred
-citation) then you can do it with the example BibTeX entry below for @fidgit.
-
-For a quick reference, the following citation commands can be used:
-- `@author:2001`  ->  "Author et al. (2001)"
-- `[@author:2001]` -> "(Author et al., 2001)"
-- `[@author1:2001; @author2:2001]` -> "(Author1 et al., 2001; Author2 et al., 2002)"
-
-# Figures
-
-Figures can be included like this:
-![Caption for example figure.\label{fig:example}](figure.png)
-and referenced from text using \autoref{fig:example}.
-
-Figure sizes can be customized by adding an optional second parameter:
-![Caption for example figure.](figure.png){ width=20% }
+Other common evolutionary simulation approaches are Moran processes [@Moran:1958] 
+and Wright-Fisher models [@Wright:1931; @Fisher:1930]. However, both 
+approaches have limitations that preclude modeling evolutionary dynamics in a
+wide variety of settings, including with varying population size and varying drug concentration.
+Other software for simulating evolution with fitness landcsapes utilize Markov
+chains, which achieve extremely high computational efficiency but cannot model
+arbitrary population sizes and time-varying selection [@Maltas:2021;@Nichol:2015].
+In addition, there exists a suite of software packages for simulating tumor evolution
+[@McDonald:2017;@Irurzun-Arana:2020;@Roney:2020;@Angaroni:2022]. However, these packages
+either do not model drug pharmacokinetics and pharmacodynamics, do not model 
+genotype-specific dose-response curves, or are simply more suited for studying
+spatial tumor evolution (in contrast to well-mixed pathogen populations that FEArS
+is suited for). To our knowledge, there is no open-source software that permits 
+stochastic evolutionary simulations with empirical genotype-specific dose-response 
+curves and arbitrary drug pharmacokinetics. To date, FEArS has been used extensively 
+in one manuscript [@King:2022].
 
 # Acknowledgements
-
-We acknowledge contributions from Brigitta Sipocz, Syrtis Major, and Semyeong
-Oh, and support from Kathryn Johnston during the genesis of this project.
 
 # References
