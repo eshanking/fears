@@ -198,6 +198,7 @@ def plot_fitness_curves(pop,
                         show_axes_labels=True,
                         raw_data = False,
                         color_kwargs={},
+                        legend_loc = (1,-0.05),
                         xdata=None):
     """Plots genotype-specific dose reponse curves (fitness seascape)
 
@@ -315,7 +316,7 @@ def plot_fitness_curves(pop,
             ax.plot(conc,fit[gen,:],linewidth=linewidth,label=str(pop.int_to_binary(gen)))
         
         if show_legend:
-            ax.legend(fontsize=labelsize,frameon=False,loc=(1,-.10),ncol=legend_cols)
+            ax.legend(fontsize=labelsize,frameon=False,loc=legend_loc,ncol=legend_cols)
         
         ax.set_xscale('log')
         
