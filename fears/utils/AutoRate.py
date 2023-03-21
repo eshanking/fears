@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 from functools import partial
 from fears.utils.plotter import gen_color_cycler
-import datetime
 
 class Experiment():
     """Experiment class for a given plate reader experiment
@@ -463,8 +462,7 @@ class Plate():
                  ref_genotypes='0',
                  ref_keys='B2',
                  t_obs=None,
-                 tmax=None,
-                 data_start = None):
+                 tmax=None):
         """Initializer
 
         Args:
@@ -479,7 +477,6 @@ class Plate():
         self.mode = mode
         self.data_cols = data_cols
         self.tmax = tmax
-        self.data_start = data_start
 
         self.exp_layout_path = exp_layout_path
         if exp_layout_path is not None:
@@ -506,8 +503,6 @@ class Plate():
         self.replicate_arrangement = replicate_arrangement
         self.debug = debug
         self.n_genotype = None
-        self.start_time = 0
-
     def execute(self):
         
         if self.mode == 'timeseries':
@@ -533,67 +528,7 @@ class Plate():
                                                     self.ref_keys,
                                                     self.ref_data)
 
-    # def get_start_time(self):
-         
-    #     # load csv or xlsx
-    #     p = self.data_path
-    #     if '.csv' in p:
-    #         df = pd.read_csv(p)
-    #     elif '.xlsx' in p:
-    #         df = pd.read_excel(p)
-    #     col0 = df.keys()[0]
-    #     col0 = df[col0]
-    #     col0 = np.array(col0)
-        
-    #     if 'Time:' in col0:
-            
-    #         start_time_row = np.argwhere(col0=='Time:')[0][0]
-    #         start_time_col = df[df.keys()[4]]
-    #         start_time = start_time_col[start_time_row]
-
-    #         if 'PM' in start_time and start_time[0:2] != '12':
-    #             add_pm = 12
-    #         else:
-    #             add_pm = 0
-            
-    #         # get the semicolon
-    #         semicolon_loc = start_time.index(':')
-    #         start_time = 60*(int(start_time[0:semicolon_loc]) + add_pm) + \
-    #             int(start_time[semicolon_loc+1:semicolon_loc+3])
-    #         # print(start_time)
-    #         self.start_time = start_time
-        
-    #     return start_time
-
-    def get_start_time(self,col=4,df=None):
-
-        if df is None:
-            p = self.data_path
-            if '.csv' in p:
-                df = pd.read_csv(p)
-            elif '.xlsx' in p:
-                df = pd.read_excel(p)
-
-        # first start time is shaking, so we take the second (start of scan)
-        f = df[df == 'Start Time'].stack().index.tolist()[1]
-
-        row = f[0]
-        date_time = df.iloc[row,col]
-
-        yr = int(date_time[0:4])
-        mon = int(date_time[5:7])
-        day = int(date_time[8:10])
-
-        hr = int(date_time[11:13])
-        min = int(date_time[14:16])
-        sec = int(date_time[17:19])
-
-        dt = datetime.datetime(yr,mon,day,hour=hr,minute=min,second=sec)
-
-
-        return dt
-
-    def parse_data_file(self,p,data_start=None):
+    def parse_data_file(self,p):
         """Strips metadata from raw data file to obtain timeseries OD data
 
         Args:
@@ -613,31 +548,20 @@ class Plate():
         # cycle nr is always in the leftmost column
         time_col = df[df.keys()[0]]
         time_array = np.array(time_col)
-            
-        if data_start == None:
-            # raw data starts after cycle nr.
-            if any(time_array == 'Cycle Nr.'):
-                data_start_indx = np.argwhere(time_array == 'Cycle Nr.')
-            elif any(time_array == 'Time [s]'):
-                data_start_indx = np.argwhere(time_array == 'Time [s]')
-            else:
-                raise Exception('Unknown file format. Expected either Cycle Nr. or Time [s] as column headings.')
-
-            #sometimes the data gets passed in very unraw
-            if len(data_start_indx) == 0:
-                return df
-            
-            data_start_indx = data_start_indx[0][0] # get scalar from numpy array
+        
+        # raw data starts after cycle nr.
+        if any(time_array == 'Cycle Nr.'):
+            data_start_indx = np.argwhere(time_array == 'Cycle Nr.')
+        elif any(time_array == 'Time [s]'):
+            data_start_indx = np.argwhere(time_array == 'Time [s]')
         else:
+            raise Exception('Unknown file format. Expected either Cycle Nr. or Time [s] as column headings.')
 
-            if any(time_array == data_start):
-                data_start_indx = np.argwhere(time_array == data_start)
-
-            else:
-                raise Exception('Specified data start string not found')
-            
-            data_start_indx = data_start_indx[0][0] + 1 # get scalar from numpy array
-    
+        #sometimes the data gets passed in very unraw
+        if len(data_start_indx) == 0:
+            return df
+        
+        data_start_indx = data_start_indx[0][0] # get scalar from numpy array
 
         # filter header from raw data file
         df_filt = df.loc[data_start_indx:,:]
@@ -1405,5 +1329,34 @@ class Plate():
             return 10**-6
         else:
             return np.max(r)
+        
+    def get_start_time(self,col=4,df=None):
+
+        if df is None:
+            p = self.data_path
+            if '.csv' in p:
+                df = pd.read_csv(p)
+            elif '.xlsx' in p:
+                df = pd.read_excel(p)
+
+        # first start time is shaking, so we take the second (start of scan)
+        f = df[df == 'Start Time'].stack().index.tolist()[1]
+
+        row = f[0]
+        date_time = df.iloc[row,col]
+
+        yr = int(date_time[0:4])
+        mon = int(date_time[5:7])
+        day = int(date_time[8:10])
+
+        hr = int(date_time[11:13])
+        min = int(date_time[14:16])
+        sec = int(date_time[17:19])
+
+        dt = datetime.datetime(yr,mon,day,hour=hr,minute=min,second=sec)
+
+
+        return dt
 
 # Misc helper functions
+
