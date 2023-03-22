@@ -99,18 +99,15 @@ and fitness seascapes.
 - AutoRate: classes and methods for estimating fitness seascapes from 
 experimental data.
 
-![Example FEArS functionality. A: Empirical fitness seascape in transgenic yeast (data adapted from [@Ogbunugafor:2016]). B: Example evolutionary timetrace for a population experiencing a drug concentration curve given by the black line. Colors indicate the genotype corresponding to A. C: Example fitness landcsape generated from A a $10^{0}$ ug/mL drug concentration. D: Example time-to-event curve generated from evolutionary simulations of patient nonadherence (adapted from [@King:2022]).](joss_example_fig.png){ width=70% }
+![Example FEArS functionality. A: Empirical fitness seascape in transgenic yeast (data adapted from @Ogbunugafor:2016). B: Example evolutionary timetrace for a population experiencing a drug concentration curve given by the black line. Colors indicate the genotype corresponding to A. C: Example fitness landcsape generated from data in panel A at $10^{0}$ ug/mL drug concentration. D: Example time-to-event curve generated from evolutionary simulations of patient nonadherence (adapted from @King:2022).](joss_example_fig.png){ width=90% }
 
 # Statement of need
 
 FEArS enables stochastic simulations of clonally evolving systems 
 subject to arbitrary drug concentrations over time. By using an agent-based
 algorithm, we are able to model mutation and selection, with evolution arising 
-as an emergent phenomena. Furthermore, by allowing for arbitrary population 
-sizes, FEArS can model population extinction. Arbitrary population sizes allows
-us to simulate how a disease population within a patient may respond to 
-therapy. In addition, FEArS models genotype-sprecific dose-response curves, 
-allowing for more fine-grained prediction of evolution.
+as an emergent phenomena. Furthermore, by nature of being an agent-based algorithm and allowing for arbitrary population sizes, FEArS can model population extinction. Arbitrary population sizes also allows us to simulate how a disease population within a patient may respond to therapy. In addition, FEArS models genotype-sprecific dose-response curves, 
+allowing for more fine-grained prediction of evolution. Modeling genotpye-specific dose-response curves will likely be critical for the translation of adaptive drug therapy [@Iram:2021]
 
 Other common evolutionary simulation approaches are Moran processes [@Moran:1958] 
 and Wright-Fisher models [@Wright:1931; @Fisher:1930]. However, both 
@@ -118,7 +115,7 @@ approaches have limitations that preclude modeling evolutionary dynamics in a
 wide variety of settings, including with varying population size and varying drug concentration.
 Other software for simulating evolution with fitness landcsapes utilize Markov
 chains, which achieve extremely high computational efficiency but cannot model
-arbitrary population sizes and time-varying selection [@Maltas:2021;@Nichol:2015].
+arbitrary population sizes and time-varying selection [@Maltas:2021;@Nichol:2015;Nichol:2019].
 In addition, there exists a suite of software packages for simulating tumor evolution
 [@McDonald:2017;@Irurzun-Arana:2020;@Roney:2020;@Angaroni:2022]. However, these packages
 either do not model drug pharmacokinetics and pharmacodynamics, do not model 
@@ -127,8 +124,6 @@ spatial tumor evolution (in contrast to well-mixed pathogen populations that FEA
 is suited for). To our knowledge, there is no open-source software that permits 
 stochastic evolutionary simulations with empirical genotype-specific dose-response 
 curves and arbitrary drug pharmacokinetics. To date, FEArS has been used extensively 
-in one manuscript [@King:2022].
-
-# Acknowledgements
+in two manuscripts, @King:2022 and @King:2023.
 
 # References
