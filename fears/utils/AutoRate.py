@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from functools import partial
 from fears.utils.plotter import gen_color_cycler
+import datetime
 
 class Experiment():
     """Experiment class for a given plate reader experiment
@@ -97,7 +98,6 @@ class Experiment():
 
     def get_plate_data_paths(self):
         """Gets plate data paths
-
         Returns:
             list: list of plate data paths
         """
@@ -119,7 +119,6 @@ class Experiment():
     
     def gen_growth_rate_lib(self):
         """Generates the complete growth rate library by compining the growth rate libraries of each plate
-
         Returns:
             dict: growth rate library
         """
@@ -154,14 +153,11 @@ class Experiment():
     
     def gen_seascape_lib(self):
         """Fits raw estimated growth rate values to a Hill dose-response curve
-
         Args:
             pop (population class object, optional): population class object. Defaults to None.
             debug (bool, optional): generates plots useful for debugging if true. Defaults to False.
-
         Raises:
             ValueError: raises error if there is no growth rate library in the experiment object
-
         Returns:
             dict: seascape library
         """
@@ -213,11 +209,9 @@ class Experiment():
 
     def fit_hill_curve(self,xdata,ydata,hc=None):
         """Fits dose-response curve to growth rate data
-
         Args:
             xdata (list or numpy array): drug concentration curve from plate experiment
             ydata (list or numpy array): growth rate versus drug concetration for a given replicate
-
         Returns:
             list: List of optimized paramters: IC50, drugless growth rate, and Hill coefficient
         """
@@ -282,13 +276,11 @@ class Experiment():
     
     def logistic_pharm_curve_vectorized(self,x,IC50,g_drugless,hill_coeff):
         """Defines the logistic dose-response curve. Use if the input is a vector of drug concentration curves
-
         Args:
             x (numpy array): drug concentration vector
             IC50 (float)): IC50
             g_drugless (float): drugless growth rate
             hill_coeff (float): Hill coefficient
-
         Returns:
             numpy array: array of growth rates
         """
@@ -311,13 +303,11 @@ class Experiment():
     
     def hill_curve_loss(self,genotype,x0,gr_lib=None,hc_est=None):
         """Calculates the loss for an individual hill curve based on the absolute value of the difference
-
         Args:
             genotype (int): genotype whose loss you want to calculate
             x0 (list or array): hill paramters: ic50, g_drugless, and hill coefficient (in that order)
             gr_lib (dict, optional): Growth rate library. Defaults to None.
             hc_est (float, optional): Hill coefficient estimate. Defaults to None.
-
         Returns:
             flaot: loss
         """
@@ -355,10 +345,8 @@ class Experiment():
     
     def hill_coeff_loss(self,hc):
         """Calculates the loss across the entire seascape for a given hill coefficient.
-
         Args:
             hc (float): Hill coefficient
-
         Returns:
             float: loss
         """
@@ -391,7 +379,6 @@ class Experiment():
     
     def estimate_hill_coeff(self):
         """Uses scipy minimize_scalar to estimate the hill coefficient for a seascape
-
         Returns:
             float: optimized hill coefficient
         """
@@ -403,13 +390,11 @@ class Experiment():
     
     def logistic_pharm_curve(self,x,IC50,g_drugless,hill_coeff):
         """Logistic dose-response curve. use if input is a single drug concentration
-
         Args:
             x (float): drug concentration scalar
             IC50 (float)): IC50
             g_drugless (float): drugless growth rate
             hill_coeff (float): Hill coefficient
-
         Returns:
             numpy array: array of growth rates
         """
@@ -462,9 +447,9 @@ class Plate():
                  ref_genotypes='0',
                  ref_keys='B2',
                  t_obs=None,
-                 tmax=None):
+                 tmax=None,
+                 data_start = None):
         """Initializer
-
         Args:
             data_path (str): csv file path
             drug_conc (list of floats): drug concentration gradient
@@ -477,6 +462,7 @@ class Plate():
         self.mode = mode
         self.data_cols = data_cols
         self.tmax = tmax
+        self.data_start = data_start
 
         self.exp_layout_path = exp_layout_path
         if exp_layout_path is not None:
@@ -503,6 +489,8 @@ class Plate():
         self.replicate_arrangement = replicate_arrangement
         self.debug = debug
         self.n_genotype = None
+        self.start_time = 0
+
     def execute(self):
         
         if self.mode == 'timeseries':
@@ -528,12 +516,70 @@ class Plate():
                                                     self.ref_keys,
                                                     self.ref_data)
 
-    def parse_data_file(self,p):
-        """Strips metadata from raw data file to obtain timeseries OD data
+    # def get_start_time(self):
+         
+    #     # load csv or xlsx
+    #     p = self.data_path
+    #     if '.csv' in p:
+    #         df = pd.read_csv(p)
+    #     elif '.xlsx' in p:
+    #         df = pd.read_excel(p)
+    #     col0 = df.keys()[0]
+    #     col0 = df[col0]
+    #     col0 = np.array(col0)
+        
+    #     if 'Time:' in col0:
+            
+    #         start_time_row = np.argwhere(col0=='Time:')[0][0]
+    #         start_time_col = df[df.keys()[4]]
+    #         start_time = start_time_col[start_time_row]
 
+    #         if 'PM' in start_time and start_time[0:2] != '12':
+    #             add_pm = 12
+    #         else:
+    #             add_pm = 0
+            
+    #         # get the semicolon
+    #         semicolon_loc = start_time.index(':')
+    #         start_time = 60*(int(start_time[0:semicolon_loc]) + add_pm) + \
+    #             int(start_time[semicolon_loc+1:semicolon_loc+3])
+    #         # print(start_time)
+    #         self.start_time = start_time
+        
+    #     return start_time
+
+    def get_start_time(self,col=4,df=None):
+
+        if df is None:
+            p = self.data_path
+            if '.csv' in p:
+                df = pd.read_csv(p)
+            elif '.xlsx' in p:
+                df = pd.read_excel(p)
+
+        # first start time is shaking, so we take the second (start of scan)
+        f = df[df == 'Start Time'].stack().index.tolist()[1]
+
+        row = f[0]
+        date_time = df.iloc[row,col]
+
+        yr = int(date_time[0:4])
+        mon = int(date_time[5:7])
+        day = int(date_time[8:10])
+
+        hr = int(date_time[11:13])
+        min = int(date_time[14:16])
+        sec = int(date_time[17:19])
+
+        dt = datetime.datetime(yr,mon,day,hour=hr,minute=min,second=sec)
+
+
+        return dt
+
+    def parse_data_file(self,p,data_start=None):
+        """Strips metadata from raw data file to obtain timeseries OD data
         Args:
             p (str): path to data file
-
         Returns:
             pandas dataframe: dataframe of raw data
         """
@@ -548,20 +594,31 @@ class Plate():
         # cycle nr is always in the leftmost column
         time_col = df[df.keys()[0]]
         time_array = np.array(time_col)
-        
-        # raw data starts after cycle nr.
-        if any(time_array == 'Cycle Nr.'):
-            data_start_indx = np.argwhere(time_array == 'Cycle Nr.')
-        elif any(time_array == 'Time [s]'):
-            data_start_indx = np.argwhere(time_array == 'Time [s]')
-        else:
-            raise Exception('Unknown file format. Expected either Cycle Nr. or Time [s] as column headings.')
+            
+        if data_start == None:
+            # raw data starts after cycle nr.
+            if any(time_array == 'Cycle Nr.'):
+                data_start_indx = np.argwhere(time_array == 'Cycle Nr.')
+            elif any(time_array == 'Time [s]'):
+                data_start_indx = np.argwhere(time_array == 'Time [s]')
+            else:
+                raise Exception('Unknown file format. Expected either Cycle Nr. or Time [s] as column headings.')
 
-        #sometimes the data gets passed in very unraw
-        if len(data_start_indx) == 0:
-            return df
-        
-        data_start_indx = data_start_indx[0][0] # get scalar from numpy array
+            #sometimes the data gets passed in very unraw
+            if len(data_start_indx) == 0:
+                return df
+            
+            data_start_indx = data_start_indx[0][0] # get scalar from numpy array
+        else:
+
+            if any(time_array == data_start):
+                data_start_indx = np.argwhere(time_array == data_start)
+
+            else:
+                raise Exception('Specified data start string not found')
+            
+            data_start_indx = data_start_indx[0][0] + 1 # get scalar from numpy array
+    
 
         # filter header from raw data file
         df_filt = df.loc[data_start_indx:,:]
@@ -581,7 +638,6 @@ class Plate():
 
     def get_background_keys(self):
         """Gets the dataframe keys for the background (aka moat)
-
         Returns:
             list: list of background keys
         """
@@ -623,7 +679,6 @@ class Plate():
         
     def get_not_data_keys(self):
         """This function is called if data_cols is not None. Return the list of keys that don't refer to wells that have actual data.
-
         Returns:
             list: list of keys for wells not in data_keys
         """
@@ -657,10 +712,8 @@ class Plate():
 
     def get_data_keys(self):
         """Gets the dataframe keys for the data
-
         Args:
             df (pandas dataframe): datafram containing raw OD data
-
         Returns:
             list: list of keys
         """
@@ -676,10 +729,8 @@ class Plate():
     def check_if_key_is_well(self,key):
         """Checks if key could refer to a well (i.e. key is in format 'X##' where X is a letter and # are numbers)
            For instance, returns True is key is 'A11', returns False if key is 'Time (s)' 
-
         Args:
             key str: key to check
-
         Returns:
             boolean: True if key could refer to a well, False if other.
         """
@@ -697,11 +748,9 @@ class Plate():
     
     def est_growth_rate(self,growth_curve,t=None):
         """Estimates growth rate from OD growth curve
-
         Args:
             growth_curve (list or numpy array): vector of OD data
             t (list or numpy array, optional): Time vector. If None, algorithm assumes each time step is 1 s. Defaults to None.
-
         Returns:
             float: Growth rate in units of 1/s
         """
@@ -760,7 +809,6 @@ class Plate():
     def get_growth_rates_from_df(self):
         
         """Estimates the growth rates from timeseries growth data in a dataframe
-
         Returns:
             growth_rates: dict
                 dictionary of growth rates for each experimental condition
@@ -787,7 +835,6 @@ class Plate():
 
     def gen_growth_rate_lib_ts(self):
         """Generates growth rate library from timeseries OD data
-
         Returns:
             dict: Dict of dose-response curves indexed by replicate
         """
@@ -882,13 +929,11 @@ class Plate():
 
     def logistic_growth_curve(self,t,r,p0,k):
         """Logistic growth equation
-
         Args:
             t (float): time
             r (float): growth rate
             p0 (float): starting population size
             k (float): carrying capacity
-
         Returns:
             float: population size at time t
         """
@@ -916,7 +961,6 @@ class Plate():
 
     def gen_growth_rate_lib_sm(self):
         """Generate growth rate library from a single measurement experiment
-
         Returns:
             dict: Dict of dicts. Keys are genotypes. Sub-dicts contain mean growth rate
             ('avg') and standard deviation ('std')
@@ -969,13 +1013,11 @@ class Plate():
 
     def OD_rate_eqn(self,OD_obs,t_obs=None,OD_max=None,L=None):
         """Estimates the growth rate using a single OD measurement
-
         Args:
             t_obs (int): Time of observation (seconds)
             OD_max (float): Estimated max OD
             OD_obs (float): Observed OD
             L (float): Experimental constant ((OD_max - OD_0)/OD_0)
-
         Returns:
             float: Growth rate (s^-1)
         """
@@ -997,13 +1039,10 @@ class Plate():
     
     def parse_exp_layout_file(self):
         """Return a dict of genotypes with locations.
-
         Each entry in the dict contains a list of keys referring to wells in the plate
         where data for the genotype is found.
-
         Args:
             df (pandas dataframe): Experiment layout dataframe.
-
         Returns:
             dict: Dict of genotypes where each genotype contains a list of wells
         """
@@ -1089,13 +1128,10 @@ class Plate():
 
     def parse_od_data_file(self,data_path):
         """Loads the raw OD data files and strips metadata
-
         OD data files refers to the type of data that is a single OD reading in time (i.e
         not timeseries data).
-
         Args:
             data_path (str): path to data file
-
         Returns:
             pandas dataframe: Formatted dataframe with metadata stripped
         """
@@ -1140,13 +1176,10 @@ class Plate():
 
     def od_data_to_dict(self,df):
         """Takes an OD data file and returns a dict with each data well as a key
-
         OD data files refers to the type of data that is a single OD reading in time (i.e
         not timeseries data).
-
         Args:
             df (pandas dataframe): Parsed OD data file
-
         Returns:
             dict: Dict of key-value pairs where each key is a well location and each value
             is the OD reading.
@@ -1167,15 +1200,12 @@ class Plate():
 
     def get_reference_params(self,genotypes=None,keys=None,df=None):
         """Gets the growth rates for one or more wells
-
         Given a genotype and key or list of genotypes and keys, estimates the growth 
         rate for each genotype using the keys provided.
-
         Args:
             genotypes (int or list of int): Genotype(s) analyzed
             keys (str or list of str): Plate well keys correspoding to genotypes
             df (pandas dataframe): data
-
         Returns:
             dict: Dict of results. Keys are genotypes and entries are growth rates.
         """
@@ -1211,11 +1241,9 @@ class Plate():
     def est_logistic_params(self,growth_curve,t,debug=False,sigma=None,mode='logistic',
                         normalize=False):
         """Estimates growth rate from OD growth curve
-
         Args:
             growth_curve (list or numpy array): vector of OD data
             t (list or numpy array, optional): Time vector. If None, algorithm assumes each time step is 1 s. Defaults to None.
-
         Returns:
             dict: Dict of logistic growth curve paramters
         """
@@ -1329,34 +1357,5 @@ class Plate():
             return 10**-6
         else:
             return np.max(r)
-        
-    def get_start_time(self,col=4,df=None):
 
-        if df is None:
-            p = self.data_path
-            if '.csv' in p:
-                df = pd.read_csv(p)
-            elif '.xlsx' in p:
-                df = pd.read_excel(p)
-
-        # first start time is shaking, so we take the second (start of scan)
-        f = df[df == 'Start Time'].stack().index.tolist()[1]
-
-        row = f[0]
-        date_time = df.iloc[row,col]
-
-        yr = int(date_time[0:4])
-        mon = int(date_time[5:7])
-        day = int(date_time[8:10])
-
-        hr = int(date_time[11:13])
-        min = int(date_time[14:16])
-        sec = int(date_time[17:19])
-
-        dt = datetime.datetime(yr,mon,day,hour=hr,minute=min,second=sec)
-
-
-        return dt
-
-# Misc helper functions
-
+# Misc helper function

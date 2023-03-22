@@ -99,6 +99,8 @@ and fitness seascapes.
 - AutoRate: classes and methods for estimating fitness seascapes from 
 experimental data.
 
+![Example FEArS functionality. A: Empirical fitness seascape in transgenic yeast (data adapted from [@Ogbunugafor:2016]). B: Example evolutionary timetrace for a population experiencing a drug concentration curve given by the black line. Colors indicate the genotype corresponding to A. C: Example fitness landcsape generated from A a $10^{0}$ ug/mL drug concentration. D: Example time-to-event curve generated from evolutionary simulations of patient nonadherence (adapted from [@King:2022]).](joss_example_fig.png){ width=70% }
+
 # Statement of need
 
 FEArS enables stochastic simulations of clonally evolving systems 
