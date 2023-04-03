@@ -34,7 +34,8 @@ def gen_fitness_curves(pop,conc=None):
     return fc
 
 # compute fitness given a drug concentration
-def gen_fitness(pop,genotype,conc,drugless_rate=None,ic50=None,hc=None):    
+def gen_fitness(pop,genotype,conc,drugless_rate=None,ic50=None,hc=None,mic=None,
+                death_model=None):    
     """Computes the fitness of a genotype at a given drug concentration.
 
     Args:
@@ -52,15 +53,38 @@ def gen_fitness(pop,genotype,conc,drugless_rate=None,ic50=None,hc=None):
         float: Growth rate computed from pharmacodynamic equation.
     """
 
-    if pop.seascape_lib is not None:
-        fitness = sl_to_fitness(pop,genotype,conc,hc=hc)
-        # fitness = fitness*(60**2)
+    # if pop.seascape_lib is not None:
+    #     fitness = sl_to_fitness(pop,genotype,conc,hc=hc)
+    #     # fitness = fitness*(60**2)
 
+    if drugless_rate is None:
+        drugless_rate = pop.drugless_rates
+    if ic50 is None:
+        ic50 = pop.ic50
+    if mic is None:
+        mic = pop.mic
+    if death_model is None:
+        death_model = pop.death_model
+
+    if death_model == 'pharmacodynamic':
+        """
+        pharmacodynamic curve from:
+
+        Regoes RR, Wiuff C, Zappala RM, Garner KN, Baquero F, Levin BR. 
+        Pharmacodynamic Functions: a Multiparameter Approach to the Design 
+        of Antibiotic Treatment Regimens. Antimicrob Agents Chemother. 
+        2004;48(10):3670-3676. doi:10.1128/AAC.48.10.3670-3676.2004
+        """
+        if mic is None:
+            mic_t = 10**pop.ic50[genotype]
+        else:
+            mic_t = mic[genotype]
+        gmax = drugless_rate[genotype]
+        gmin = pop.gmin
+        k = pop.death_model_k
+        fitness = gmax - (((gmax-gmin)*((conc/mic_t)**k))/((conc/mic_t)**k-(gmin/gmax)))
+    
     else:
-        if drugless_rate is None:
-            drugless_rate = pop.drugless_rates
-        if ic50 is None:
-            ic50 = pop.ic50
 
         # logistic equation from Ogbunugafor 2016
         # conc = conc/10**6 # concentration in uM, convert to M

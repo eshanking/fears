@@ -24,5 +24,4 @@ fears/utils/dir_manager.py
 fears/utils/fitness.py
 fears/utils/pharm.py
 fears/utils/plotter.py
-fears/utils/results_manager.py
 fears/utils/stats.py

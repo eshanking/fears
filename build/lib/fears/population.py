@@ -142,12 +142,17 @@ class PopParams:
         max_dc = np.log10(max(self.seascape_drug_conc))
         self.drug_conc_range = [np.round(min_dc),np.round(max_dc)]
 
+        self.death_model = 'pharmacodynamic'
+        self.death_model_k = 0.644 # empirical
+        self.gmin = -10**8/36.34 # cells/hr
+        self.mic = None
+
         self.constant_pop, self.use_carrying_cap = False, True
         self.carrying_cap = 10**10
         self.growth_rate_norm = 1
         self.init_counts = None
         self.n_allele, self.n_genotype = None, None
-        self.fitness_data = 'two-point' 
+        self.fitness_data = 'from_file' 
         self.moat = True
         self.hc_estimate = 'per_genotype'
         self.seascape_type = 'natural'
