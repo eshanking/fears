@@ -478,8 +478,9 @@ class Plate():
             self.ref_keys = ref_keys
             self.t_obs = t_obs
             self.data = self.parse_od_data_file(data_path)
-            self.ref_data = self.parse_data_file(ref_data_path)
-            self.set_background()
+            if ref_data_path is not None:
+                self.ref_data = self.parse_data_file(ref_data_path)
+            # self.set_background()
 
         if drug_conc is None:
             self.drug_conc = [0,0.003,0.0179,0.1072,0.643,3.858,23.1481,138.8889,833.3333,5000]
@@ -955,6 +956,7 @@ class Plate():
         return bg_est
 
     def set_background(self,data=None,background_keys=None):
+        
         self.background_od = self.est_background(data=data,
                                                  background_keys=background_keys)
 
