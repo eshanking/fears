@@ -1106,7 +1106,7 @@ def plot_msw_to_ax(pop,ax,conc,wt_fitness_curve,mut_fitness_curve,wtlabel,mutlab
             label = 'net loss'
         elif key == 'reference':
             color = '#ff7f00'
-            label = 'wt selection'
+            label = 'reference selection'
         else:
             color = 'tab:blue'
             label = 'mutant selection'
@@ -1121,7 +1121,7 @@ def plot_msw_to_ax(pop,ax,conc,wt_fitness_curve,mut_fitness_curve,wtlabel,mutlab
                 s = s[start_x:end_x]
                 s = s-np.min(s)
                 s = s/np.max(s)
-            elif label == 'wt selection':
+            elif label == 'reference selection':
                 s = np.array((wt_fitness_curve+r_d)/(mut_fitness_curve+r_d))
                 s = s[start_x:end_x]
                 s = s-np.min(s)
@@ -1206,7 +1206,7 @@ def msw_grid(pop,genotypes,
                     label = 'net loss'
                 elif key == 'reference':
                     color = '#ff7f00'
-                    label = 'wt selection'
+                    label = 'reference selection'
                 else:
                     color = 'tab:blue'
                     label = 'mutant selection'
@@ -1220,7 +1220,7 @@ def msw_grid(pop,genotypes,
                         s = s[start_x:end_x]
                         s = s-np.min(s)
                         s = s/np.max(s)
-                    elif label == 'wt selection':
+                    elif label == 'reference selection':
                         s = np.array((fc[g]+r_d)/(fc[n]+r_d))
                         s = s[start_x:end_x]
                         s = s-np.min(s)
@@ -1260,7 +1260,7 @@ def msw_grid(pop,genotypes,
     ax.tick_params(axis='x', which='major', labelsize=ticklabelsize)
     ax.set_yticks([])
     if legend:
-        p1 = ax.plot([1,1], color = '#ff7f00',label = 'wt selection',linewidth=3)
+        p1 = ax.plot([1,1], color = '#ff7f00',label = 'reference selection',linewidth=3)
         p2 = ax.plot([1,1], color = 'tab:blue',label = 'mutant selection',linewidth=3)
         p0 = ax.plot([1,1], color = '#e41a1c',label = 'net loss',linewidth=3)
         ax.legend(frameon=False,ncol=3,loc=legendloc)
