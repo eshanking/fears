@@ -12,8 +12,10 @@ fears.egg-info/requires.txt
 fears.egg-info/top_level.txt
 fears/data/cycloguanil_ic50.csv
 fears/data/ogbunugafor_drugless.csv
+fears/data/pharm_params_09152023.csv
 fears/data/plate_layout.csv
 fears/data/pyrimethamine_ic50.csv
+fears/data/seascape_lib_09252023.csv
 fears/data/seascape_library.xlsx
 fears/data/plates/20210929_plate1.csv
 fears/data/plates/20210929_plate2.csv

@@ -33,6 +33,38 @@ def gen_fitness_curves(pop,conc=None):
 
     return fc
 
+def pharmacodynamic_curve(c, gmax, gmin, mic, k):
+    """pharmacodynamic model adapted from Foerster et al.
+
+    Foerster, S., Unemo, M., Hathaway, L.J. et al. Time-kill curve analysis and
+    pharmacodynamic modelling for in vitro evaluation of antimicrobials against Neisseria
+    gonorrhoeae . BMC Microbiol 16, 216 (2016). 
+    https://doi.org/10.1186/s12866-016-0838-9
+
+    Args:
+        c (float): drug concentration
+        gmax (float): max growth rate
+        gmin (float): min growth rate
+        mic (float): estimated minimum inhibitory concentration
+        k (float): hill coefficient
+    """
+
+    if type(c) == np.ndarray or type(c) == list:
+        g = []
+        for c_t in c:
+            if c_t == 0:
+                g.append(gmax)
+            else:
+                g.append(gmax - (((gmax-gmin)*(c_t/mic)**k)/((c_t/mic)**k-(gmin/gmax))))
+        return g
+    
+    else:
+        if c == 0:
+            g = gmax
+        else:
+            g = gmax - (((gmax-gmin)*(c/mic)**k)/((c/mic)**k-(gmin/gmax)))
+        return g
+
 # compute fitness given a drug concentration
 def gen_fitness(pop,genotype,conc,drugless_rate=None,ic50=None,hc=None,mic=None,
                 death_model=None):    
@@ -67,22 +99,15 @@ def gen_fitness(pop,genotype,conc,drugless_rate=None,ic50=None,hc=None,mic=None,
         death_model = pop.death_model
 
     if death_model == 'pharmacodynamic':
-        """
-        pharmacodynamic curve from:
 
-        Regoes RR, Wiuff C, Zappala RM, Garner KN, Baquero F, Levin BR. 
-        Pharmacodynamic Functions: a Multiparameter Approach to the Design 
-        of Antibiotic Treatment Regimens. Antimicrob Agents Chemother. 
-        2004;48(10):3670-3676. doi:10.1128/AAC.48.10.3670-3676.2004
-        """
-        if mic is None:
-            mic_t = 10**pop.ic50[genotype]
-        else:
-            mic_t = mic[genotype]
-        gmax = drugless_rate[genotype]
-        gmin = pop.gmin
-        k = pop.death_model_k
-        fitness = gmax - (((gmax-gmin)*((conc/mic_t)**k))/((conc/mic_t)**k-(gmin/gmax)))
+        gmax = pop.seascape_lib[str(genotype)]['gmax']
+        gmin = pop.pharm_params['gmin']
+        k = pop.pharm_params['k']
+        mic = pop.seascape_lib[str(genotype)]['mic']
+
+        g = pharmacodynamic_curve(conc,gmax,gmin,mic,k)
+
+        return pharmacodynamic_curve(conc,gmax,gmin,mic,k)
     
     else:
 
@@ -94,11 +119,11 @@ def gen_fitness(pop,genotype,conc,drugless_rate=None,ic50=None,hc=None,mic=None,
             c = hc
         log_eqn = lambda d,i: d/(1+np.exp((i-np.log10(conc))/c))
         if conc <= 0:
-            fitness = drugless_rate[genotype]
+            return drugless_rate[genotype]
         else:
-            fitness = log_eqn(drugless_rate[genotype],ic50[genotype])
+            return log_eqn(drugless_rate[genotype],ic50[genotype])
 
-    return fitness
+    # return fitness
 
 def logistic_equation(conc,drugless_rate,ic50,hc=-0.6824968):
     """

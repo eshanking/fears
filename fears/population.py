@@ -123,6 +123,8 @@ class PopParams:
         self.seascape_path = None
         self.seascape_lib = None
   
+        self.pharm_params_path = files('fears.data').joinpath('pharm_params_09152023.csv')
+
         p = files('fears.data').joinpath('pyrimethamine_ic50.csv')
         self.ic50_data_path = str(p)
 
@@ -319,6 +321,13 @@ class Population(PopParams):
         # initialize fitness
         self.initialize_fitness()
 
+        # load pharmacodynamic parameters
+        # self.pharm_params = pd.read_csv(self.pharm_params_path).to_dict()
+        df = pd.read_csv(self.pharm_params_path)
+        self.pharm_params = {}
+        for key in df.keys():
+            self.pharm_params[key] = df[key][0]
+
         if self.n_genotype is None:
             self.n_genotype = int(len(self.ic50))
         if self.n_allele is None:
@@ -393,13 +402,16 @@ class Population(PopParams):
 
             elif self.fitness_data == 'from_file':
                 if self.seascape_path is not None:
-                    self.seascape_lib = pd.read_excel(self.seascape_path,index_col=0)
+                    if self.seascape_path.endswith('.csv'):
+                        self.seascape_lib = pd.read_csv(self.seascape_path,index_col=0)
+                    else:
+                        self.seascape_lib = pd.read_excel(self.seascape_path,index_col=0)
                     self.data_source = self.seascape_path
                 else: # default data
                     self.data_source = 'example data'
                     self.seascape_path = \
-                        files('fears.data').joinpath('seascape_library.xlsx')
-                    self.seascape_lib = pd.read_excel(self.seascape_path,index_col=0)
+                        files('fears.data').joinpath('seascape_lib_09252023.csv')
+                    self.seascape_lib = pd.read_csv(self.seascape_path,index_col=0)
                 
                 self.n_genotype = len(self.seascape_lib.keys())
 

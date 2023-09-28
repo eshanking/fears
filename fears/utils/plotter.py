@@ -199,7 +199,8 @@ def plot_fitness_curves(pop,
                         raw_data = False,
                         color_kwargs={},
                         legend_loc = (1,-0.05),
-                        xdata=None):
+                        xdata=None,
+                        linthresh=10**-3):
     """Plots genotype-specific dose reponse curves (fitness seascape)
 
     Args:
@@ -227,7 +228,7 @@ def plot_fitness_curves(pop,
         
         if xdata is None:
             xdata = np.logspace(pop.drug_conc_range[0],pop.drug_conc_range[1],
-                            num=100)
+                            num=1000)
 
         if ax is None:
             fig, ax = plt.subplots(figsize = (10,6))
@@ -245,42 +246,32 @@ def plot_fitness_curves(pop,
 
         
         else:
-            # if min(xdata) == 0:
-            #     xmin = np.log10(xdata[1])
-            # else:
-            #     xmin = np.log10(min(xdata))
-            # xmax = np.log10(max(xdata))
-
-            # xdata = np.logspace(xmin,xmax)
 
             if not xdata[0] == 0:
-                xdata = np.insert(xdata,0,0)
-            sl = pop.seascape_lib
+
+                xdata = np.concatenate(([0],xdata))
+            # sl = pop.seascape_lib
 
             for g in range(pop.n_genotype):
-                
-                f = []
-                sl_t = sl[str(g)]
-                # ic50 = sl_t['ic50']
 
+                f = []
                 for c in xdata:
-                    
-                    # f_t = pop.logistic_pharm_curve(c,ic50,sl_t['g_drugless'],sl_t['hill_coeff'])
-                    f_t = fitness.sl_to_fitness(pop,g,c)
-                    # f_t = f_t*(60**2)
-                    f.append(f_t)
-                    
+
+                    f.append(fitness.gen_fitness(pop,g,c))
 
                 ax.plot(xdata,f,label = str(pop.int_to_binary(g)),linewidth=linewidth) 
 
-        ax.set_xscale('log')
+        ax.set_xscale('symlog',linthresh=linthresh)
         
         ax.tick_params(labelsize=labelsize)
         ax.set_ylabel('Growth rate (hr$^-1$)',fontsize=labelsize)
         ax.set_xlabel('Drug concentration (ug/ml)',fontsize=labelsize)
 
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
+
         if show_legend:
-            ax.legend(fontsize=labelsize,frameon=False,loc=(1.1,0),ncol=legend_cols)
+            ax.legend(fontsize=labelsize,frameon=False,loc=(1,0),ncol=legend_cols)
 
     else:
         if ax is None:

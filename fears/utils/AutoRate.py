@@ -1360,4 +1360,128 @@ class Plate():
         else:
             return np.max(r)
 
-# Misc helper function
+def est_linear_slope(count,
+                        # dt=1, # per hour
+                        dt=1,
+                        time=None,
+                        window=10,
+                        step=5,
+                        thresh=0.65,
+                        debug=False,
+                        title=None,
+                        exclude=0,
+                        cell_death_thresh=0.7,
+                        return_fit=False):
+        """A non-parametric method for estimating the slope of growth curves
+
+        Args:
+            OD (array-like): Raw optical density data
+            window (float,optional): Window for rolling linear regression. Defaults to 10.
+            step (float, optional): Step size for rolling lienar regression. Defaults to 5.
+            thresh (float, optional): Percentage of max slope to include in final 
+            linear regression. Defaults to 0.65.
+            debug (bool, optional): If True, plots linear fit over data. Defaults to False.
+
+        Returns:
+            _type_: _description_
+        """
+
+        n_measurements = len(count)
+        if type(count) is list:
+            count = np.array(count)
+
+        if time is None:
+            time = np.arange(len(count))
+
+        # remove zero values
+        time = np.delete(time,np.argwhere(count<=0))
+        count = np.delete(count,np.argwhere(count<=0))
+        if len(count) < n_measurements/2:
+            return np.nan
+        
+        lnCount = np.log(count) # normalize OD data
+
+        # check if the population is decreasing
+        if np.mean(lnCount[-3:]) < np.max(lnCount)*cell_death_thresh:
+            return 0
+
+        slopes = []
+        x_pos = []
+
+        # calculate piecewise slopes
+        for indx in range(exclude,len(lnCount)-window+step,step):
+            time_t = time[indx:indx+window]
+            subset = lnCount[indx:indx+window]
+            fit = scipy.stats.linregress(time_t,subset)
+            slopes.append(fit.slope)
+            x_pos.append(indx)
+
+        # print(slopes)
+        if all(np.array(slopes)<=0):
+            return 0
+        # find the max slope
+        
+        lb = thresh*np.nanmax(slopes)
+        # print(lb)
+        # print(slopes)
+        use_indices = np.argwhere(slopes>=lb)[:,0]
+
+        if len(use_indices) == 1:
+
+            return np.nanmax(slopes)
+        # print(use_indices)
+        # print(x_pos)
+        if len(use_indices) > 1:
+            lin_range = x_pos[np.min(use_indices):np.max(use_indices)+1]
+
+        else:
+            lin_range = x_pos[use_indices[0]:use_indices[0]+1]
+        # print(lin_range)
+
+        # compute slope and plot result
+        time_t = time[lin_range]
+        lin_seg = lnCount[lin_range]
+        # print(lin_seg)
+        fit = scipy.stats.linregress(time_t,lin_seg)
+        slope = fit.slope
+
+        count_fit = time_t*fit.slope + fit.intercept
+        
+        if return_fit:
+            return (fit.slope/dt,fit.intercept)
+
+        if np.isnan(slope):
+            # raise Warning('Slope is NaN, adjust parameters')
+            return slope
+
+        # if self.growth_rate_type == 'linear':
+        #     rate = np.exp(slope/dt)
+        # else:
+        #     rate = slope/dt
+        rate = slope/dt
+
+        # plot the linear regression
+        if debug:
+            fig,ax_list = plt.subplots(ncols=2,figsize=(8,3))
+            ax = ax_list[0]
+            ax.plot(time,lnCount,linewidth=2,label='lnCount')
+            ax.plot(time_t,count_fit,linewidth=2,label='Linear fit')
+            # ax.plot(time[x_pos],(10000*np.array(slopes))+np.min(lnCount),label='slope')
+            # ax.plot(cutoff_time,cutoff,label='Threshold')
+            ax.legend(frameon=False)
+
+            # title = title + ' ' + 'err = ' + str(round(100000*fit.stderr,2))
+
+            ax.set_title(title)
+
+            ax = ax_list[1]
+            ax.plot(time,count)
+            ax.set_title('Raw count')
+            # ax.set_ylim(0,1.1)
+            fig.suptitle('Slope = ' + str(round(slope,3)), fontsize=14)
+            AUC = np.trapz(count,time)
+            max_count = np.max(count)
+            AUC_ratio = AUC/np.trapz(max_count*np.ones(len(time)),time)
+            ax.annotate('AUC ratio = ' + str(round(AUC_ratio,3)),xy=(0.5,0.5),xycoords='axes fraction')
+
+        return rate # per hour
