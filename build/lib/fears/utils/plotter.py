@@ -95,7 +95,7 @@ def plot_timecourse(pop,counts_t=None,title_t=None,**kwargs):
     if pop.plot_drug_curve:
         ax2 = ax1.twinx() # ax2 is the drug timecourse
         ax2.set_position([left, 0.5, width, 0.6])
-        ax2.set_ylabel('Drug Concentration \n($\u03BC$M)', color=color,fontsize=20) # we already handled the x-label with ax1
+        ax2.set_ylabel('Drug Concentration \n($\u03BC$M)', color=color,fontsize=14) # we already handled the x-label with ax1
         
         drug_curve = pop.drug_curve
         
@@ -109,16 +109,16 @@ def plot_timecourse(pop,counts_t=None,title_t=None,**kwargs):
             else:
                 axmin = min(drug_curve)
             ax2.set_ylim(axmin,2*max(drug_curve))
-            ax2.legend(['Drug Conc.'],loc=(1.3,0.93),frameon=False,fontsize=15)
+            ax2.legend(['Drug Conc.'],loc=(1.3,0.93),frameon=False,fontsize=12)
             
         else:
             ax2.set_ylim(0,1.1*max(drug_curve))
-            ax2.legend(['Drug Conc.'],loc=(1.25,0.93),frameon=False,fontsize=15)
+            ax2.legend(['Drug Conc.'],loc=(1.25,0.93),frameon=False,fontsize=12)
 
             
-        ax2.tick_params(labelsize=15)
+        ax2.tick_params(labelsize=12)
         ax2.axes.ticklabel_format(axis='y',style='sci',scilimits=(1,10))
-        ax2.set_title(title,fontsize=20)
+        ax2.set_title(title,fontsize=14)
         
     for allele in range(counts.shape[1]):
         if allele in sorted_index_big:
@@ -141,35 +141,19 @@ def plot_timecourse(pop,counts_t=None,title_t=None,**kwargs):
 
         ax1.set_title(title)
 
-    ax1.legend(loc=(1.25,-.12),frameon=False,fontsize=15)
+    ax1.legend(loc=(1.25,-.12),frameon=False,fontsize=12)
         
     ax1.set_xlim(0,pop.x_lim)
     ax1.set_facecolor(color='w')
     ax1.grid(False)
 
-    ax1.set_ylabel('Cells',fontsize=20)
-    ax1.tick_params(labelsize=15)
+    ax1.set_ylabel('Cells',fontsize=14)
+    ax1.tick_params(labelsize=12)    
     
-    if pop.plot_entropy == True:
-        e = pop.entropy(counts)
-        
-        ax3.plot(e,color='black')
-        ax3.set_xlabel('Time',fontsize=20)
-        ax3.set_ylabel('Entropy',fontsize=20)
-        if pop.entropy_lim is not None:
-            ax3.set_ylim(0,pop.entropy_lim)
-        ax3.tick_params(labelsize=15)
-    
-    if pop.y_lim is not None:
-        y_lim = pop.y_lim
-    else:
-        y_lim = np.max(counts) + 0.05*np.max(counts)
-    
-    if pop.counts_log_scale:
-        ax1.set_yscale('log')
-        # ax1.set_ylim(1,5*10**5)
-    else:
-        ax1.set_ylim(0,y_lim)
+    # if pop.y_lim is not None:
+    #     y_lim = pop.y_lim
+    # else:
+    #     y_lim = np.max(counts) + 0.05*np.max(counts)
     
     xlabels = ax1.get_xticks()
     xlabels = xlabels*pop.timestep_scale
@@ -178,11 +162,14 @@ def plot_timecourse(pop,counts_t=None,title_t=None,**kwargs):
     xt = ax1.get_xticks()
     ax1.set_xticks(xt)
     ax1.set_xticklabels(xlabels)
-    ax1.set_xlabel('Days',fontsize=20)
+    ax1.set_xlabel('Days',fontsize=14)
 
     # get the length of the simulation
     n_timestep = len(counts[:,0])
     ax1.set_xlim(0,n_timestep)
+    ax1.set_ylim(0,10*np.max(counts))
+
+    ax1.set_yscale('symlog',linthresh=1)
 
     return fig
 
@@ -958,11 +945,12 @@ def plot_kaplan_meier(pop,
         # rule of succession explanation: https://en.wikipedia.org/wiki/Rule_of_succession
         err = np.zeros(t_max)
         for t in range(t_max):
-            p = (np.array(survival_curve[t]) + 1)/(n_sims + 2) # uniform prior (rule of succession) 
+            p = (np.array(survival_curve[t]/100) + 1)/(n_sims + 2) # uniform prior (rule of succession) 
             n = n_sims
             q = 1-p
             # standard deviation of the estimator of the parameter of a binomial distribution
-            err[t] = 100*(p*q/n)**0.5 #
+            
+            err[t] = 100*((p*q)/n)**0.5 #
     t = np.arange(t_max)
     
     ax.fill_between(t,survival_curve-err,survival_curve+err,alpha=0.4)

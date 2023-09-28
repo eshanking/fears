@@ -146,6 +146,10 @@ def gen_curves(pop):
     Returns:
         list of numpy arrays: Drug concentration curve and impulse train
     """
+    if pop.dwell:
+        dwell_indx = int(pop.dwell_time/pop.timestep_scale)
+    else:
+        dwell_indx = 0
     curve = np.zeros(pop.n_timestep)
     u = None
     if pop.curve_type == 'linear': # aka ramp linearly till timestep defined by steepness
@@ -170,6 +174,7 @@ def gen_curves(pop):
             
     elif pop.curve_type == 'constant':
         curve[:] = pop.max_dose
+        curve[0:dwell_indx] = 0
 
     elif pop.curve_type == 'heaviside':
         for i in range(pop.n_timestep):
@@ -185,6 +190,9 @@ def gen_curves(pop):
         else:
             for i in range(pop.n_timestep):
                 curve[i] = pop.pharm_eqn(i)
+        # pad the curve with zeros to account for dwell time
+        curve = np.pad(curve,(dwell_indx,0),'constant')
+        
     
     # Pulsed convolves an impulse train with the 1-compartment model
     elif pop.curve_type == 'pulsed':

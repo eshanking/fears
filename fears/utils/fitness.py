@@ -270,17 +270,7 @@ def gen_fl_for_abm(pop,conc,counts):
     """
 
     fit_land = gen_fit_land(pop,conc)
-    
-    # # takes the landscape at the max dose and scales the replication rate
-    # # according to drug concentration
-    # if pop.static_landscape:
-    #     # max_fitness = max(fit_land)
-    #     # fit_land = pop.gen_fit_land(pop.max_dose)
-    #     # fit_land = fit_land*max_fitness/max(fit_land)
-    #     fit_land = gen_fit_land(pop,conc)
-    
-    # if pop.static_topology:
-    #     fit_land = gen_fit_land(pop,conc)
+    pos_indx = np.argwhere(fit_land>0)
     
     # Scale division rates based on carrying capacity
     if pop.use_carrying_cap:
@@ -290,7 +280,7 @@ def gen_fl_for_abm(pop,conc,counts):
     else:
         division_scale = 1
     
-    fit_land = fit_land*division_scale
+    fit_land[pos_indx] = fit_land[pos_indx]*division_scale
     
     return fit_land
 

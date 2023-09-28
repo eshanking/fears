@@ -390,7 +390,7 @@ class Experiment():
                         data_dict = {'counts':counts,
                                      'drug_curve':drug,
                                      'regimen':u}
-                        self.save_dict(data_dict,i,save_folder)
+                        self.save_dict(data_dict,save_folder,num=i)
                 # kk+=1
                 # pbar.update()
                 self.perc_survive = 100*self.n_survive/self.n_sims
@@ -448,7 +448,7 @@ class Experiment():
                         # self.save_counts(counts,n,save_folder)
                         data_dict = {'counts':counts,
                                      'drug_curve':drug}
-                        self.save_dict(data_dict,n,save_folder)
+                        self.save_dict(data_dict,save_folder,num=n)
         if not self.debug:
             pickle.dump(self, open(self.experiment_info_path,"wb"))
         # pickle.dump(self, open(self.experiment_info_path,"wb"))

@@ -24,6 +24,175 @@ def survival_proportion(pop,data):
 
     return p_survived
 
+def generate_binary_strings(N, m):
+    def generate_strings_helper(N, m, prefix):
+        if N == 0:
+            if m == 0:
+                binary_str = ''.join(prefix)
+                decimal_value = int(binary_str, 2)
+                results.append(decimal_value)
+            return
+        if m > 0:
+            generate_strings_helper(N - 1, m - 1, prefix + ['1'])
+        generate_strings_helper(N - 1, m, prefix + ['0'])
+
+    results = []
+    generate_strings_helper(N, m, [])
+    return results
+
+def most_freq_genotype(exp=None,exp_info_path=None,mode='mode'):
+    """Computes the proportion of the population that has a given number of mutations
+    
+    Returns a dictionary of dictionaries of K-M curves from the 
+    given experiment. Each experimental condition has two 
+    resistance curves (defined by resistance_outcome) and a
+    survival curve.
+
+    Args:
+        exp (fears Experiment object, optional): Experiment to analyze. Defaults to None.
+        exp_info_path (str, optional): Optional path to Experiment object. Defaults to None.
+        resistance_outcome (list, optional): List of resistance outcomes. Defaults to [14,15].
+
+    Returns:
+        dict: Dict of dicts containing KM curves. Sub-dictionaries are different
+        experimental conditions.
+    """
+
+    if exp is None:
+        exp =  pickle.load(open(exp_info_path,'rb'))
+
+    exp_folders,exp_info = results_manager.get_experiment_results(exp=exp)
+
+    max_idx_dict = {}
+    
+    pop = exp_info.populations[0]
+    
+    for exp in exp_folders:
+    
+        k_abs_t = exp[exp.find('=')+1:]
+        k_abs_t = k_abs_t.replace(',','.')
+        k_abs_t = float(k_abs_t)
+        
+        k_abs_t = round(k_abs_t,10)
+        # print(f"{k_abs_t:.2e}")
+        
+        sim_files = os.listdir(path=exp)
+        sim_files = sorted(sim_files)
+        
+        if mode == 'mode':
+            k=0
+
+            data = np.zeros((pop.n_timestep,pop.n_genotype))
+
+            while k < len(sim_files):
+
+                sim = sim_files[k]
+                sim = exp + os.sep + sim
+                data_dict = results_manager.get_data(sim)
+
+                data += data_dict['counts']
+                k+=1
+                
+            max_idx = np.argmax(data,axis=1)
+            max_idx = max_idx[data.sum(axis=1) > 0]
+            max_idx_dict[str(k_abs_t)] = max_idx
+            
+        else:
+            k=0
+
+            data = np.zeros((pop.n_timestep,len(sim_files)))
+            pop_size = np.zeros((pop.n_timestep))
+            while k < len(sim_files):
+                    
+                sim = sim_files[k]
+                sim = exp + os.sep + sim
+                data_dict = results_manager.get_data(sim)
+
+                pop_size += np.sum(data_dict['counts'],axis=1)
+
+                data[:,k] = np.argmax(data_dict['counts'],axis=1)
+                k+=1
+            
+            data = data[pop_size > 0,:]
+            max_idx_dict[str(k_abs_t)] = data
+        
+    return max_idx_dict
+
+def n_mut_curve(exp=None,exp_info_path=None,nmut=1):
+    """Computes the proportion of the population that has a given number of mutations
+    
+    Returns a dictionary of dictionaries of K-M curves from the 
+    given experiment. Each experimental condition has two 
+    resistance curves (defined by resistance_outcome) and a
+    survival curve.
+
+    Args:
+        exp (fears Experiment object, optional): Experiment to analyze. Defaults to None.
+        exp_info_path (str, optional): Optional path to Experiment object. Defaults to None.
+        resistance_outcome (list, optional): List of resistance outcomes. Defaults to [14,15].
+
+    Returns:
+        dict: Dict of dicts containing KM curves. Sub-dictionaries are different
+        experimental conditions.
+    """
+
+    if exp is None:
+        exp =  pickle.load(open(exp_info_path,'rb'))
+
+    exp_folders,exp_info = results_manager.get_experiment_results(exp=exp)
+
+    n_sims = exp_info.n_sims
+    
+    pop = exp_info.populations[0]
+
+    genotypes = generate_binary_strings(pop.n_allele,nmut)
+    
+    prop_data = {}
+
+    # c[:,0] = c[:,0] + np.ones(len(c[:,0]))
+
+    # pop_size = np.sum(c,axis=1)
+
+    # for i in range(c.shape[1]):
+    #     c_t = c[:,i]
+    #     c[:,i] = np.divide(c_t,pop_size)
+    
+    for exp in exp_folders:
+    
+        k_abs_t = exp[exp.find('=')+1:]
+        k_abs_t = k_abs_t.replace(',','.')
+        k_abs_t = float(k_abs_t)
+        
+        k_abs_t = round(k_abs_t,10)
+        # print(f"{k_abs_t:.2e}")
+        
+        sim_files = os.listdir(path=exp)
+        sim_files = sorted(sim_files)
+        
+        k=0
+
+        data = np.zeros((pop.n_timestep,pop.n_genotype))
+
+        while k < len(sim_files):
+
+            sim = sim_files[k]
+            sim = exp + os.sep + sim
+            data_dict = results_manager.get_data(sim)
+
+            data += data_dict['counts']
+            k+=1
+            
+        pop_size = np.sum(data,axis=1)
+        data = data[pop_size > 0]
+        pop_size = pop_size[pop_size > 0]
+        data = np.divide(data,pop_size[:,None])
+        data = data[:,genotypes]
+        data = np.sum(data,axis=1)
+
+        prop_data[str(k_abs_t)] = data
+        
+    return prop_data
+
 def km_curve(exp=None,exp_info_path=None,resistance_outcome=[14,15]):
     """Computes Kaplan-Meier data for km curve plotting
     
