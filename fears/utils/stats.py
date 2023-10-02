@@ -139,7 +139,7 @@ def most_freq_genotype(exp=None,exp_info_path=None,mode='mode'):
             max_idx = np.argmax(data,axis=1)
             max_idx = max_idx[data.sum(axis=1) > 0]
             max_idx_dict[str(k_abs_t)] = max_idx
-            
+
         else:
             k=0
 
