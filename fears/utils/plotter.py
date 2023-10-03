@@ -12,6 +12,9 @@ from matplotlib.patches import Polygon
 import networkx as nx
 from labellines import labelLine
 
+def foo():
+    return
+
 def gen_color_cycler(style=None,palette='bright',n_colors=16):
     """Generates a custom matplotlib color cycler
 
