@@ -123,7 +123,7 @@ class PopParams:
         self.seascape_path = None
         self.seascape_lib = None
   
-        self.pharm_params_path = files('fears.data').joinpath('pharm_params_09152023.csv')
+        self.pharm_params_path = files('fears.data').joinpath('pharm_params_01172024.csv')
 
         p = files('fears.data').joinpath('pyrimethamine_ic50.csv')
         self.ic50_data_path = str(p)

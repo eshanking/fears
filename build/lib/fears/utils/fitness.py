@@ -105,7 +105,7 @@ def gen_fitness(pop,genotype,conc,drugless_rate=None,ic50=None,hc=None,mic=None,
         k = pop.pharm_params['k']
         mic = pop.seascape_lib[str(genotype)]['mic']
 
-        g = pharmacodynamic_curve(conc,gmax,gmin,mic,k)
+        # g = pharmacodynamic_curve(conc,gmax,gmin,mic,k)
 
         return pharmacodynamic_curve(conc,gmax,gmin,mic,k)
     

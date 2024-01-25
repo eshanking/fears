@@ -850,7 +850,7 @@ def add_landscape_to_fitness_curve(c,ax,pop,
 
     x = get_pos_in_log_space(c, width)
     lax = ax.inset_axes([x[0],ypos,x[1]-x[0],height],transform=ax.transData)
-    lax = plot_landscape(pop,c,ax=lax,
+    lax = plot_landscape(pop,conc=c,ax=lax,
                         **kwargs)
     
     if vert_lines:
