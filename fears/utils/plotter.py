@@ -12,6 +12,7 @@ from matplotlib.patches import Polygon
 import networkx as nx
 from labellines import labelLine
 
+
 def gen_color_cycler(style=None,palette='bright',n_colors=16):
     """Generates a custom matplotlib color cycler
 
@@ -583,6 +584,7 @@ def plot_landscape(p,conc=10**0,
                 textsize=11,
                 resize_param=0.2,
                 square=False,
+                arrows=False,
                 textcolor='black',
                 cbax=None,
                 cblabel=None,
@@ -704,6 +706,36 @@ def plot_landscape(p,conc=10**0,
         color=edge_colors)
     edge_collection.set_zorder(1)
     ax.add_collection(edge_collection)
+ 
+    # Add arrows
+    
+    if(arrows):
+
+        # Filter edge list and draw arrows:
+        unique_edges = set()
+        filtered_edges = []
+
+        for edge in edgelist:
+            # Sort the edge tuple to ensure order independence
+            sorted_edge = tuple(sorted(edge))
+            reversed_edge = tuple(reversed(edge))
+
+            # Check if either the sorted or reversed edge is already in the set
+            if sorted_edge not in unique_edges and reversed_edge not in unique_edges:
+                unique_edges.add(sorted_edge)
+                filtered_edges.append(edge)
+
+        #Draw arrows
+        for edge in filtered_edges:
+            if((edge[0][1]-edge[1][1])>0):
+                ax.annotate('', xy=pos[edge[0]], xytext=pos[edge[1]],
+                    arrowprops=dict(arrowstyle='->', color='black', lw=1.5, shrinkA=14, shrinkB=14))
+            
+            if((edge[0][1]-edge[1][1])<0):
+                ax.annotate('', xy=pos[edge[1]], xytext=pos[edge[0]],
+                    arrowprops=dict(arrowstyle='->', color='black', lw=1.5, shrinkA=14, shrinkB=14))
+
+
     
     # draw nodes
     
