@@ -12,6 +12,7 @@ from matplotlib.patches import Polygon
 import networkx as nx
 from labellines import labelLine
 
+
 def gen_color_cycler(style=None,palette='bright',n_colors=16):
     """Generates a custom matplotlib color cycler
 
@@ -572,6 +573,7 @@ def plot_timecourse_to_axes(pop,
     return counts_ax, drug_ax
 
 def plot_landscape(p,conc=10**0,
+                arrowprops=None,
                 fit_land=None,
                 relative=True,
                 rank=True,
@@ -580,15 +582,19 @@ def plot_landscape(p,conc=10**0,
                 colorbar_lim=None,
                 colorbar=True,
                 node_size = 800,
+                node_label = 'base2',
                 textsize=11,
                 resize_param=0.2,
                 square=False,
+                arrows=False,
+                trajectory=None,
                 textcolor='black',
                 cbax=None,
                 cblabel=None,
                 cbloc = [0.1,0.8,0.3,0.5],
                 network_only=False, # plots just the network without any fit_land data
                 edge_color='gray',
+                edge_alpha=1,
                 plot_sub_network=False,
                 sub_network=None,
                 sub_network_color='white',
@@ -701,10 +707,49 @@ def plot_landscape(p,conc=10**0,
         antialiaseds=(1,),
         linestyle='solid',
         zorder=1,
-        color=edge_colors)
+        color=edge_colors,
+        alpha=edge_alpha)
     edge_collection.set_zorder(1)
     ax.add_collection(edge_collection)
+ 
+ 
+    # Filter edge list and draw arrows: 
+
+    filtered_edges = []
+    unique_edges = set()
+
+    for edge in edgelist:
+        # Sort the edge tuple to ensure order independence
+        sorted_edge = tuple(sorted(edge))
+        reversed_edge = tuple(reversed(edge))
+
+        # Check if either the sorted or reversed edge is already in the set
+        if sorted_edge not in unique_edges and reversed_edge not in unique_edges:
+            unique_edges.add(sorted_edge)
+            filtered_edges.append(edge)
+
+    if(arrows):
+
+        for edge in filtered_edges:
+            if((edge[0][1]-edge[1][1])>0):
+                ax.annotate('', xy=pos[edge[0]], xytext=pos[edge[1]],
+                    arrowprops=dict(arrowstyle='->', color='black', lw=1.5, shrinkA=14, shrinkB=14))
+            
+            if((edge[0][1]-edge[1][1])<0):
+                ax.annotate('', xy=pos[edge[1]], xytext=pos[edge[0]],
+                    arrowprops=dict(arrowstyle='->', color='black', lw=1.5, shrinkA=14, shrinkB=14))
+
+
+    #Path trajectory with arrows
+                
+    if trajectory and not isinstance(trajectory, list):
+        raise ValueError("If trajectory parameter is set to True, trajectory data must be provided as a list.")
     
+    if trajectory:
+        trajectory_data = trajectory
+    else:
+        trajectory_data = None
+
     # draw nodes
     
     if colorbar_lim is not None:
@@ -759,6 +804,14 @@ def plot_landscape(p,conc=10**0,
             (x, y) = pos[n]
             if not isinstance(label, str):
                 label = str(label)  # this makes "1" and 1 labeled the same
+            
+            if node_label == 'base10':
+                l = 0
+                for i in range(len(label)):
+                    l += int(label[i]) * 2**(len(label) - i - 1)
+
+                label = str(l)
+            
             if plot_sub_network and n[0] in sub_network_str:
                 color = 'white'
             else:
@@ -821,6 +874,55 @@ def plot_landscape(p,conc=10**0,
     yrange = yl[1]-yl[0]
     yl = [yl[0]-resize_param*yrange,yl[1]+yrange*resize_param]
     ax.set_ylim(yl)
+
+    if trajectory_data is not None:
+        trajectory_pairs = []
+
+        if arrowprops is None:
+            arrowprops = dict(arrowstyle='->', color='black', lw=2.5, shrinkA=14.5, shrinkB=14.5, mutation_scale=15)
+
+        for i in range(len(trajectory) - 1):
+            trajectory_pairs.append([trajectory[i], trajectory[i + 1]])
+
+        binary_trajectory_pairs = []
+
+        for pair in trajectory_pairs:
+            binary_pair = []
+            for node in pair:
+                binary_representation = format(node, '04b')  # Convert node number to 4-bit binary representation
+                binary_pair.append("" + binary_representation + "")
+            binary_trajectory_pairs.append(binary_pair)
+
+        for pair in binary_trajectory_pairs:
+            start_binary = pair[0]
+            end_binary = pair[1]
+    
+            # Find the corresponding edge in filtered_edges based on the binary values
+            for edge in filtered_edges:
+                if edge[0][0] == start_binary:
+                    start_pos = pos[edge[0]]
+                    break
+    
+            for edge in filtered_edges:
+                if edge[0][0] == end_binary:
+                    end_pos = pos[edge[0]]
+                    break
+
+            # For genotypes only in the end position in filtered_edges (genotype 15)
+            for edge in filtered_edges:
+                if edge[1][0] == start_binary:
+                    start_pos = pos[edge[1]]
+                    break
+
+            for edge in filtered_edges:
+                if edge[1][0] == end_binary:
+                    end_pos = pos[edge[1]]
+                    break
+    
+            # Draw trajectory arrows
+        
+            ax.annotate('', xy=end_pos, xytext=start_pos,
+                    arrowprops=arrowprops)
     
     ax.set_axis_off()
     return ax
