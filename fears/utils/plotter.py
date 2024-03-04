@@ -585,6 +585,7 @@ def plot_landscape(p,conc=10**0,
                 resize_param=0.2,
                 square=False,
                 arrows=False,
+                trajectory=None,
                 textcolor='black',
                 cbax=None,
                 cblabel=None,
@@ -707,25 +708,24 @@ def plot_landscape(p,conc=10**0,
     edge_collection.set_zorder(1)
     ax.add_collection(edge_collection)
  
-    # Add arrows
-    
+ 
+    # Filter edge list and draw arrows: 
+
+    filtered_edges = []
+    unique_edges = set()
+
+    for edge in edgelist:
+        # Sort the edge tuple to ensure order independence
+        sorted_edge = tuple(sorted(edge))
+        reversed_edge = tuple(reversed(edge))
+
+        # Check if either the sorted or reversed edge is already in the set
+        if sorted_edge not in unique_edges and reversed_edge not in unique_edges:
+            unique_edges.add(sorted_edge)
+            filtered_edges.append(edge)
+
     if(arrows):
 
-        # Filter edge list and draw arrows:
-        unique_edges = set()
-        filtered_edges = []
-
-        for edge in edgelist:
-            # Sort the edge tuple to ensure order independence
-            sorted_edge = tuple(sorted(edge))
-            reversed_edge = tuple(reversed(edge))
-
-            # Check if either the sorted or reversed edge is already in the set
-            if sorted_edge not in unique_edges and reversed_edge not in unique_edges:
-                unique_edges.add(sorted_edge)
-                filtered_edges.append(edge)
-
-        #Draw arrows
         for edge in filtered_edges:
             if((edge[0][1]-edge[1][1])>0):
                 ax.annotate('', xy=pos[edge[0]], xytext=pos[edge[1]],
@@ -734,6 +734,63 @@ def plot_landscape(p,conc=10**0,
             if((edge[0][1]-edge[1][1])<0):
                 ax.annotate('', xy=pos[edge[1]], xytext=pos[edge[0]],
                     arrowprops=dict(arrowstyle='->', color='black', lw=1.5, shrinkA=14, shrinkB=14))
+
+
+    #Path trajectory with arrows
+                
+    if trajectory and not isinstance(trajectory, list):
+        raise ValueError("If trajectory parameter is set to True, trajectory data must be provided as a list.")
+    
+    if trajectory:
+        trajectory_data = trajectory
+    else:
+        trajectory_data = None
+
+    
+    if trajectory_data is not None:
+        trajectory_pairs = []
+
+        for i in range(len(trajectory) - 1):
+            trajectory_pairs.append([trajectory[i], trajectory[i + 1]])
+
+        binary_trajectory_pairs = []
+
+        for pair in trajectory_pairs:
+            binary_pair = []
+            for node in pair:
+                binary_representation = format(node, '04b')  # Convert node number to 4-bit binary representation
+                binary_pair.append("" + binary_representation + "")
+            binary_trajectory_pairs.append(binary_pair)
+
+        for pair in binary_trajectory_pairs:
+            start_binary = pair[0]
+            end_binary = pair[1]
+    
+            # Find the corresponding edge in filtered_edges based on the binary values
+            for edge in filtered_edges:
+                if edge[0][0] == start_binary:
+                    start_pos = pos[edge[0]]
+                    break
+    
+            for edge in filtered_edges:
+                if edge[0][0] == end_binary:
+                    end_pos = pos[edge[0]]
+                    break
+
+            # For genotypes only in the end position in filtered_edges (genotype 15)
+            for edge in filtered_edges:
+                if edge[1][0] == start_binary:
+                    start_pos = pos[edge[1]]
+                    break
+
+            for edge in filtered_edges:
+                if edge[1][0] == end_binary:
+                    end_pos = pos[edge[1]]
+                    break
+    
+            # Draw trajectory arrows
+            ax.annotate('', xy=end_pos, xytext=start_pos,
+                    arrowprops=dict(arrowstyle='->', color='black', lw=2.5, shrinkA=14.5, shrinkB=14.5, mutation_scale=15))
 
 
     
