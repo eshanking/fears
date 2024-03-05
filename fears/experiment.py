@@ -34,7 +34,8 @@ class Experiment():
                  passage=False,
                  passage_time = 48,
                  debug = True,
-                 population_template=None): # debug = True -> no save
+                 population_template=None,
+                 eq_times=None): # debug = True -> no save
     
         self.root_path = str(dir_manager.get_project_root())
         
@@ -49,6 +50,7 @@ class Experiment():
         allowed_experiments = ['inoculant-survival',
                                'dose-survival',
                                'drug-regimen',
+                               'equilibrium-time',
                                'dose-entropy',
                                'rate-survival',
                                'bottleneck',
@@ -210,6 +212,28 @@ class Experiment():
                 self.populations.append(p)
 
             self.n_survive = np.zeros([len(self.populations)])
+        
+        elif self.experiment_type == 'equilibrium-time':
+
+            self.eq_times = eq_times
+
+            if population_template is None:
+                if 'dwell' in self.population_options:
+                    del self.population_options['dwell']
+                if 'dwell_time' in self.population_options:
+                    del self.population_options['dwell_time']
+
+                p0 = Population(curve_type='pulsed',
+                                n_sims = 1,
+                                dwell=True,
+                                **self.population_options)
+            else:
+                p0 = population_template
+
+            for eq_time in self.eq_times:
+                p = copy.copy(p0)
+                p.reset_drug_conc_curve(dwell_time=eq_time)
+                self.populations.append(p)
             
         elif self.experiment_type == 'dose-entropy':
             for dose in self.max_doses:
@@ -394,6 +418,29 @@ class Experiment():
                 # kk+=1
                 # pbar.update()
                 self.perc_survive = 100*self.n_survive/self.n_sims
+
+        elif self.experiment_type == 'equilibrium-time':
+
+            for p in self.populations:
+                save_folder = 'eq_time=' + str(p.dwell_time)
+
+                for i in range(self.n_sims):
+                    # initialize new drug curve
+                    # p.drug_curve,u = p.gen_curves()
+                    
+                    counts,n_survive = p.simulate()
+                    drug = p.drug_curve
+                    drug = np.array([drug])
+                    drug = np.transpose(drug)
+                    
+                    if not self.debug:
+                        # self.save_counts(counts,i,save_folder)
+                        data_dict = {'counts':counts,
+                                     'drug_curve':drug}
+                        self.save_dict(data_dict,save_folder,num=i)
+                # kk+=1
+                # pbar.update()
+                # self.perc_survive = 100*n_survive/self.n_sims
             
         elif self.experiment_type == 'dose-entropy':
             # pbar = tqdm(total=len(self.populations)*self.n_sims)

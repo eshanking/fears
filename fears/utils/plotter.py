@@ -587,7 +587,7 @@ def plot_landscape(p,conc=10**0,
                 resize_param=0.2,
                 square=False,
                 arrows=False,
-                trajectory=None,
+                trajectory_list=None,
                 textcolor='black',
                 cbax=None,
                 cblabel=None,
@@ -740,16 +740,11 @@ def plot_landscape(p,conc=10**0,
                     arrowprops=dict(arrowstyle='->', color='black', lw=1.5, shrinkA=14, shrinkB=14))
 
 
-    #Path trajectory with arrows
+    # #Path trajectory with arrows
                 
-    if trajectory and not isinstance(trajectory, list):
-        raise ValueError("If trajectory parameter is set to True, trajectory data must be provided as a list.")
+    # if trajectory and not isinstance(trajectory, list):
+    #     raise ValueError("If trajectory parameter is set to True, trajectory data must be provided as a list.")
     
-    if trajectory:
-        trajectory_data = trajectory
-    else:
-        trajectory_data = None
-
     # draw nodes
     
     if colorbar_lim is not None:
@@ -875,54 +870,57 @@ def plot_landscape(p,conc=10**0,
     yl = [yl[0]-resize_param*yrange,yl[1]+yrange*resize_param]
     ax.set_ylim(yl)
 
-    if trajectory_data is not None:
-        trajectory_pairs = []
 
-        if arrowprops is None:
-            arrowprops = dict(arrowstyle='->', color='black', lw=2.5, shrinkA=14.5, shrinkB=14.5, mutation_scale=15)
+    if trajectory_list is not None:
+        for trajectory in trajectory_list:
 
-        for i in range(len(trajectory) - 1):
-            trajectory_pairs.append([trajectory[i], trajectory[i + 1]])
+                trajectory_pairs = []
 
-        binary_trajectory_pairs = []
+                if arrowprops is None:
+                    arrowprops = dict(arrowstyle='->', color='black', lw=2.5, shrinkA=14.5, shrinkB=14.5, mutation_scale=15)
 
-        for pair in trajectory_pairs:
-            binary_pair = []
-            for node in pair:
-                binary_representation = format(node, '04b')  # Convert node number to 4-bit binary representation
-                binary_pair.append("" + binary_representation + "")
-            binary_trajectory_pairs.append(binary_pair)
+                for i in range(len(trajectory) - 1):
+                    trajectory_pairs.append([trajectory[i], trajectory[i + 1]])
 
-        for pair in binary_trajectory_pairs:
-            start_binary = pair[0]
-            end_binary = pair[1]
-    
-            # Find the corresponding edge in filtered_edges based on the binary values
-            for edge in filtered_edges:
-                if edge[0][0] == start_binary:
-                    start_pos = pos[edge[0]]
-                    break
-    
-            for edge in filtered_edges:
-                if edge[0][0] == end_binary:
-                    end_pos = pos[edge[0]]
-                    break
+                binary_trajectory_pairs = []
 
-            # For genotypes only in the end position in filtered_edges (genotype 15)
-            for edge in filtered_edges:
-                if edge[1][0] == start_binary:
-                    start_pos = pos[edge[1]]
-                    break
+                for pair in trajectory_pairs:
+                    binary_pair = []
+                    for node in pair:
+                        binary_representation = format(node, '04b')  # Convert node number to 4-bit binary representation
+                        binary_pair.append("" + binary_representation + "")
+                    binary_trajectory_pairs.append(binary_pair)
 
-            for edge in filtered_edges:
-                if edge[1][0] == end_binary:
-                    end_pos = pos[edge[1]]
-                    break
-    
-            # Draw trajectory arrows
+                for pair in binary_trajectory_pairs:
+                    start_binary = pair[0]
+                    end_binary = pair[1]
+            
+                    # Find the corresponding edge in filtered_edges based on the binary values
+                    for edge in filtered_edges:
+                        if edge[0][0] == start_binary:
+                            start_pos = pos[edge[0]]
+                            break
+            
+                    for edge in filtered_edges:
+                        if edge[0][0] == end_binary:
+                            end_pos = pos[edge[0]]
+                            break
+
+                    # For genotypes only in the end position in filtered_edges (genotype 15)
+                    for edge in filtered_edges:
+                        if edge[1][0] == start_binary:
+                            start_pos = pos[edge[1]]
+                            break
+
+                    for edge in filtered_edges:
+                        if edge[1][0] == end_binary:
+                            end_pos = pos[edge[1]]
+                            break
         
-            ax.annotate('', xy=end_pos, xytext=start_pos,
-                    arrowprops=arrowprops)
+                # Draw trajectory arrows
+            
+                    ax.annotate('', xy=end_pos, xytext=start_pos,
+                            arrowprops=arrowprops)
     
     ax.set_axis_off()
     return ax
