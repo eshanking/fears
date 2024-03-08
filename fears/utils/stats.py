@@ -164,7 +164,7 @@ def get_entropy_timetrace(sim_num=0,condition_num=0,exp=None,exp_info_path=None)
     sim = exp + os.sep + sim
     data_dict = results_manager.get_data(sim)
 
-    data = data_dict['counts']
+    data = data_dict['counts']/np.sum(data_dict['counts'],axis=1)
 
     return stats.entropy(data.T)
     

@@ -101,14 +101,6 @@ class Experiment():
         else:
             self.experiment_type = experiment_type
         
-        # if experiment_type == 'dose-survival' and len(inoculants) > 1:
-        #     raise Exception('The experiment type is set to dose-survival (default), but more than one inoculant is given.')
-        # elif experiment_type == 'inoculant-survival' and len(self.max_doses) > 1:
-        #     # print('here')
-        #     raise Exception('The experiment type is set to inoculant-survival, but more than one max dose is given.')
-        
-        # if experiment_type == 'inoculant-survival' and inoculants is None:
-        #     raise Exception('The experiment type is set to inoculant-survival, but no inoculants are given.')
         self.ramp = ramp
         if self.experiment_type == 'ramp_up_down':
             self.p_landscape = Population(constant_pop = True,
@@ -150,19 +142,6 @@ class Experiment():
             
             self.set_ramp_ud(self.p_landscape)
             self.set_ramp_ud(self.p_seascape)
-        
-    
-            # p_bottleneck = Population(max_dose = max_doses,
-            #                              n_sims = self.n_sims,
-            #                              curve_type = 'bottleneck'
-            #                              **self.population_options)
-            # self.populations.append(p_bottleneck)
-            
-            # p_no_bottleneck = Population(max_dose = max_doses,
-            #                  n_sims = self.n_sims,
-            #                  curve_type = 'constant'
-            #                  **self.population_options)
-            # self.populations.append(p_no_bottleneck)
         
         if self.experiment_type == 'dose-survival':
             for curve_type in self.curve_types:
@@ -490,7 +469,7 @@ class Experiment():
                             save_folder = 'k_abs=' + str(p.k_abs)
                             save_folder.replace('.',',')
                         else:
-                            save_folder = 'slope=' + str(p.slope)
+                            save_folder = 'slope=' + str(p.k_abs)
                             save_folder.replace('.',',')
                         # self.save_counts(counts,n,save_folder)
                         data_dict = {'counts':counts,
@@ -498,15 +477,6 @@ class Experiment():
                         self.save_dict(data_dict,save_folder,num=n)
         if not self.debug:
             pickle.dump(self, open(self.experiment_info_path,"wb"))
-        # pickle.dump(self, open(self.experiment_info_path,"wb"))
-        
-                    
-                # fig_savename = 'slope = ' + str(p.slope)
-                # self.figures = self.figures.append(fig)
-                # pbar.update()
-            # self.rate_survival_results.index = np.arange(len(self.rate_survival_results))
-                
-        # pbar.close() # close progress bar
   
     # save counts as a csv in the given subfolder with the label 'num'
     def save_counts(self,counts,num,save_folder,prefix='sim_'):

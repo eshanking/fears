@@ -87,10 +87,18 @@ def gen_impulses(pop):
     
     # generate the drug dose regimen
 
+    if pop.dwell:
+        dwell_time = int(pop.dwell_time/pop.timestep_scale)
+    else:
+        dwell_time = 0
+
     if pop.regimen_length is None:
         regimen_length = pop.n_timestep
     else:
-        regimen_length = pop.regimen_length
+        regimen_length = pop.regimen_length + pop.dwell_time
+
+    if regimen_length > pop.n_timestep:
+        regimen_length = pop.n_timestep
 
     while impulse_indx[i] < regimen_length*pop.timestep_scale-pop.dose_schedule:
         impulse_indx.append(pop.dose_schedule*(i+1))
@@ -108,7 +116,6 @@ def gen_impulses(pop):
     u[impulse_indx]=1 # list of impulses at the simulated drug dosage times
 
     if pop.dwell:
-        dwell_time = int(pop.dwell_time/pop.timestep_scale)
         u[0:dwell_time] = 0
 
     return u

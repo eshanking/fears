@@ -598,6 +598,7 @@ def plot_landscape(p,conc=10**0,
                 plot_sub_network=False,
                 sub_network=None,
                 sub_network_color='white',
+                weight_list=None,
                 **kwargs):
     """
     Plots a graph representation of this landscape on the current matplotlib figure.
@@ -872,7 +873,11 @@ def plot_landscape(p,conc=10**0,
 
 
     if trajectory_list is not None:
-        for trajectory in trajectory_list:
+        for i,trajectory in enumerate(trajectory_list):
+                
+                if weight_list is not None:
+                    weight = weight_list[i]
+                    arrowprops['lw'] = weight
 
                 trajectory_pairs = []
 
@@ -918,7 +923,7 @@ def plot_landscape(p,conc=10**0,
                             break
         
                 # Draw trajectory arrows
-            
+                    
                     ax.annotate('', xy=end_pos, xytext=start_pos,
                             arrowprops=arrowprops)
     
@@ -1006,6 +1011,7 @@ def plot_kaplan_meier(pop,
                     event_times,
                     label=None,
                     t_max=None,
+                    t_vect = None,
                     n_sims=None,
                     ax=None,
                     mode='resistant',
@@ -1038,7 +1044,9 @@ def plot_kaplan_meier(pop,
     else:
         ylabel='% survival'
     
-    ax.plot(survival_curve,label=label,**kwargs)
+    if t_vect is None:
+        t_vect = np.arange(t_max)
+    ax.plot(t_vect,survival_curve,label=label,**kwargs)
     
     if errorband:
         # compute error bars
@@ -1053,7 +1061,7 @@ def plot_kaplan_meier(pop,
             err[t] = 100*((p*q)/n)**0.5 #
     t = np.arange(t_max)
     
-    ax.fill_between(t,survival_curve-err,survival_curve+err,alpha=0.4)
+    ax.fill_between(t_vect,survival_curve-err,survival_curve+err,alpha=0.4)
     
     xticks = ax.get_xticks()
     xlabels = xticks
