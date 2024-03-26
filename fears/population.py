@@ -564,9 +564,9 @@ class Population(PopParams):
             delta_cells = np.random.poisson(counts_t*fit_land)
             delta_cells[negative_fitness] = -1*delta_cells[negative_fitness]
             counts_t = counts_t + delta_cells
-        
-        else:
-            counts_t = counts_t - np.random.poisson(counts*death_rate)
+
+        # else:
+        counts_t = counts_t - np.random.poisson(counts*death_rate) # background turnover
         
         # Make sure there aren't negative numbers
         
