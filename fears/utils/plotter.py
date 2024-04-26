@@ -749,7 +749,6 @@ def plot_landscape(p,conc=10**0,
     
     if trajectory_data is not None:
         trajectory_pairs = []
-        raise ValueError("error")
 
         for i in range(len(trajectory) - 1):
             trajectory_pairs.append([trajectory[i], trajectory[i + 1]])
