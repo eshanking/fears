@@ -558,7 +558,10 @@ class Plate():
             if '.csv' in p:
                 df = pd.read_csv(p)
             elif '.xlsx' in p:
-                df = pd.read_excel(p,sheet_name=self.sheet_name)
+                if self.sheet_name is None:
+                    df = pd.read_excel(p)
+                else:
+                    df = pd.read_excel(p,sheet_name=self.sheet_name)
 
         # first start time is shaking, so we take the second (start of scan)
         f = df[df == 'Start Time'].stack().index.tolist()[1]
@@ -590,7 +593,10 @@ class Plate():
         if '.csv' in p:
             df = pd.read_csv(p)
         elif '.xlsx' in p:
-            df = pd.read_excel(p,sheet_name=self.sheet_name)
+            if self.sheet_name is None:
+                df = pd.read_excel(p)
+            else:
+                df = pd.read_excel(p,sheet_name=self.sheet_name)
 
         # get the first column (leftmost) of the data
         # cycle nr is always in the leftmost column
@@ -1053,7 +1059,10 @@ class Plate():
         if '.csv' in data_path:
             df = pd.read_csv(data_path)
         elif '.xlsx' in data_path:
-            df = pd.read_excel(data_path,sheet_name=self.sheet_name)
+            if self.sheet_name is None:
+                df = pd.read_excel(data_path)
+            else:
+                df = pd.read_excel(data_path,sheet_name=self.sheet_name)
 
         # Get the total number of genotypes
         cur_max = 0
@@ -1141,7 +1150,10 @@ class Plate():
         if '.csv' in data_path:
             df = pd.read_csv(data_path)
         elif '.xlsx' in data_path:
-            df = pd.read_excel(data_path,sheet_name=self.sheet_name)
+            if self.sheet_name is None:
+                df = pd.read_excel(data_path)
+            else:
+                df = pd.read_excel(data_path,sheet_name=self.sheet_name)
 
         # get the first column as an array
         col_0 = df.columns[0]

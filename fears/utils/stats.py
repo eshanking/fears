@@ -3,6 +3,7 @@ import numpy as np
 from fears.utils import results_manager
 import pickle
 import lifelines
+import scipy.stats as stats
 
 def survival_proportion(pop,data):
     """Computes survival fraction of populations in an experiment for lhs analysis 
@@ -82,6 +83,91 @@ def get_population_timetrace(sim_num=0,condition_num=0,exp=None,exp_info_path=No
     data = data_dict['counts']
 
     return np.sum(data,axis=1)
+
+def get_sim_data(sim_num=0,condition_num=0,exp=None,exp_info_path=None):
+    """Computes the proportion of the population that has a given number of mutations
+    
+    Returns a dictionary of dictionaries of K-M curves from the 
+    given experiment. Each experimental condition has two 
+    resistance curves (defined by resistance_outcome) and a
+    survival curve.
+
+    Args:
+        exp (fears Experiment object, optional): Experiment to analyze. Defaults to None.
+        exp_info_path (str, optional): Optional path to Experiment object. Defaults to None.
+        resistance_outcome (list, optional): List of resistance outcomes. Defaults to [14,15].
+
+    Returns:
+        dict: Dict of dicts containing KM curves. Sub-dictionaries are different
+        experimental conditions.
+    """
+
+    if exp is None:
+        exp =  pickle.load(open(exp_info_path,'rb'))
+
+    exp_folders,exp_info = results_manager.get_experiment_results(exp=exp)
+    
+    # for exp in exp_folders[condition_num]:
+
+    exp = exp_folders[condition_num]
+    
+    k_abs_t = exp[exp.find('=')+1:]
+    k_abs_t = k_abs_t.replace(',','.')
+    k_abs_t = float(k_abs_t)
+    
+    k_abs_t = round(k_abs_t,10)
+    
+    sim_files = os.listdir(path=exp)
+    sim_files = sorted(sim_files)
+    sim = sim_files[sim_num]
+    sim = exp + os.sep + sim
+    data_dict = results_manager.get_data(sim)
+
+    return data_dict['counts']
+
+def get_entropy_timetrace(sim_num=0,condition_num=0,exp=None,exp_info_path=None):
+    """Computes the proportion of the population that has a given number of mutations
+    
+    Returns a dictionary of dictionaries of K-M curves from the 
+    given experiment. Each experimental condition has two 
+    resistance curves (defined by resistance_outcome) and a
+    survival curve.
+
+    Args:
+        exp (fears Experiment object, optional): Experiment to analyze. Defaults to None.
+        exp_info_path (str, optional): Optional path to Experiment object. Defaults to None.
+        resistance_outcome (list, optional): List of resistance outcomes. Defaults to [14,15].
+
+    Returns:
+        dict: Dict of dicts containing KM curves. Sub-dictionaries are different
+        experimental conditions.
+    """
+
+    if exp is None:
+        exp =  pickle.load(open(exp_info_path,'rb'))
+
+    exp_folders,exp_info = results_manager.get_experiment_results(exp=exp)
+    
+    # for exp in exp_folders[condition_num]:
+
+    exp = exp_folders[condition_num]
+    
+    k_abs_t = exp[exp.find('=')+1:]
+    k_abs_t = k_abs_t.replace(',','.')
+    k_abs_t = float(k_abs_t)
+    
+    k_abs_t = round(k_abs_t,10)
+    
+    sim_files = os.listdir(path=exp)
+    sim_files = sorted(sim_files)
+    sim = sim_files[sim_num]
+    sim = exp + os.sep + sim
+    data_dict = results_manager.get_data(sim)
+
+    data = data_dict['counts']/np.sum(data_dict['counts'],axis=1)
+
+    return stats.entropy(data.T)
+    
 
 def most_freq_genotype(exp=None,exp_info_path=None,mode='mode'):
     """Computes the proportion of the population that has a given number of mutations

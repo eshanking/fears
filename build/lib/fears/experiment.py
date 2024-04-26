@@ -34,7 +34,8 @@ class Experiment():
                  passage=False,
                  passage_time = 48,
                  debug = True,
-                 population_template=None): # debug = True -> no save
+                 population_template=None,
+                 eq_times=None): # debug = True -> no save
     
         self.root_path = str(dir_manager.get_project_root())
         
@@ -49,6 +50,7 @@ class Experiment():
         allowed_experiments = ['inoculant-survival',
                                'dose-survival',
                                'drug-regimen',
+                               'equilibrium-time',
                                'dose-entropy',
                                'rate-survival',
                                'bottleneck',
@@ -99,14 +101,6 @@ class Experiment():
         else:
             self.experiment_type = experiment_type
         
-        # if experiment_type == 'dose-survival' and len(inoculants) > 1:
-        #     raise Exception('The experiment type is set to dose-survival (default), but more than one inoculant is given.')
-        # elif experiment_type == 'inoculant-survival' and len(self.max_doses) > 1:
-        #     # print('here')
-        #     raise Exception('The experiment type is set to inoculant-survival, but more than one max dose is given.')
-        
-        # if experiment_type == 'inoculant-survival' and inoculants is None:
-        #     raise Exception('The experiment type is set to inoculant-survival, but no inoculants are given.')
         self.ramp = ramp
         if self.experiment_type == 'ramp_up_down':
             self.p_landscape = Population(constant_pop = True,
@@ -148,19 +142,6 @@ class Experiment():
             
             self.set_ramp_ud(self.p_landscape)
             self.set_ramp_ud(self.p_seascape)
-        
-    
-            # p_bottleneck = Population(max_dose = max_doses,
-            #                              n_sims = self.n_sims,
-            #                              curve_type = 'bottleneck'
-            #                              **self.population_options)
-            # self.populations.append(p_bottleneck)
-            
-            # p_no_bottleneck = Population(max_dose = max_doses,
-            #                  n_sims = self.n_sims,
-            #                  curve_type = 'constant'
-            #                  **self.population_options)
-            # self.populations.append(p_no_bottleneck)
         
         if self.experiment_type == 'dose-survival':
             for curve_type in self.curve_types:
@@ -210,6 +191,28 @@ class Experiment():
                 self.populations.append(p)
 
             self.n_survive = np.zeros([len(self.populations)])
+        
+        elif self.experiment_type == 'equilibrium-time':
+
+            self.eq_times = eq_times
+
+            if population_template is None:
+                if 'dwell' in self.population_options:
+                    del self.population_options['dwell']
+                if 'dwell_time' in self.population_options:
+                    del self.population_options['dwell_time']
+
+                p0 = Population(curve_type='pulsed',
+                                n_sims = 1,
+                                dwell=True,
+                                **self.population_options)
+            else:
+                p0 = population_template
+
+            for eq_time in self.eq_times:
+                p = copy.copy(p0)
+                p.reset_drug_conc_curve(dwell_time=eq_time)
+                self.populations.append(p)
             
         elif self.experiment_type == 'dose-entropy':
             for dose in self.max_doses:
@@ -394,6 +397,29 @@ class Experiment():
                 # kk+=1
                 # pbar.update()
                 self.perc_survive = 100*self.n_survive/self.n_sims
+
+        elif self.experiment_type == 'equilibrium-time':
+
+            for p in self.populations:
+                save_folder = 'eq_time=' + str(p.dwell_time)
+
+                for i in range(self.n_sims):
+                    # initialize new drug curve
+                    # p.drug_curve,u = p.gen_curves()
+                    
+                    counts,n_survive = p.simulate()
+                    drug = p.drug_curve
+                    drug = np.array([drug])
+                    drug = np.transpose(drug)
+                    
+                    if not self.debug:
+                        # self.save_counts(counts,i,save_folder)
+                        data_dict = {'counts':counts,
+                                     'drug_curve':drug}
+                        self.save_dict(data_dict,save_folder,num=i)
+                # kk+=1
+                # pbar.update()
+                # self.perc_survive = 100*n_survive/self.n_sims
             
         elif self.experiment_type == 'dose-entropy':
             # pbar = tqdm(total=len(self.populations)*self.n_sims)
@@ -443,7 +469,7 @@ class Experiment():
                             save_folder = 'k_abs=' + str(p.k_abs)
                             save_folder.replace('.',',')
                         else:
-                            save_folder = 'slope=' + str(p.slope)
+                            save_folder = 'slope=' + str(p.k_abs)
                             save_folder.replace('.',',')
                         # self.save_counts(counts,n,save_folder)
                         data_dict = {'counts':counts,
@@ -451,15 +477,6 @@ class Experiment():
                         self.save_dict(data_dict,save_folder,num=n)
         if not self.debug:
             pickle.dump(self, open(self.experiment_info_path,"wb"))
-        # pickle.dump(self, open(self.experiment_info_path,"wb"))
-        
-                    
-                # fig_savename = 'slope = ' + str(p.slope)
-                # self.figures = self.figures.append(fig)
-                # pbar.update()
-            # self.rate_survival_results.index = np.arange(len(self.rate_survival_results))
-                
-        # pbar.close() # close progress bar
   
     # save counts as a csv in the given subfolder with the label 'num'
     def save_counts(self,counts,num,save_folder,prefix='sim_'):

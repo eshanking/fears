@@ -123,7 +123,7 @@ class PopParams:
         self.seascape_path = None
         self.seascape_lib = None
   
-        self.pharm_params_path = files('fears.data').joinpath('pharm_params_09152023.csv')
+        self.pharm_params_path = files('fears.data').joinpath('pharm_params_01172024.csv')
 
         p = files('fears.data').joinpath('pyrimethamine_ic50.csv')
         self.ic50_data_path = str(p)
@@ -564,9 +564,9 @@ class Population(PopParams):
             delta_cells = np.random.poisson(counts_t*fit_land)
             delta_cells[negative_fitness] = -1*delta_cells[negative_fitness]
             counts_t = counts_t + delta_cells
-        
-        else:
-            counts_t = counts_t - np.random.poisson(counts*death_rate)
+
+        # else:
+        counts_t = counts_t - np.random.poisson(counts*death_rate) # background turnover
         
         # Make sure there aren't negative numbers
         
