@@ -930,6 +930,47 @@ def plot_landscape(p,conc=10**0,
     ax.set_axis_off()
     return ax
 
+def gen_transition_matrix(p, conc=10**0, fit_land=None):
+    """
+    Generates a 16x16 transition matrix based on genotypes and their fitnesses at a given drug concentration.
+    """
+
+    if fit_land is None:
+        fit_land = fitness.gen_fit_land(p,conc)
+    
+    # Figure out the length of the bit sequences we're working with
+    N = int(np.log2(len(fit_land)))
+
+    # Generate all possible N-bit sequences
+    genotypes = np.arange(2**N)
+    genotypes = [p.int_to_binary(g) for g in genotypes]
+
+    # Turn the unique bit sequences array into a list of tuples with the bit sequence and its corresponding fitness
+    # The tuples can still be used as nodes because they are hashable objects
+    genotypes = [(genotypes[i], fit_land[i]) for i in range(len(genotypes))]
+
+    # Initialize a 16x16 transition matrix filled with zeros
+    N = len(genotypes)  # Number of genotypes
+    transition_matrix = np.zeros((N, N))  # Initialize transition matrix with zeros
+
+    for i in range(N):
+        genotype_i, fitness_i = genotypes[i]
+        more_fit_neighbors = [
+            j for j in range(N) if genotypes[j][1] > fitness_i and bin(i ^ j).count('1') == 1
+        ]
+
+        if i == 0 or i == 15:
+            if len(more_fit_neighbors) == 0:
+                transition_matrix[i, i] = 1
+                continue  # Skip further processing for this genotype
+
+        if more_fit_neighbors:
+            prob_per_neighbor = 1 / len(more_fit_neighbors)
+            for j in more_fit_neighbors:
+                transition_matrix[i, j] = round(prob_per_neighbor, 3)
+
+    return transition_matrix
+
 def add_landscape_to_fitness_curve(c,ax,pop,
                                 vert_lines=True,
                                 position = 'top',
