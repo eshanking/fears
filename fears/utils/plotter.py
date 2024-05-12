@@ -959,10 +959,9 @@ def gen_transition_matrix(p, conc=10**0, fit_land=None):
             j for j in range(N) if genotypes[j][1] > fitness_i and bin(i ^ j).count('1') == 1
         ]
 
-        if i == 0 or i == 15:
-            if len(more_fit_neighbors) == 0:
-                transition_matrix[i, i] = 1
-                continue  # Skip further processing for this genotype
+        if len(more_fit_neighbors) == 0:
+            transition_matrix[i, i] = 1
+            continue  # Skip further processing for this genotype
 
         if more_fit_neighbors:
             prob_per_neighbor = 1 / len(more_fit_neighbors)
