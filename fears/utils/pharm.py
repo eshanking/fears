@@ -235,3 +235,31 @@ def gen_passage_drug_protocol(pop):
         drug_curve[t] = pharm_eqn(pop,tc)
     
     return drug_curve
+
+def __pharm_eqn__(t,cmax,ke,ka):
+    return cmax * (np.exp(-ke*t) - np.exp(-ka*t))
+
+def est_pharm_params(thalf,tmax,t=None,ka_max=10):
+    # given the half life and time of maximum concentration, estimate the parameters
+
+    if t is None:
+        t = np.linspace(0, 10, 10000)
+
+    # estimate ke from half life
+    ke = -np.log(0.5)/thalf
+
+    # estimate ka from tmax
+
+    ka_est = np.linspace(ke, ka_max, 100)
+
+    est = []
+    for k in ka_est:
+        c = __pharm_eqn__(t, 1, ke, k)
+
+        tmax_t = t[np.argmax(c)]
+
+        est.append((tmax_t - tmax)**2)
+
+    ka = ka_est[np.argmin(est)]
+
+    return ka,ke

@@ -599,6 +599,7 @@ def plot_landscape(p,conc=10**0,
                 sub_network=None,
                 sub_network_color='white',
                 weight_list=None,
+                arrow_alpha_list=None,
                 **kwargs):
     """
     Plots a graph representation of this landscape on the current matplotlib figure.
@@ -878,6 +879,10 @@ def plot_landscape(p,conc=10**0,
                 if weight_list is not None:
                     weight = weight_list[i]
                     arrowprops['lw'] = weight
+                
+                if arrow_alpha_list is not None:
+                    alpha = arrow_alpha_list[i]
+                    arrowprops['alpha'] = alpha
 
                 trajectory_pairs = []
 
