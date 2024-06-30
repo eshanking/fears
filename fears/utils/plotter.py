@@ -1061,6 +1061,7 @@ def plot_kaplan_meier(pop,
                     ax=None,
                     mode='resistant',
                     errorband=True,
+                    auto_xticks=True,
                     **kwargs):
     
     if t_max is None:
@@ -1106,14 +1107,17 @@ def plot_kaplan_meier(pop,
             err[t] = 100*((p*q)/n)**0.5 #
     t = np.arange(t_max)
     
-    ax.fill_between(t_vect,survival_curve-err,survival_curve+err,alpha=0.4)
+    if 'color' in kwargs:
+        color = kwargs['color']
+    ax.fill_between(t_vect,survival_curve-err,survival_curve+err,alpha=0.4,color=color)
     
-    xticks = ax.get_xticks()
-    xlabels = xticks
-    xlabels = xlabels/24
-    xlabels = np.array(xlabels).astype('int')
-    ax.set_xticks(xticks)
-    ax.set_xticklabels(xlabels)
+    if auto_xticks:
+        xticks = ax.get_xticks()
+        xlabels = xticks
+        xlabels = xlabels/24
+        xlabels = np.array(xlabels).astype('int')
+        ax.set_xticks(xticks)
+        ax.set_xticklabels(xlabels)
     
     xl = [0,len(survival_curve)]
     ax.set_xlim(xl)
